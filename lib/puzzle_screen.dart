@@ -1,3 +1,4 @@
+import 'package:color_puzzle/congratulations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'puzzle_model.dart';
@@ -23,10 +24,10 @@ class PuzzleScreen extends StatelessWidget {
                 GestureDetector(
                   child: Text("Reset"),
                   onTap: () {
-                     puzzle.grid = puzzle.savedGrid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
-    puzzle.resetMoves();
-    puzzle.moveWhereError = -1;
-    puzzle.clicks = puzzle.savedClicks.map((click) => List<int>.from(click)).toList(); // Deep copy clicks
+                    puzzle.grid = puzzle.savedGrid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
+                    puzzle.resetMoves();
+                    puzzle.moveWhereError = -1;
+                    puzzle.clicks = puzzle.savedClicks.map((click) => List<int>.from(click)).toList(); // Deep copy clicks
 
                     print(puzzle.clicks);
                     print(puzzle.savedClicks);
@@ -45,25 +46,24 @@ class PuzzleScreen extends StatelessWidget {
                   ),
                 ),
                 ElevatedButton(
-  onPressed: () {
-    bool resetOccurred = puzzle.getHint();
-    if (resetOccurred) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("You made a mistake and have been reset to the last correct state."),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } else {
-        // Add a short delay to allow visual feedback
-        Future.delayed(Duration(milliseconds: 500), () {
-          puzzle.clearHint();
-        });
-    }
-  },
-  child: Text('Hint'),
-),
-
+                  onPressed: () {
+                    bool resetOccurred = puzzle.getHint();
+                    if (resetOccurred) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("You made a mistake and have been reset to the last correct state."),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    } else {
+                      // Add a short delay to allow visual feedback
+                      Future.delayed(Duration(milliseconds: 500), () {
+                        puzzle.clearHint();
+                      });
+                    }
+                  },
+                  child: Text('Hint'),
+                ),
               ],
             ),
           ),
@@ -83,9 +83,17 @@ class PuzzleScreen extends StatelessWidget {
                 return GestureDetector(
                   onTap: () {
                     puzzle.clickTile(x, y, false);
+                    // Check if the puzzle is completed after a move
+                    if (puzzle.isGridFilledWithTargetColor()) {
+                      // Navigate to the Congratulations screen
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => CongratulationsScreen(),
+                        ),
+                      );
+                    }
                   },
                   child: Container(
-                    
                     margin: EdgeInsets.all(2),
                     decoration: BoxDecoration(
                       color: tileColor,

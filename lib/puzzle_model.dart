@@ -11,7 +11,7 @@ class PuzzleModel with ChangeNotifier {
   int _maxMoves;
   Timer? _timer;
   int _elapsedTime;
-  int resetPosition = 0; 
+  int resetPosition = 0;
 
   List<List<int>> clicks;
   List<List<int>> savedClicks;
@@ -46,10 +46,9 @@ class PuzzleModel with ChangeNotifier {
         _lastCorrectGrid = List.generate(size, (i) => List.generate(size, (j) => 1)),
         clicks = List.generate(maxMoves, (_) => []),
         savedClicks = List.generate(maxMoves, (_) => []),
-
         _targetColorNumber = 1 { // Default target color number
     _initializeGrid();
-    _startTimer();
+    //_startTimer();
   }
 
   List<List<int>> get grid => _grid;
@@ -59,14 +58,15 @@ class PuzzleModel with ChangeNotifier {
   int get maxMoves => _maxMoves;
   int get elapsedTime => _elapsedTime;
   Color get targetColor => _colorMapping[_targetColorNumber] ?? Colors.transparent;
-    set grid(List<List<int>> newGrid) {
+  set grid(List<List<int>> newGrid) {
     _grid = newGrid.map((row) => List<int>.from(row)).toList(); // Deep copy
     notifyListeners();
+    _checkCompletion();
   }
 
   int moveWhereError = -1;
 
-   int? _hintX;
+  int? _hintX;
   int? _hintY;
 
   int? get hintX => _hintX;
@@ -84,23 +84,24 @@ class PuzzleModel with ChangeNotifier {
     _hintY = null;
     notifyListeners();
   }
-bool getHint() {
-  bool resetOccurred = false;
-  
-  if(moveWhereError != -1) {
-    _moves = moveWhereError - 1;
-    grid = _lastCorrectGrid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
-    moveWhereError = -1;
-    resetOccurred = true;
-  } else {
-    if(moves < maxMoves - 1) {
-      var hint = clicks[0];
-      setHint(hint[0], hint[1]); // Set hint coordinates
+
+  bool getHint() {
+    bool resetOccurred = false;
+
+    if (moveWhereError != -1) {
+      _moves = moveWhereError - 1;
+      grid = _lastCorrectGrid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
+      moveWhereError = -1;
+      resetOccurred = true;
+    } else {
+      if (moves < maxMoves - 1) {
+        var hint = clicks[0];
+        setHint(hint[0], hint[1]); // Set hint coordinates
+      }
     }
+
+    return resetOccurred;
   }
-  
-  return resetOccurred;
-}
 
   void setTargetColor(int colorNumber) {
     _targetColorNumber = colorNumber;
@@ -108,13 +109,13 @@ bool getHint() {
   }
 
   Color? getHintColor(int x, int y) {
-  if (clicks.isNotEmpty) {
-    int currentColorNumber = _grid[x][y];
-    int newColorNumber = _numberMapping[currentColorNumber] ?? currentColorNumber;
-    return _colorMapping[newColorNumber];
+    if (clicks.isNotEmpty) {
+      int currentColorNumber = _grid[x][y];
+      int newColorNumber = _numberMapping[currentColorNumber] ?? currentColorNumber;
+      return _colorMapping[newColorNumber];
+    }
+    return null;
   }
-  return null;
-} 
 
   void resetMoves() {
     _moves = 0;
@@ -133,14 +134,13 @@ bool getHint() {
     }
 
     // Create random moves and store them in the clicks list
-for (int i = 0; i < _maxMoves; i++) {
-  var x = _randomPositionNumber();
-  var y = _randomPositionNumber();
-  clickTile(x, y, true);
-  clicks[i] = [x, y];
-  savedClicks[i] = [x, y];  // Deep copy the individual list
-}
-
+    for (int i = 0; i < _maxMoves; i++) {
+      var x = _randomPositionNumber();
+      var y = _randomPositionNumber();
+      clickTile(x, y, true);
+      clicks[i] = [x, y];
+      savedClicks[i] = [x, y];  // Deep copy the individual list
+    }
 
     // Save the current state of the grid
     for (int i = 0; i < size; i++) {
@@ -150,43 +150,40 @@ for (int i = 0; i < _maxMoves; i++) {
     }
   }
 
-void clickTile(int x, int y, bool reversed) {
-  if (x < 0 || y < 0 || x >= size || y >= size) return;
-  if (_moves >= _maxMoves) return;
+  void clickTile(int x, int y, bool reversed) {
+    if (x < 0 || y < 0 || x >= size || y >= size) return;
+    if (_moves >= _maxMoves) return;
 
-  int currentColorNumber = _grid[x][y];
-  int newColorNumber = currentColorNumber;
-  if (reversed) {
-    newColorNumber = _numberMappingReversed[currentColorNumber] ?? currentColorNumber;
-  } else {
-    newColorNumber = _numberMapping[currentColorNumber] ?? currentColorNumber;
-  }
-  bool found = false;
-  
-  if (!reversed) {
-    _moves++;
-    // Remove the clicked tile from the clicks list
-    for (int i = 0; i < clicks.length; i++) {
-      if (clicks[i][0] == x && clicks[i][1] == y) {
-        found = true;
-        clicks.removeAt(i);
-        break; // Exit the loop after removing the first matching element
+    int currentColorNumber = _grid[x][y];
+    int newColorNumber = currentColorNumber;
+    if (reversed) {
+      newColorNumber = _numberMappingReversed[currentColorNumber] ?? currentColorNumber;
+    } else {
+      newColorNumber = _numberMapping[currentColorNumber] ?? currentColorNumber;
     }
-}
-if (!found && moveWhereError == -1) {
-  moveWhereError = moves;
-  _lastCorrectGrid = grid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
-}
+    bool found = false;
 
+    if (!reversed) {
+      _moves++;
+      // Remove the clicked tile from the clicks list
+      for (int i = 0; i < clicks.length; i++) {
+        if (clicks[i][0] == x && clicks[i][1] == y) {
+          found = true;
+          clicks.removeAt(i);
+          break; // Exit the loop after removing the first matching element
+        }
+      }
+      if (!found && moveWhereError == -1) {
+        moveWhereError = moves;
+        _lastCorrectGrid = grid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
+      }
+    }
+    _changeColor(x, y, newColorNumber, reversed);
 
+    clearHint(); // Clear hint after clicking
+
+    notifyListeners();
   }
-  _changeColor(x, y, newColorNumber, reversed);
-
-  clearHint(); // Clear hint after clicking
-
-  notifyListeners();
-}
-
 
   void _changeColor(int x, int y, int newColorNumber, bool reversed) {
     if (x < 0 || y < 0 || x >= size || y >= size) return;
@@ -235,12 +232,12 @@ if (!found && moveWhereError == -1) {
     return _colorMapping[colorNumber] ?? Colors.transparent;
   }
 
-  void _startTimer() {
+  /*void _startTimer() {
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       _elapsedTime++;
       notifyListeners();
     });
-  }
+  }*/
 
   void resetGame() {
     _initializeGrid();
@@ -248,7 +245,19 @@ if (!found && moveWhereError == -1) {
     _elapsedTime = 0;
     moveWhereError = -1;
     _timer?.cancel();
-    _startTimer();
+    //_startTimer();
+    notifyListeners();
+  }
+
+  void _checkCompletion() {
+    if (isGridFilledWithTargetColor()) {
+      // Notify listeners or trigger a completion event
+      _onPuzzleCompleted();
+    }
+  }
+
+  void _onPuzzleCompleted() {
+    // This function can be used to notify that the puzzle is completed
     notifyListeners();
   }
 }

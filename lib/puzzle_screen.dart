@@ -10,6 +10,14 @@ class PuzzleScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Color Change Puzzle'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.undo),
+            onPressed: () {
+              puzzle.undo();
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -23,11 +31,11 @@ class PuzzleScreen extends StatelessWidget {
                 GestureDetector(
                   child: Text("Reset"),
                   onTap: () {
-                     puzzle.grid = puzzle.savedGrid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
-    puzzle.resetMoves();
-    puzzle.moveWhereError = -1;
-    puzzle.clicks = puzzle.savedClicks.map((click) => List<int>.from(click)).toList(); // Deep copy clicks
-
+                    puzzle.grid = puzzle.savedGrid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
+                    puzzle.resetMoves();
+                    puzzle.moveWhereError = -1;
+                    puzzle.clicks = puzzle.savedClicks.map((click) => List<int>.from(click)).toList(); // Deep copy clicks
+                    puzzle.undoStack.clear(); // Clear the undo stack on reset
                     print(puzzle.clicks);
                     print(puzzle.savedClicks);
                   },
@@ -45,25 +53,24 @@ class PuzzleScreen extends StatelessWidget {
                   ),
                 ),
                 ElevatedButton(
-  onPressed: () {
-    bool resetOccurred = puzzle.getHint();
-    if (resetOccurred) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("You made a mistake and have been reset to the last correct state."),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } else {
-        // Add a short delay to allow visual feedback
-        Future.delayed(Duration(milliseconds: 500), () {
-          puzzle.clearHint();
-        });
-    }
-  },
-  child: Text('Hint'),
-),
-
+                  onPressed: () {
+                    bool resetOccurred = puzzle.getHint();
+                    if (resetOccurred) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("You made a mistake and have been reset to the last correct state."),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    } else {
+                      // Add a short delay to allow visual feedback
+                      Future.delayed(Duration(milliseconds: 500), () {
+                        puzzle.clearHint();
+                      });
+                    }
+                  },
+                  child: Text('Hint'),
+                ),
               ],
             ),
           ),
@@ -85,7 +92,6 @@ class PuzzleScreen extends StatelessWidget {
                     puzzle.clickTile(x, y, false);
                   },
                   child: Container(
-                    
                     margin: EdgeInsets.all(2),
                     decoration: BoxDecoration(
                       color: tileColor,

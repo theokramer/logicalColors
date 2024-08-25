@@ -12,6 +12,7 @@ class PuzzleModel with ChangeNotifier {
   int _elapsedTime;
 
   List<List<int>> clicks;
+  List<List<int>> savedClicks;
 
   final Map<int, Color> _colorMapping = {
     1: Colors.red,
@@ -41,6 +42,8 @@ class PuzzleModel with ChangeNotifier {
         _grid = List.generate(size, (i) => List.generate(size, (j) => 1)),
         _savedGrid = List.generate(size, (i) => List.generate(size, (j) => 1)),
         clicks = List.generate(maxMoves, (_) => []),
+        savedClicks = List.generate(maxMoves, (_) => []),
+
         _targetColorNumber = 1 { // Default target color number
     _initializeGrid();
     _startTimer();
@@ -78,12 +81,12 @@ class PuzzleModel with ChangeNotifier {
   }
 
   List<int>? getHint() {
-    if (_moves < clicks.length) {
-      var hint = clicks[_moves];
+    if(moves < maxMoves - 1) {
+      var hint = clicks[0];
       setHint(hint[0], hint[1]); // Set hint coordinates
       return hint; // Return the hint
     }
-    return null; // No more hints available
+    return null;
   }
 
   void setTargetColor(int colorNumber) {
@@ -117,12 +120,14 @@ class PuzzleModel with ChangeNotifier {
     }
 
     // Create random moves and store them in the clicks list
-    for (int i = 0; i < _maxMoves; i++) {
-      var x = _randomPositionNumber();
-      var y = _randomPositionNumber();
-      clickTile(x, y, true);
-      clicks[i] = [x, y];
-    }
+for (int i = 0; i < _maxMoves; i++) {
+  var x = _randomPositionNumber();
+  var y = _randomPositionNumber();
+  clickTile(x, y, true);
+  clicks[i] = [x, y];
+  savedClicks[i] = [x, y];  // Deep copy the individual list
+}
+
 
     // Save the current state of the grid
     for (int i = 0; i < size; i++) {
@@ -132,26 +137,30 @@ class PuzzleModel with ChangeNotifier {
     }
   }
 
-  void clickTile(int x, int y, bool reversed) {
-    if (x < 0 || y < 0 || x >= size || y >= size) return;
-    if (_moves >= _maxMoves) return;
+void clickTile(int x, int y, bool reversed) {
+  if (x < 0 || y < 0 || x >= size || y >= size) return;
+  if (_moves >= _maxMoves) return;
 
-    int currentColorNumber = _grid[x][y];
-    int newColorNumber = currentColorNumber;
-    if (reversed) {
-      newColorNumber = _numberMappingReversed[currentColorNumber] ?? currentColorNumber;
-    } else {
-      newColorNumber = _numberMapping[currentColorNumber] ?? currentColorNumber;
-    }
-
-    _changeColor(x, y, newColorNumber, reversed);
-    if (!reversed) {
-      _moves++;
-    }
-        clearHint(); // Clear hint after clicking
-
-    notifyListeners();
+  int currentColorNumber = _grid[x][y];
+  int newColorNumber = currentColorNumber;
+  if (reversed) {
+    newColorNumber = _numberMappingReversed[currentColorNumber] ?? currentColorNumber;
+  } else {
+    newColorNumber = _numberMapping[currentColorNumber] ?? currentColorNumber;
   }
+
+  _changeColor(x, y, newColorNumber, reversed);
+  if (!reversed) {
+    _moves++;
+    // Remove the clicked tile from the clicks list
+    clicks.removeWhere((click) => click[0] == x && click[1] == y);
+  }
+
+  clearHint(); // Clear hint after clicking
+
+  notifyListeners();
+}
+
 
   void _changeColor(int x, int y, int newColorNumber, bool reversed) {
     if (x < 0 || y < 0 || x >= size || y >= size) return;

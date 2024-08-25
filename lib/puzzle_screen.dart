@@ -23,8 +23,12 @@ class PuzzleScreen extends StatelessWidget {
                 GestureDetector(
                   child: Text("Reset"),
                   onTap: () {
-                    puzzle.grid = puzzle.savedGrid;
-                    puzzle.resetMoves();
+                     puzzle.grid = puzzle.savedGrid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
+    puzzle.resetMoves();
+    puzzle.clicks = puzzle.savedClicks.map((click) => List<int>.from(click)).toList(); // Deep copy clicks
+
+                    print(puzzle.clicks);
+                    print(puzzle.savedClicks);
                   },
                 ),
                 Container(
@@ -46,6 +50,7 @@ class PuzzleScreen extends StatelessWidget {
                       // Add a short delay to allow visual feedback
                       Future.delayed(Duration(milliseconds: 500), () {
                         puzzle.clearHint();
+                        
                       });
                     }
                   },

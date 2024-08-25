@@ -6,10 +6,12 @@ class PuzzleModel with ChangeNotifier {
   final int size;
   List<List<int>> _grid;
   List<List<int>> _savedGrid;
+  List<List<int>> _lastCorrectGrid;
   int _moves;
   int _maxMoves;
   Timer? _timer;
   int _elapsedTime;
+  int resetPosition = 0; 
 
   List<List<int>> clicks;
   List<List<int>> savedClicks;
@@ -41,6 +43,7 @@ class PuzzleModel with ChangeNotifier {
         _elapsedTime = 0,
         _grid = List.generate(size, (i) => List.generate(size, (j) => 1)),
         _savedGrid = List.generate(size, (i) => List.generate(size, (j) => 1)),
+        _lastCorrectGrid = List.generate(size, (i) => List.generate(size, (j) => 1)),
         clicks = List.generate(maxMoves, (_) => []),
         savedClicks = List.generate(maxMoves, (_) => []),
 
@@ -61,6 +64,8 @@ class PuzzleModel with ChangeNotifier {
     notifyListeners();
   }
 
+  int moveWhereError = -1;
+
    int? _hintX;
   int? _hintY;
 
@@ -79,15 +84,23 @@ class PuzzleModel with ChangeNotifier {
     _hintY = null;
     notifyListeners();
   }
-
-  List<int>? getHint() {
+bool getHint() {
+  bool resetOccurred = false;
+  
+  if(moveWhereError != -1) {
+    _moves = moveWhereError - 1;
+    grid = _lastCorrectGrid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
+    moveWhereError = -1;
+    resetOccurred = true;
+  } else {
     if(moves < maxMoves - 1) {
       var hint = clicks[0];
       setHint(hint[0], hint[1]); // Set hint coordinates
-      return hint; // Return the hint
     }
-    return null;
   }
+  
+  return resetOccurred;
+}
 
   void setTargetColor(int colorNumber) {
     _targetColorNumber = colorNumber;
@@ -148,13 +161,26 @@ void clickTile(int x, int y, bool reversed) {
   } else {
     newColorNumber = _numberMapping[currentColorNumber] ?? currentColorNumber;
   }
-
-  _changeColor(x, y, newColorNumber, reversed);
+  bool found = false;
+  
   if (!reversed) {
     _moves++;
     // Remove the clicked tile from the clicks list
-    clicks.removeWhere((click) => click[0] == x && click[1] == y);
+    for (int i = 0; i < clicks.length; i++) {
+      if (clicks[i][0] == x && clicks[i][1] == y) {
+        found = true;
+        clicks.removeAt(i);
+        break; // Exit the loop after removing the first matching element
+    }
+}
+if (!found && moveWhereError == -1) {
+  moveWhereError = moves;
+  _lastCorrectGrid = grid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
+}
+
+
   }
+  _changeColor(x, y, newColorNumber, reversed);
 
   clearHint(); // Clear hint after clicking
 
@@ -220,6 +246,7 @@ void clickTile(int x, int y, bool reversed) {
     _initializeGrid();
     _moves = 0;
     _elapsedTime = 0;
+    moveWhereError = -1;
     _timer?.cancel();
     _startTimer();
     notifyListeners();

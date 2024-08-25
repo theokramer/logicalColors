@@ -25,6 +25,7 @@ class PuzzleScreen extends StatelessWidget {
                   onTap: () {
                      puzzle.grid = puzzle.savedGrid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
     puzzle.resetMoves();
+    puzzle.moveWhereError = -1;
     puzzle.clicks = puzzle.savedClicks.map((click) => List<int>.from(click)).toList(); // Deep copy clicks
 
                     print(puzzle.clicks);
@@ -44,18 +45,25 @@ class PuzzleScreen extends StatelessWidget {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    final hint = puzzle.getHint();
-                    if (hint != null) {
-                      // Add a short delay to allow visual feedback
-                      Future.delayed(Duration(milliseconds: 500), () {
-                        puzzle.clearHint();
-                        
-                      });
-                    }
-                  },
-                  child: Text('Hint'),
-                ),
+  onPressed: () {
+    bool resetOccurred = puzzle.getHint();
+    if (resetOccurred) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("You made a mistake and have been reset to the last correct state."),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+        // Add a short delay to allow visual feedback
+        Future.delayed(Duration(milliseconds: 500), () {
+          puzzle.clearHint();
+        });
+    }
+  },
+  child: Text('Hint'),
+),
+
               ],
             ),
           ),

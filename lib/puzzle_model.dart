@@ -159,7 +159,9 @@ List<List<List<int>>> get undoStack => _undoStack;
     if (x < 0 || y < 0 || x >= size || y >= size) return;
     if (_moves >= _maxMoves) return;
 
-    _undoStack.add(_grid.map((row) => List<int>.from(row)).toList()); // Save current state to undo stack
+if(!reversed) {
+      _undoStack.add(_grid.map((row) => List<int>.from(row)).toList()); // Save current state to undo stack
+}
 
     int currentColorNumber = _grid[x][y];
     int newColorNumber = currentColorNumber;

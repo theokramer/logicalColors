@@ -1,3 +1,4 @@
+import 'package:color_puzzle/roadmap_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'puzzle_model.dart'; // Make sure to import your model
@@ -19,7 +20,11 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: PuzzleScreen(),
+        initialRoute: '/puzzle',
+        routes: {
+        '/puzzle': (context) => PuzzleScreen(currentLevel: 1,),
+        '/roadmap': (context) => RoadMapScreen(currentLevel: 1),
+      },
       ),
     );
   }

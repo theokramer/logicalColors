@@ -39,6 +39,36 @@ class PuzzleModel with ChangeNotifier {
 
   final Random _random = Random();
   int _targetColorNumber;
+Map<String, int> getSizeAndMaxMoves(int level) {
+  int s = 1; // Grid-Size
+  int m = 1; // MaxMoves
+  int startLevel = 1; // Startlevel für die aktuelle Grid-Size
+
+  while (true) {
+    // Die Anzahl der Levels für die aktuelle Grid-Size steigt schneller an
+    int levelsForCurrentSize = ((s + 0.5) * (s + 0.5 )).floor();
+    int endLevel = startLevel + levelsForCurrentSize - 1;
+
+    if (level <= endLevel) {
+      // Berechne den maximalen Schwierigkeitsgrad innerhalb der aktuellen Grid-Size
+      // Innerhalb der Grid-Size, steigen die maxMoves schneller
+      m = ((level - startLevel) / s).ceil() + 1;
+      // Überprüfe, ob m die maximale Anzahl der Schwierigkeitsgrade für diese Grid-Size erreicht
+      int maxMovesForCurrentSize = (s * 1.9).floor();
+      m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
+      break;
+    }
+
+    // Gehe zur nächsten Grid-Size
+    s++;
+    startLevel = endLevel + 1;
+  }
+
+  return {"size": s, "maxMoves": m};
+}
+
+
+  
 
   PuzzleModel({required this.size, required int level})
       : _maxMoves = level, // Increase moves as levels increase

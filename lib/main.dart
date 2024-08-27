@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => PuzzleModel(size: 2, level: 1)),
+        ChangeNotifierProvider(create: (_) => PuzzleModel(size: 1, level: 1)),
       ],
       child: MaterialApp(
         title: 'Color Change Puzzle',

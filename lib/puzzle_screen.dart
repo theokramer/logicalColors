@@ -187,7 +187,6 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                       child: GestureDetector(
                         onTap: () {
                           puzzle.clickTile(x, y, false);
-
                           if (puzzle.isGridFilledWithTargetColor()) {
                             _confettiController.play();
                             HapticFeedback.heavyImpact();
@@ -197,8 +196,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                                   setState(() {
                                     showBanner = true;
                                   });
-                                  puzzle.addCoins(_coinsEarned);
-                                  widget.currentLevel += 1;
+                                  
                                 });
                               });
                             });
@@ -249,6 +247,27 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                   },
                 ),
               ),
+                      Padding(
+          padding: const EdgeInsets.only(bottom: 50, left: 50),
+          child: Row(
+            children: [
+              Image.asset(
+                'images/coins.png',
+                width: 24,
+                height: 24,
+              ),
+              SizedBox(width: 4),
+              Text(
+                '$coins',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
             ],
           ),
           if (showBanner)
@@ -279,12 +298,16 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                             height: 50,
                             child: GestureDetector(
                               onTap: () {
+                                puzzle.addCoins(_coinsEarned);
+                                  widget.currentLevel += 1;
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (context) => ChangeNotifierProvider(
                                       create: (_) => PuzzleModel(
-                                          size: widget.currentLevel < 5 ? 2 : 3,
-                                          level: widget.currentLevel < 5 ? widget.currentLevel : widget.currentLevel - 3),
+                                          size: puzzle.getSizeAndMaxMoves(widget.currentLevel)["size"] ?? 2,
+                                          level: puzzle.getSizeAndMaxMoves(widget.currentLevel)["maxMoves"] ?? 2,
+                                          ),
+
                                       child: PuzzleScreen(currentLevel: widget.currentLevel),
                                     ),
                                   ),
@@ -293,9 +316,11 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                               child: AnimatedText(),
                             ),
                           ),
+                          
                         ],
                       ),
                     ),
+                    
                   ],
                 ),
               ),

@@ -1,93 +1,232 @@
+import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'puzzle_model.dart';
 
 class RoadMapScreen extends StatelessWidget {
-  final int currentLevel;
-
-  RoadMapScreen({required this.currentLevel});
-
   @override
   Widget build(BuildContext context) {
+    final puzzle = Provider.of<PuzzleModel>(context);
+    final result = RoadMapUtils.findHighestUnlockedWorldAndLevel(puzzle);
+
+    // Bestimme den höchsten Schwierigkeitsgrad
+    int maxWorldIndex = worlds.length - 1;
+    int maxLevel = puzzle.getMaxLevelForWorld(maxWorldIndex + 1);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Road Map'),
-        backgroundColor: Colors.purpleAccent,
+        title: Text('Road Map', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.orange,
+        automaticallyImplyLeading: false,
       ),
-      body: RoadMapBody(currentLevel: currentLevel),
+      body: Stack(
+        children: [
+          ListView.builder(
+            itemCount: worlds.length,
+            itemBuilder: (context, worldIndex) {
+              final world = worlds[worldIndex];
+              bool isWorldUnlocked = worldIndex == 0 || puzzle.getMaxLevelForWorld(worldIndex) >= worldIndex * 10 + 60;
+
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Card(
+                  color: isWorldUnlocked ? Colors.white : Colors.grey,
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: ListTile(
+                    title: Text(
+                      'World ${world.id}',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: isWorldUnlocked ? Colors.orange : Colors.white,
+                      ),
+                    ),
+                    subtitle: Text(
+                      isWorldUnlocked
+                          ? 'Levels 1-${world.maxLevel}'
+                          : 'Reach Level ${worldIndex * 10 + 60} in World ${worldIndex} to unlock',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isWorldUnlocked ? Colors.orangeAccent : Colors.white,
+                      ),
+                    ),
+                    onTap: isWorldUnlocked
+                        ? () {
+                            currentWorld = worldIndex + 1;
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => LevelSelectionScreen(
+                                  worldIndex: world.id,
+                                  currentLevel: puzzle.getMaxLevelForWorld(world.id),
+                                ),
+                              ),
+                            );
+                          }
+                        : null,
+                  ),
+                ),
+              );
+            },
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 30.0),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        int highestWorldIndex = result['highestWorldIndex'] ?? 1;
+                        int highestLevelIndex = result['highestLevelIndex'] ?? 1;
+                        selectedLevel = highestLevelIndex ;
+                    Navigator.of(context).pushReplacement(
+                      FadePageRoute(
+                        page: ChangeNotifierProvider(
+                          create: (_) => PuzzleModel(
+                            size: puzzle.getSizeAndMaxMoves((highestWorldIndex - 1)  + highestLevelIndex)["size"] ?? 2,
+                            level: puzzle.getSizeAndMaxMoves((highestWorldIndex - 1)  + highestLevelIndex)["maxMoves"] ?? 2,
+                          ),
+                          child: PuzzleScreen(),
+                        ),
+                      ),
+                    );
+                      },
+                      child: Text(
+                        'World ${(result['highestWorldIndex'] ?? 1) + 1} – Level ${result['highestLevelIndex'] ?? 1}',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        backgroundColor: Colors.orange,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
 
-class RoadMapBody extends StatelessWidget {
+class LevelSelectionScreen extends StatelessWidget {
+  final int worldIndex;
   final int currentLevel;
 
-  RoadMapBody({required this.currentLevel});
+  LevelSelectionScreen({
+    required this.worldIndex,
+    required this.currentLevel,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        SliverGrid(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              int level = index + 1;
-              bool isUnlocked = level <= currentLevel;
-              return LevelBubble(level: level, isUnlocked: isUnlocked);
-            },
-            childCount: 100,
-          ),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 10,
-            crossAxisSpacing: 8.0,
-            mainAxisSpacing: 8.0,
-          ),
+    final puzzle = Provider.of<PuzzleModel>(context);
+    int worldStartLevel = (worldIndex - 1) * 100 + 1;
+    int worldEndLevel = (worldIndex) * 100;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('World $worldIndex Levels', style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.orange,
+      ),
+      body: GridView.builder(
+        padding: EdgeInsets.all(16),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 5,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
         ),
-        SliverToBoxAdapter(
-          child: Container(
-            margin: EdgeInsets.all(20.0),
-            child: Center(
-              child: Text(
-                'Current Level: $currentLevel',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        itemCount: worldEndLevel - worldStartLevel + 1,
+        itemBuilder: (context, levelIndex) {
+          int levelNumber = levelIndex + 1;
+          bool isLevelUnlocked = levelNumber <= currentLevel;
+
+          return GestureDetector(
+            onTap: isLevelUnlocked
+                ? () {
+                    selectedLevel = levelIndex + 1;
+                    Navigator.of(context).pushReplacement(
+                      FadePageRoute(
+                        page: ChangeNotifierProvider(
+                          create: (_) => PuzzleModel(
+                            size: puzzle.getSizeAndMaxMoves(levelNumber)["size"] ?? 2,
+                            level: puzzle.getSizeAndMaxMoves(levelNumber)["maxMoves"] ?? 2,
+                          ),
+                          child: PuzzleScreen(),
+                        ),
+                      ),
+                    );
+                  }
+                : null,
+            child: Container(
+              decoration: BoxDecoration(
+                color: isLevelUnlocked ? Colors.orange : Colors.grey,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 4,
+                    offset: Offset(2, 2),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  '$levelNumber',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      ],
+          );
+        },
+      ),
     );
   }
 }
 
-class LevelBubble extends StatelessWidget {
-  final int level;
-  final bool isUnlocked;
+class RoadMapUtils {
+  // Function to find the highest unlocked world index and level index
+  static Map<String, int> findHighestUnlockedWorldAndLevel(PuzzleModel puzzle) {
+    int highestWorldIndex = -1;
+    int highestLevelIndex = -1;
 
-  LevelBubble({required this.level, required this.isUnlocked});
+    for (int worldIndex = 0; worldIndex < worlds.length; worldIndex++) {
+      final world = worlds[worldIndex];
+      bool isWorldUnlocked = worldIndex == 0 || puzzle.getMaxLevelForWorld(worldIndex) >= 70;
 
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        if (isUnlocked) {
-          Navigator.of(context).pushNamed('/puzzle', arguments: level);
+      if (isWorldUnlocked) {
+        int currentMaxLevel = puzzle.getMaxLevelForWorld(worldIndex + 1);
+        int worldStartLevel = (worldIndex) * 100 + 1;
+        int worldEndLevel = (worldIndex + 1) * 100;
+
+        // Update highest world index and highest level index
+        if (worldIndex > highestWorldIndex) {
+          highestWorldIndex = worldIndex;
+          highestLevelIndex = currentMaxLevel;
+        } else if (worldIndex == highestWorldIndex) {
+          // For the current highest world, find the highest level
+          highestLevelIndex = currentMaxLevel;
         }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isUnlocked ? Colors.green : Colors.grey,
-          border: Border.all(color: Colors.black, width: 2.0),
-        ),
-        child: Center(
-          child: Text(
-            level.toString(),
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
-    );
+      }
+    }
+
+    return {
+      'highestWorldIndex': highestWorldIndex,
+      'highestLevelIndex': highestLevelIndex,
+    };
   }
 }

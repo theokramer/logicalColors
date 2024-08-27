@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => PuzzleModel(size: 1, level: 1)),
+        ChangeNotifierProvider(create: (_) => PuzzleModel(size: 1, level: 68)),
       ],
       child: MaterialApp(
         title: 'Color Change Puzzle',
@@ -22,8 +22,8 @@ class MyApp extends StatelessWidget {
         ),
         initialRoute: '/puzzle',
         routes: {
-        '/puzzle': (context) => PuzzleScreen(currentLevel: 1,),
-        '/roadmap': (context) => RoadMapScreen(currentLevel: 1),
+        '/puzzle': (context) => PuzzleScreen(),
+        '/roadmap': (context) => RoadMapScreen(),
       },
       ),
     );

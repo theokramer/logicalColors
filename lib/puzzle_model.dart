@@ -2,8 +2,20 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'dart:math';
 
-int coins = 100;
+int coins = 5000;
+int currentWorld = 1;
+
+   List<World> worlds = [
+      World(id: 1, maxLevel: 1),
+      World(id: 2, maxLevel: 0),
+      World(id: 3, maxLevel: 0),
+      World(id: 4, maxLevel: 0),
+      World(id: 5, maxLevel: 0),
+
+      // Weitere Welten hier hinzufügen...
+    ];
 
 class PuzzleModel with ChangeNotifier {
   int size;
@@ -18,6 +30,7 @@ class PuzzleModel with ChangeNotifier {
   List<List<int>> clicks;
   List<List<int>> savedClicks;
   bool gotHint = false;
+   
 
   final Map<int, Color> _colorMapping = {
     1: Colors.red,
@@ -44,17 +57,18 @@ Map<String, int> getSizeAndMaxMoves(int level) {
   int m = 1; // MaxMoves
   int startLevel = 1; // Startlevel für die aktuelle Grid-Size
 
-  while (true) {
+  while (level < 70) {
     // Die Anzahl der Levels für die aktuelle Grid-Size steigt schneller an
-    int levelsForCurrentSize = ((s + 0.5) * (s + 0.5 )).floor();
+    int levelsForCurrentSize = ((s + 0.5) * (s + 0.5)).floor();
     int endLevel = startLevel + levelsForCurrentSize - 1;
 
     if (level <= endLevel) {
       // Berechne den maximalen Schwierigkeitsgrad innerhalb der aktuellen Grid-Size
-      // Innerhalb der Grid-Size, steigen die maxMoves schneller
-      m = ((level - startLevel) / s).ceil() + 1;
+      // Verwende einen logarithmischen Anstieg für die MaxMoves
+      m = (1 + (log(level - startLevel + 1) / log(1.8))).ceil();
+      
       // Überprüfe, ob m die maximale Anzahl der Schwierigkeitsgrade für diese Grid-Size erreicht
-      int maxMovesForCurrentSize = (s * 1.9).floor();
+      int maxMovesForCurrentSize = (s * 2.5).floor();
       m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
       break;
     }
@@ -64,10 +78,49 @@ Map<String, int> getSizeAndMaxMoves(int level) {
     startLevel = endLevel + 1;
   }
 
+  if(level >= 70){
+    s = 5;
+    m = 7;
+    int tempLvl = level - 1;
+    int set = 0;
+    while(tempLvl > 70) {  // MaxIterations-Abbruch
+      if (set == 1) {
+        set = 0;
+        if(s > m - 5 && s > 3) {
+          s = s - 1;
+        } else {
+          s = 5;
+          m += 1;
+        }
+      } else {
+        set += 1;
+      }
+      tempLvl -= 1;
+    }
+  } 
+
   return {"size": s, "maxMoves": m};
 }
 
 
+
+
+  void addWorld(int id, int maxLevel) {
+    worlds.add(World(id: id, maxLevel: maxLevel));
+    notifyListeners();
+  }
+
+    void updateWorldLevel(int worldId, int newLevel) {
+    var world = worlds.firstWhere((w) => w.id == worldId);
+    if (newLevel > world.maxLevel) {
+      world.maxLevel = newLevel;
+      notifyListeners();
+    }
+  }
+
+  int getMaxLevelForWorld(int worldId) {
+    return worlds.firstWhere((w) => w.id == worldId).maxLevel;
+  }
   
 
   PuzzleModel({required this.size, required int level})
@@ -211,7 +264,7 @@ Map<String, int> getSizeAndMaxMoves(int level) {
     for (int i = 0; i < _maxMoves; i++) {
       var x = _randomPositionNumber();
       var y = _randomPositionNumber();
-      clickTile(x, y, true);
+      clickTile(x, y, true, false);
       clicks[i] = [x, y];
       savedClicks[i] = [x, y];  // Deep copy the individual list
     }
@@ -224,9 +277,9 @@ Map<String, int> getSizeAndMaxMoves(int level) {
     }
   }
 
-  void clickTile(int x, int y, bool reversed) {
+  void clickTile(int x, int y, bool reversed, bool oneTile) {
     if (x < 0 || y < 0 || x >= size || y >= size) return;
-    if (_moves >= _maxMoves) return;
+    if (_moves >= _maxMoves && !oneTile) return;
 
     int currentColorNumber = _grid[x][y];
     int newColorNumber = currentColorNumber;
@@ -237,7 +290,7 @@ Map<String, int> getSizeAndMaxMoves(int level) {
     }
     bool found = false;
 
-    if (!reversed) {
+    if (!reversed && !oneTile) {
       
       _moves++;
       // Remove the clicked tile from the clicks list
@@ -256,25 +309,27 @@ Map<String, int> getSizeAndMaxMoves(int level) {
         gotHint = false;
       }
     }
-    _changeColor(x, y, newColorNumber, reversed);
+    _changeColor(x, y, newColorNumber, reversed, oneTile);
 
     clearHint(); // Clear hint after clicking
 
     notifyListeners();
   }
 
-  void _changeColor(int x, int y, int newColorNumber, bool reversed) {
+  void _changeColor(int x, int y, int newColorNumber, bool reversed, bool oneTile) {
     if (x < 0 || y < 0 || x >= size || y >= size) return;
 
     int currentColorNumber = _grid[x][y];
     if (currentColorNumber == newColorNumber) return;
 
     _grid[x][y] = newColorNumber;
-
-    _updateAdjacentTile(x - 1, y, reversed); // Up
+  if (!oneTile) {
+        _updateAdjacentTile(x - 1, y, reversed); // Up
     _updateAdjacentTile(x + 1, y, reversed); // Down
     _updateAdjacentTile(x, y - 1, reversed); // Left
     _updateAdjacentTile(x, y + 1, reversed); // Right
+  }
+
   }
 
   void _updateAdjacentTile(int x, int y, bool reversed) {
@@ -330,4 +385,15 @@ Map<String, int> getSizeAndMaxMoves(int level) {
     // This function can be used to notify that the puzzle is completed
     notifyListeners();
   }
+}
+
+
+class World {
+  final int id;
+  int maxLevel;
+
+  World({
+    required this.id,
+    required this.maxLevel,
+  });
 }

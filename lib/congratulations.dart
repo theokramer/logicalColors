@@ -108,7 +108,7 @@ class _CongratulationsScreenState extends State<CongratulationsScreen>
                         create: (_) => PuzzleModel(
                             size: _nextLevel < 5 ? 2 : 3,
                             level: _nextLevel < 5 ? _nextLevel : _nextLevel - 3),
-                        child: PuzzleScreen(currentLevel: widget.currentLevel,),
+                        child: PuzzleScreen(),
                       ),
                     ),
                   );

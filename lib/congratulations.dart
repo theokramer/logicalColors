@@ -71,7 +71,7 @@ class _CongratulationsScreenState extends State<CongratulationsScreen>
                 padding: const EdgeInsets.only(top: 80.0),
                 child: Center(
                   child: Text(
-                    'You completed level ${currentLevel - 1}',
+                    'You completed level ${widget.currentLevel - 1}',
                     style: TextStyle(
                       fontSize: 42,
                       fontWeight: FontWeight.bold,
@@ -108,7 +108,7 @@ class _CongratulationsScreenState extends State<CongratulationsScreen>
                         create: (_) => PuzzleModel(
                             size: _nextLevel < 5 ? 2 : 3,
                             level: _nextLevel < 5 ? _nextLevel : _nextLevel - 3),
-                        child: PuzzleScreen(),
+                        child: PuzzleScreen(currentLevel: widget.currentLevel,),
                       ),
                     ),
                   );

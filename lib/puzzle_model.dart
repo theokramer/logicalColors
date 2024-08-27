@@ -6,7 +6,7 @@ import 'package:flutter/widgets.dart';
 int coins = 100;
 
 class PuzzleModel with ChangeNotifier {
-  final int size;
+  int size;
   List<List<int>> _grid;
   List<List<int>> _savedGrid;
   List<List<int>> _lastCorrectGrid;
@@ -39,6 +39,36 @@ class PuzzleModel with ChangeNotifier {
 
   final Random _random = Random();
   int _targetColorNumber;
+Map<String, int> getSizeAndMaxMoves(int level) {
+  int s = 1; // Grid-Size
+  int m = 1; // MaxMoves
+  int startLevel = 1; // Startlevel für die aktuelle Grid-Size
+
+  while (true) {
+    // Die Anzahl der Levels für die aktuelle Grid-Size steigt schneller an
+    int levelsForCurrentSize = ((s + 0.5) * (s + 0.5 )).floor();
+    int endLevel = startLevel + levelsForCurrentSize - 1;
+
+    if (level <= endLevel) {
+      // Berechne den maximalen Schwierigkeitsgrad innerhalb der aktuellen Grid-Size
+      // Innerhalb der Grid-Size, steigen die maxMoves schneller
+      m = ((level - startLevel) / s).ceil() + 1;
+      // Überprüfe, ob m die maximale Anzahl der Schwierigkeitsgrade für diese Grid-Size erreicht
+      int maxMovesForCurrentSize = (s * 1.9).floor();
+      m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
+      break;
+    }
+
+    // Gehe zur nächsten Grid-Size
+    s++;
+    startLevel = endLevel + 1;
+  }
+
+  return {"size": s, "maxMoves": m};
+}
+
+
+  
 
   PuzzleModel({required this.size, required int level})
       : _maxMoves = level, // Increase moves as levels increase
@@ -77,6 +107,21 @@ class PuzzleModel with ChangeNotifier {
     notifyListeners();
   }
 
+  void refreshGrid(int newLevel, int newSize) {
+        _maxMoves = newLevel; // Increase moves as levels increase
+        _moves = 0;
+        _elapsedTime = 0;
+        _grid = List.generate(newSize, (i) => List.generate(newSize, (j) => 1));
+        _savedGrid = List.generate(newSize, (i) => List.generate(newSize, (j) => 1));
+        _lastCorrectGrid = List.generate(newSize, (i) => List.generate(newSize, (j) => 1));
+        clicks = List.generate(newLevel, (_) => []);
+        savedClicks = List.generate(newLevel, (_) => []);
+        _targetColorNumber = 1;
+        moveWhereError = -1;
+        _initializeGrid();
+
+  }
+
   int moveWhereError = -1;
 
   int? _hintX;
@@ -107,14 +152,17 @@ class PuzzleModel with ChangeNotifier {
       resetOccurred = true;
     } else {
       if (moves < maxMoves - 1) {
+        
         if(!gotHint) {
           if(coins >= 50) {
             gotHint = true;
           subtractCoins(50);
+          
           var hint = clicks[0];
         setHint(hint[0], hint[1]); // Set hint coordinates
         } 
         } else {
+          
                     var hint = clicks[0];
         setHint(hint[0], hint[1]); // Set hint coordinates
         }
@@ -144,6 +192,9 @@ class PuzzleModel with ChangeNotifier {
     _moves = 0;
     notifyListeners();
   }
+
+  
+
 
   void _initializeGrid() {
     _targetColorNumber = _random.nextInt(3) + 1; // Target color number to achieve

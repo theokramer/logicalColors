@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'puzzle_model.dart';
@@ -5,6 +7,8 @@ import 'roadmap_screen.dart';
 import 'shop_screen.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/services.dart';
+
+
 
 class PuzzleScreen extends StatefulWidget {
   int currentLevel;
@@ -19,12 +23,14 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
   late ConfettiController _confettiController;
   late AnimationController _animationController;
   late Animation<double> _animation;
-  final int _coinsEarned = 30; // Coins earned after level completion
+  final int _coinsEarned = 10;
   bool showBanner = false;
+  bool showCoinAnimation = false;
+  bool animationStarted = false;
   double pi = 3.1415926535897932;
 
   @override
-  void initState() {
+ void initState() {
     super.initState();
     _confettiController = ConfettiController(duration: const Duration(milliseconds: 500));
     _animationController = AnimationController(
@@ -196,7 +202,6 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                                   setState(() {
                                     showBanner = true;
                                   });
-                                  
                                 });
                               });
                             });
@@ -205,7 +210,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                           }
                         },
                         child: AnimatedContainer(
-                          duration: Duration(milliseconds: 300),
+                          duration: Duration(milliseconds: 200),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [tileColor.withOpacity(0.8), tileColor],
@@ -247,84 +252,107 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                   },
                 ),
               ),
-                      Padding(
-          padding: const EdgeInsets.only(bottom: 50, left: 50),
-          child: Row(
-            children: [
-              Image.asset(
-                'images/coins.png',
-                width: 24,
-                height: 24,
-              ),
-              SizedBox(width: 4),
-              Text(
-                '$coins',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-            ],
-          ),
-          if (showBanner)
-            Container(
-              color: Colors.black.withOpacity(0.6), // Dark overlay with opacity
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 50, left: 50),
+                child: Row(
                   children: [
-                    Container(
-                      color: Colors.deepPurple,
-                      padding: EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Level Complete!',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Quicksand',
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          _buildCoinDisplay(_coinsEarned),
-                          SizedBox(height: 20),
-                          Container(
-                            height: 50,
-                            child: GestureDetector(
-                              onTap: () {
-                                puzzle.addCoins(_coinsEarned);
-                                  widget.currentLevel += 1;
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => ChangeNotifierProvider(
-                                      create: (_) => PuzzleModel(
-                                          size: puzzle.getSizeAndMaxMoves(widget.currentLevel)["size"] ?? 2,
-                                          level: puzzle.getSizeAndMaxMoves(widget.currentLevel)["maxMoves"] ?? 2,
-                                          ),
-
-                                      child: PuzzleScreen(currentLevel: widget.currentLevel),
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: AnimatedText(),
-                            ),
-                          ),
-                          
-                        ],
+                    Image.asset(
+                      'images/coins.png',
+                      width: 24,
+                      height: 24,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      '$coins',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    
                   ],
                 ),
               ),
+            ],
+          ),
+          
+          if (showBanner && !animationStarted)
+  Positioned.fill(
+    child: Stack(
+      children: [
+        Container(
+          color: Colors.black.withOpacity(0.6),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  color: Colors.deepPurple,
+                  padding: EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Level Complete!',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Quicksand',
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      animationStarted ? Container(height: 200,) :
+                      _buildCoinDisplay(_coinsEarned),
+                      SizedBox(height: 20),
+                      GestureDetector(
+  onTap: () {
+    if (animationStarted) {
+
+    } else {
+      setState(() {
+      animationStarted = true;
+      showCoinAnimation = true;
+      widget.currentLevel += 1;
+    });
+
+    // Delay navigation to ensure the coin animation completes
+    Future.delayed(Duration(milliseconds: 800), () {
+      puzzle.addCoins(_coinsEarned);
+      Navigator.of(context).pushReplacement(
+        FadePageRoute(
+          page: ChangeNotifierProvider(
+            create: (_) => PuzzleModel(
+              size: puzzle.getSizeAndMaxMoves(widget.currentLevel)["size"] ?? 2,
+              level: puzzle.getSizeAndMaxMoves(widget.currentLevel)["maxMoves"] ?? 2,
             ),
+            child: PuzzleScreen(currentLevel: widget.currentLevel),
+          ),
+        ),
+      );
+    });
+    }
+    
+  },
+  child: animationStarted ? Text("") : AnimatedText(),
+)
+
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+if (animationStarted && showCoinAnimation)
+  CoinAnimation(
+    start: Offset(MediaQuery.of(context).size.width / 2, MediaQuery.of(context).size.height / 2),
+    end: Offset(50, MediaQuery.of(context).size.height - 75),
+    numberOfCoins: _coinsEarned,
+  ),
+
           ConfettiWidget(
             confettiController: _confettiController,
             blastDirection: pi / 5,
@@ -337,57 +365,120 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          if (coins < 50) {
-            _showSnackbar(context, "Not enough coins to use hint.");
-          } else {
-            bool resetOccurred = puzzle.getHint();
-            if (resetOccurred) {
-              _showSnackbar(context, "You made a mistake and have been reset to the last correct state.");
-            } else {
-              Future.delayed(Duration(milliseconds: 500), () {
-                puzzle.clearHint();
-              });
-            }
+      floatingActionButton: PopupMenuButton<String>(
+        onSelected: (value) {
+          switch (value) {
+            case 'Hint':
+              if (coins < 50) {
+                _showSnackbar(context, "Not enough coins to use $value.");
+                return;
+              }
+              
+              bool hintUsed = puzzle.getHint();
+              if (hintUsed) {
+                _showSnackbar(context, "You made a mistake and have been reset to the last correct state.");
+              } else {
+                Future.delayed(Duration(milliseconds: 500), () {
+                  puzzle.clearHint();
+                });
+              }
+              break;
+            case 'Reset Level':
+              if (coins >= 10) {
+                coins -= 10;
+                puzzle.refreshGrid(puzzle.maxMoves, puzzle.size);
+              } else {
+                _showSnackbar(context, "Not enough coins to use $value.");
+                return;
+              }
+              break;
+            case 'Remove one Tile':
+              // Implement the functionality to remove one tile here
+              _showSnackbar(context, "One tile removed.");
+              break;
+            case 'Swap':
+              // Implement the functionality to swap tiles here
+              _showSnackbar(context, "Tiles swapped.");
+              break;
           }
         },
-        backgroundColor: Colors.orangeAccent,
-        child: Icon(Icons.lightbulb_outline, color: Colors.white),
-        tooltip: 'Get Hint',
+        itemBuilder: (context) => [
+          _buildPopupMenuItem('Hint', 'Hint - 50 coins', Icons.help_outline, Colors.orangeAccent),
+          _buildPopupMenuItem('Reset Level', 'Get New Level - 10 coins', Icons.refresh, Colors.orangeAccent),
+          _buildPopupMenuItem('Remove one Tile', 'Remove one Tile - 30 coins', Icons.remove_circle_outline, Colors.orangeAccent),
+          _buildPopupMenuItem('Swap', 'Swap - 30 coins', Icons.swap_horiz, Colors.orangeAccent),
+        ],
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: Colors.orangeAccent,
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.all(Radius.circular(20)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 8,
+                offset: Offset(2, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Icon(
+              Icons.more_horiz,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  PopupMenuEntry<String> _buildPopupMenuItem(String value, String text, IconData icon, Color color) {
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, color: color),
+          SizedBox(width: 8),
+          Text(text),
+        ],
       ),
     );
   }
 
   Widget _buildCoinDisplay(int coinsEarned) {
-    return Column(
-      children: [
-        Image.asset(
-          'images/coins.png',
-          width: 130,
-          height: 130,
-        ),
-        SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'images/coin.png',
-              width: 35,
-              height: 35,
-            ),
-            SizedBox(width: 10),
-            Text(
-              '$coinsEarned',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
+    return Container(
+      height: 200,
+      child: Column(
+        children: [
+          Image.asset(
+            'images/coins.png',
+            width: 130,
+            height: 130,
+          ),
+          SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'images/coin.png',
+                width: 35,
+                height: 35,
               ),
-            ),
-          ],
-        ),
-      ],
+              SizedBox(width: 10),
+              Text(
+                '$coinsEarned',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -468,7 +559,7 @@ class _AnimatedTextState extends State<AnimatedText> with SingleTickerProviderSt
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 700),
       vsync: this,
     )..repeat(reverse: true);
 
@@ -489,7 +580,7 @@ class _AnimatedTextState extends State<AnimatedText> with SingleTickerProviderSt
       animation: _controller,
       builder: (context, child) {
         return Text(
-          'Tap to claim!',
+          'Tap to claim',
           style: TextStyle(
             color: _colorAnimation.value,
             fontSize: _sizeAnimation.value,
@@ -498,6 +589,107 @@ class _AnimatedTextState extends State<AnimatedText> with SingleTickerProviderSt
           ),
         );
       },
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+}
+
+
+class FadePageRoute<T> extends PageRouteBuilder<T> {
+  final Widget page;
+
+  FadePageRoute({required this.page})
+      : super(
+          pageBuilder: (context, animation, secondaryAnimation) => page,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = 0.0;
+            const end = 1.0;
+            const curve = Curves.easeInOut;
+            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            var opacityAnimation = animation.drive(tween);
+            return FadeTransition(opacity: opacityAnimation, child: child);
+          },
+          transitionDuration: Duration(milliseconds: 500), // Dauer der Animation
+        );
+}
+
+
+
+class CoinAnimation extends StatefulWidget {
+  final Offset start;
+  final Offset end;
+  final int numberOfCoins;
+
+  CoinAnimation({
+    required this.start,
+    required this.end,
+    required this.numberOfCoins,
+  });
+
+  @override
+  _CoinAnimationState createState() => _CoinAnimationState();
+}
+
+class _CoinAnimationState extends State<CoinAnimation> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _positionAnimation;
+  late List<Widget> _coins;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: Duration(milliseconds: 1500), // Duration for the entire animation
+      vsync: this,
+    )..forward();
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.2).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+    );
+
+    _positionAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+
+    _coins = List.generate(
+      widget.numberOfCoins,
+      (index) => AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final double scale = _scaleAnimation.value;
+          final double progress = _positionAnimation.value;
+          final double dx = widget.start.dx + progress * (widget.end.dx - widget.start.dx);
+          final double dy = widget.start.dy + progress * (widget.end.dy - widget.start.dy);
+
+          return Positioned(
+            left: dx - (12 * scale), // Center the coin correctly based on scale
+            top: dy - (12 * scale), // Center the coin correctly based on scale
+            child: Transform.scale(
+              scale: scale,
+              child: Image.asset(
+                'images/coins.png',
+                width: 24,
+                height: 24,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Stack(
+        children: _coins,
+      ),
     );
   }
 

@@ -12,8 +12,8 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/services.dart';
 
 int selectedLevel = 1;
-int aHints = 3;
-int aRems = 5;
+int aHints = 5;
+int aRems = 2;
 
 class PuzzleScreen extends StatefulWidget {
 
@@ -48,6 +48,44 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
         curve: Curves.easeInOut,
       ),
     );
+  }
+
+    void handleBuyHint() {
+    if (coins >= 200) {
+      setState(() {
+        coins -= 200;
+        aHints += 5;
+        
+      });
+    } else {
+      // Handle not enough coins
+    }
+  }
+
+      void handleBuyRem() {
+    if (coins >= 200) {
+      setState(() {
+        coins -= 200;
+        aRems += 5;
+        
+      });
+    } else {
+      // Handle not enough coins
+    }
+  }
+
+  void handleWatchAdForHints() {
+    // Implement your ad logic here
+    setState(() {
+      aHints += 5;
+    });
+  }
+
+    void handleWatchAdForRems() {
+    // Implement your ad logic here
+    setState(() {
+      aRems += 5;
+    });
   }
 
   @override
@@ -319,105 +357,127 @@ if (isRemoveTileMode) {
             ],
           ),
 
-          Positioned(
-  bottom: 32,
-  left: 16,
-  right: 16,
-  child: Row(
-    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-    children: [
-      CustomActionButton(
-        icon: Icons.help_outline,
-        onPressed: () {
-          if(aHints > 0) {
-            bool hintUsed = puzzle.getHint();
-              if (hintUsed) {
-                //_showSnackbar(context, "You made a mistake and have been reset to the last correct state.");
-              } else {
-                Future.delayed(Duration(milliseconds: 500), () {
-                  puzzle.clearHint();
-                });
-              }
-          } else {
-            if (coins < 50) {
-                //_showSnackbar(context, "Not enough coins to use Hint.");
-                return;
-              } else {
+          Column(
+  mainAxisAlignment: MainAxisAlignment.end,
+  children: [
+    Padding(
+      padding: const EdgeInsets.only(bottom: 32.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Stack(
+            children: [
+              CustomActionButton(
+                icon: Icons.lightbulb,
+                onPressed: () {
+                  if (aHints > 0) {
                 bool hintUsed = puzzle.getHint();
-              if (hintUsed) {
-                //_showSnackbar(context, "You made a mistake and have been reset to the last correct state.");
+                if (hintUsed) {
+                  // Your hint used logic here
+                } else {
+                  Future.delayed(Duration(milliseconds: 500), () {
+                    puzzle.clearHint();
+                  });
+                }
               } else {
-                Future.delayed(Duration(milliseconds: 500), () {
-                  puzzle.clearHint();
-                });
-              }
-              }
-          }
-            
-              
-              
-        },
-        count: aHints, // Number of hints available
-        gradientColors: [Colors.green, Colors.greenAccent],
-        iconColor: Colors.white,
-        badgeColor: const Color.fromARGB(255, 40, 27, 27),
-      ),
-      
-      CustomActionButton(
-        icon: Icons.remove_circle_outline,
-        onPressed: () {
-          setState(() {
-            if (aRems > 0) {
-              aRems -= 1;
-
-            } else {
-              coins -= 30;
-            }
-                 isRemoveTileMode = true;     
+                showGadgetPopup(
+                    context,
+                    'Hinweise',
+                    handleBuyHint,
+                    handleWatchAdForHints,
+                    [Colors.amber, Colors.orange]
+                  );
+                /*if (coins < 50) {
+                  // Not enough coins logic here
+                  return;
+                } else {
+                  bool hintUsed = puzzle.getHint();
+                  if (hintUsed) {
+                    // Your hint used logic here
+                  } else {
+                    Future.delayed(Duration(milliseconds: 500), () {
+                      puzzle.clearHint();
                     });
-        },
-        count: aRems, // Number of removes available
-        gradientColors: [Color.fromARGB(255, 255, 68, 0), Colors.orangeAccent],
-        iconColor: Colors.white,
-        badgeColor: const Color.fromARGB(255, 40, 27, 27),
+                  }
+                }*/
+              }
+                },
+                count: aHints, // Number of hints available
+                gradientColors: [Colors.amber, Colors.orange],
+                iconColor: Colors.white,
+              ),
+                
+            ],
+          ),
+          Stack(
+            children: [
+              CustomActionButton(
+                icon: Icons.colorize,
+                onPressed: () {
+                  setState(() {
+                if (aRems > 0) {
+                  aRems -= 1;
+                } else {
+                  //coins -= 30;
+                  showGadgetPopup(
+                    context,
+                    'Colorizer',
+                    handleBuyRem,
+                    handleWatchAdForRems,
+                    [Color.fromARGB(255, 176, 2, 124), Color.fromARGB(255, 255, 0, 81)]
+                  );
+                }
+                //isRemoveTileMode = true;
+              });
+                },
+                count: aRems, // Number of removes available
+                gradientColors: [Color.fromARGB(255, 176, 2, 124), Color.fromARGB(255, 255, 0, 81)],
+                iconColor: Colors.white,
+              ),
+            ],
+          ),
+          Stack(
+            children: [
+              CustomActionButton(
+                icon: Icons.undo,
+                onPressed: () {
+                  puzzle.undoMove();
+                },
+                count: -1, // Infinite undo available
+                gradientColors: [Color.fromARGB(255, 255, 68, 0), Colors.orangeAccent],
+                
+                iconColor: Colors.white,
+              ),
+            ],
+          ),
+          Stack(
+            children: [
+              CustomActionButton(
+                icon: Icons.refresh,
+                onPressed: () {
+                  puzzle.grid = puzzle.savedGrid.map((row) => List<int>.from(row)).toList();
+                  puzzle.resetMoves();
+                  puzzle.moveWhereError = -1;
+                  puzzle.clicks = puzzle.savedClicks.map((click) => List<int>.from(click)).toList();
+                  puzzle.undoStack.clear();
+                },
+                count: -1, // Infinite refresh available
+                gradientColors: [Color.fromARGB(255, 63, 3, 165), Colors.deepPurpleAccent],
+                iconColor: Colors.white,
+              ),
+            ],
+          ),
+        ],
       ),
-      CustomActionButton(
-        icon: Icons.undo,
-        onPressed: () {
-          // Your logic here
-
-              puzzle.undoMove();
-              
-            
-         
-        },
-        count: -1, // Number of swaps available
-        gradientColors: [Color.fromARGB(255, 176, 2, 124), Color.fromARGB(255, 255, 0, 81)],
-        iconColor: Colors.white,
-        badgeColor: const Color.fromARGB(255, 40, 27, 27),
-      ),
-            CustomActionButton(
-        icon: Icons.refresh,
-        onPressed: () {
-          puzzle.grid = puzzle.savedGrid.map((row) => List<int>.from(row)).toList();
-                        puzzle.resetMoves();
-                        puzzle.moveWhereError = -1;
-                        puzzle.clicks = puzzle.savedClicks.map((click) => List<int>.from(click)).toList();
-                        puzzle.undoStack.clear();
-        },
-        count: -1, // Number of refreshes available
-        gradientColors: [Color.fromARGB(255, 63, 3, 165), Colors.deepPurpleAccent],
-        iconColor: Colors.white,
-        badgeColor: const Color.fromARGB(255, 40, 27, 27),
-      ),
-    ],
-  ),
+    ),
+  ],
 ),
 
 
 
+
           
-          if (showBanner && !animationStarted)
+if (showBanner && !animationStarted)
   Positioned.fill(
     child: Stack(
       children: [
@@ -527,6 +587,114 @@ if (animationStarted && showCoinAnimation)
       ),
     );
   }
+
+
+void showGadgetPopup(BuildContext context, String gadgetName, Function onBuyPressed, Function onWatchAdPressed, List<Color> gradientColors) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.blueGrey[400],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Container(
+          
+          padding: EdgeInsets.all(25),
+          height: 400, // Höhe angepasst
+          width: MediaQuery.of(context).size.width * 0.75, // Breite angepasst
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Mehr $gadgetName erhalten',
+                style: TextStyle(
+                  color: Colors.white, // Farbe angepasst
+                  fontFamily: 'Quicksand',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22, // Größe angepasst
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+
+                  Icon(
+                    gadgetName == "Colorizer" ? Icons.colorize : Icons.lightbulb,
+                    size: 60, // Größe des Icons
+                    color: gradientColors.first, // Farbe des Icons
+                  ),
+                  SizedBox(width: 25,),
+              Text(
+                'x6', // Anzahl der Aktionen
+                style: TextStyle(
+                  color: gradientColors.first,
+                  fontFamily: 'Quicksand',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                ),
+              ),
+
+                ],
+              ),
+              
+              SizedBox(height: 20),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      onWatchAdPressed();
+                      Navigator.of(context).pop();
+                    },
+                    icon: Icon(Icons.play_circle_fill),
+                    label: Text(
+                      'Werbung',
+                      style: TextStyle(
+                        fontFamily: 'Quicksand',
+                        fontSize: 16,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      backgroundColor: gradientColors.first, // Farbe angepasst
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 15,),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      onBuyPressed();
+                      Navigator.of(context).pop();
+                    },
+                    icon: Icon(Icons.monetization_on),
+                    label: Text(
+                      '200 Coins',
+                      style: TextStyle(
+                        fontFamily: 'Quicksand',
+                        fontSize: 16,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      backgroundColor: gradientColors.first, // Farbe angepasst
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+
+
 
   PopupMenuEntry<String> _buildPopupMenuItem(String value, String text, IconData icon, Color color) {
     return PopupMenuItem<String>(

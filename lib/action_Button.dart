@@ -6,7 +6,6 @@ class CustomActionButton extends StatelessWidget {
   final int count;
   final List<Color> gradientColors;
   final Color iconColor;
-  final Color badgeColor;
 
   const CustomActionButton({
     required this.icon,
@@ -14,68 +13,100 @@ class CustomActionButton extends StatelessWidget {
     required this.count,
     required this.gradientColors,
     required this.iconColor,
-    required this.badgeColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onPressed,
-      child: Stack(
-        alignment: Alignment.center,
+      child: Column(
         children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: gradientColors,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10,
-                  offset: Offset(4, 4),
-                ),
-              ],
-            ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 30,
-            ),
-          ),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Container(
-              padding: EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: badgeColor,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 6,
-                    offset: Offset(2, 2),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 80,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: gradientColors,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
-              ),
-              child: Text(
-                count == -1 ? '\u221e' : count.toString(),
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 4,
+                      offset: Offset(2, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      icon,
+                      color: iconColor,
+                      size: 26,
+                    ),
+                    (count == -1 || count == 0) ? Text("") : SizedBox(width: 10), // Space between icon and text
+                    Text(
+                      (count == -1 || count == 0) ? '' : count.toString(),
+                      //count == -1 ? '\u221e' : count.toString(),
+                      style: TextStyle(
+                        color: iconColor,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
+              if (count == 0)
+                SizedBox(
+                  width: 95, height: 80,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Stack(
+                            children: [
+                              Positioned(
+                                child: Container(
+                                  width: 25, height: 25,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.green, // Badge color
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.green,
+                                        blurRadius: 4,
+                                        offset: Offset(2, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.add,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                )
+            ],
           ),
         ],
       ),
     );
   }
 }
+

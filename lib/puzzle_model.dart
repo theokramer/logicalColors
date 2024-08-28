@@ -73,7 +73,6 @@ class PuzzleModel with ChangeNotifier {
   List<List<int>> savedClicks;
   
   bool gotHint = false;
-  int aHints = 0; // Assuming aHints is used somewhere else
 
   final Map<int, Color> _colorMapping;
   final Map<int, int> _numberMapping = {1: 2, 2: 3, 3: 1};
@@ -246,6 +245,7 @@ class PuzzleModel with ChangeNotifier {
     moveWhereError = -1;
     _initializeGrid();
   }
+  
 
   void addCoins(int amount) {
     coins += amount;
@@ -313,7 +313,7 @@ class PuzzleModel with ChangeNotifier {
       resetOccurred = true;
       undoStack.clear();
     } else {
-      if (moves < maxMoves - 1) {
+      if (moves < maxMoves) {
         
         if(!gotHint) {
           if(aHints > 0) {

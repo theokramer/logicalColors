@@ -69,24 +69,32 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
         children: [
           Column(
             children: [
-              SizedBox(height: 60),
+              SizedBox(height: 50),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Positioned(
-          top: 16,
-          left: 16,
-          child: CustomInfoButton(
-            value: '$coins',
-            targetColor: -1, // No target color needed here
-            movesLeft: -1, // No moves left needed here
-            iconPath: 'images/coins.png', // Path to your coin icon
-            backgroundColor: Colors.blueGrey[400]!,
-            textColor: Colors.white,
-          ),
-        ),
+                    Container(
+                      height: 65,
+                      width: 150,
+                      child: Stack(
+                        children: [
+                          Positioned(
+                                    top: 16,
+                                    left: 16,
+                                    child: CustomInfoButton(
+                                      value: '$coins',
+                                      targetColor: -1, // No target color needed here
+                                      movesLeft: -1, // No moves left needed here
+                                      iconPath: 'images/coins.png', // Path to your coin icon
+                                      backgroundColor: Colors.blueGrey[400]!,
+                                      textColor: Colors.white,
+                                    ),
+                                  ),
+                        ],
+                      ),
+                    ),
                     PopupMenuButton<String>(
                       icon: Icon(Icons.settings, color: Colors.grey),
                       onSelected: (String value) {
@@ -109,20 +117,22 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                             );
                             break;
                           case 'refresh':
-                            if (coins >= 10) {
-                          coins -= 10;
+                            if (coins >= 10 || worlds[currentWorld-1].maxLevel > selectedLevel) {
+                          if(worlds[currentWorld-1].maxLevel <= selectedLevel) {
+                            coins -= 10;
+                          }
                           puzzle.refreshGrid(puzzle.maxMoves, puzzle.size);
                         } else {
-                          _showSnackbar(context, "Not enough coins to use Refresh.");
+                          //_showSnackbar(context, "Not enough coins to use Refresh.");
                           return;
                         }
                             break;
                           case 'next':
-                            if (coins >= 100){
-                              coins -= 100;
+                            if (coins >= 100 || worlds[currentWorld-1].maxLevel > selectedLevel){
+                              if(worlds[currentWorld-1].maxLevel <= selectedLevel) {
+                                coins -= 100;
+                              }
                         //Watch Ad, when following level isn't unlocked
-                        print(currentWorld);
-                        print(selectedLevel);
                                 
                                 if (selectedLevel >= 69 && worlds[currentWorld+1].maxLevel == 0) {
                                   puzzle.updateWorldLevel(currentWorld + 1, 1);
@@ -155,8 +165,8 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                         _buildPopupMenuItem('home', 'Home', Icons.home, Colors.orangeAccent),
                         _buildPopupMenuItem('shop', 'Shop', Icons.shopping_cart, Colors.orangeAccent),
-                        _buildPopupMenuItem('refresh', 'New Level - 10 Coins', Icons.refresh, Colors.orangeAccent),
-                        _buildPopupMenuItem('next', 'Skip Level - 100 Coins', Icons.skip_next, Colors.orangeAccent),
+                        _buildPopupMenuItem('refresh', 'New Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 10 Coins' : ""}', Icons.refresh, Colors.orangeAccent),
+                        _buildPopupMenuItem('next', 'Skip Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 100 Coins' : ""}', Icons.skip_next, Colors.orangeAccent),
                       ],
                     ),
                   ],
@@ -172,36 +182,42 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                   fontFamily: 'Quicksand',
                 ),
               ),
-              SizedBox(height: 20),
-              Positioned(
-          top: 64, // Adjust depending on level position
-          left: 0,
-          right: 0,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              CustomInfoButton(
-                value: '', // No value needed here
-                targetColor: puzzle.targetColorNumber, // Target color
-                movesLeft: -1, // No moves left needed here
-                iconPath: '', // No icon needed
-                backgroundColor: Colors.grey[100]!,
-                textColor: Colors.black,
-                isLarge: true, // Increase size
+              Container(
+                height: 100,
+                child: Stack(
+                  children: [
+                    Positioned(
+                              top: 40, // Adjust depending on level position
+                              left: 0,
+                              right: 0,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                    CustomInfoButton(
+                      value: '', // No value needed here
+                      targetColor: puzzle.targetColorNumber, // Target color
+                      movesLeft: -1, // No moves left needed here
+                      iconPath: '', // No icon needed
+                      backgroundColor: Colors.grey[100]!,
+                      textColor: Colors.black,
+                      isLarge: true, // Increase size
+                    ),
+                    
+                    CustomInfoButton(
+                      value: '', // No value needed here
+                      targetColor: -1, // No target color needed here
+                      movesLeft: (puzzle.maxMoves - puzzle.moves), // Number of moves left
+                      iconPath: '', // No icon needed
+                      backgroundColor: Colors.grey[100]!,
+                      textColor: Colors.black,
+                      isLarge: true, // Increase size
+                    ),
+                                ],
+                              ),
+                            ),
+                  ],
+                ),
               ),
-              
-              CustomInfoButton(
-                value: '', // No value needed here
-                targetColor: -1, // No target color needed here
-                movesLeft: (puzzle.maxMoves - puzzle.moves), // Number of moves left
-                iconPath: '', // No icon needed
-                backgroundColor: Colors.grey[100]!,
-                textColor: Colors.black,
-                isLarge: true, // Increase size
-              ),
-            ],
-          ),
-        ),
               SizedBox(height: 30),
               Expanded(
                 child: GridView.builder(
@@ -228,7 +244,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
 if (isRemoveTileMode) {
                               // Remove the tile
                               puzzle.clickTile(x, y, false, true);
-                              _showSnackbar(context, "Tile removed.");
+                              //_showSnackbar(context, "Tile removed.");
                               setState(() {
                                 isRemoveTileMode = false; // Exit remove mode after removing a tile
                               });
@@ -317,7 +333,7 @@ if (isRemoveTileMode) {
           if(aHints > 0) {
             bool hintUsed = puzzle.getHint();
               if (hintUsed) {
-                _showSnackbar(context, "You made a mistake and have been reset to the last correct state.");
+                //_showSnackbar(context, "You made a mistake and have been reset to the last correct state.");
               } else {
                 Future.delayed(Duration(milliseconds: 500), () {
                   puzzle.clearHint();
@@ -325,12 +341,12 @@ if (isRemoveTileMode) {
               }
           } else {
             if (coins < 50) {
-                _showSnackbar(context, "Not enough coins to use Hint.");
+                //_showSnackbar(context, "Not enough coins to use Hint.");
                 return;
               } else {
                 bool hintUsed = puzzle.getHint();
               if (hintUsed) {
-                _showSnackbar(context, "You made a mistake and have been reset to the last correct state.");
+                //_showSnackbar(context, "You made a mistake and have been reset to the last correct state.");
               } else {
                 Future.delayed(Duration(milliseconds: 500), () {
                   puzzle.clearHint();

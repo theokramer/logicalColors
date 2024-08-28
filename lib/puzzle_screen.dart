@@ -26,7 +26,6 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
   late ConfettiController _confettiController;
   late AnimationController _animationController;
   late Animation<double> _animation;
-  final int _coinsEarned = 10;
   bool showBanner = false;
   bool showCoinAnimation = false;
   bool animationStarted = false;
@@ -444,7 +443,7 @@ if (isRemoveTileMode) {
                       ),
                       SizedBox(height: 20),
                       animationStarted ? Container(height: 200,) :
-                      _buildCoinDisplay(_coinsEarned),
+                      _buildCoinDisplay(puzzle.coinsEarned),
                       SizedBox(height: 20),
                       GestureDetector(
   onTap: () {
@@ -469,7 +468,7 @@ if (isRemoveTileMode) {
 
     // Delay navigation to ensure the coin animation completes
     Future.delayed(Duration(milliseconds: 800), () {
-      puzzle.addCoins(_coinsEarned);
+      puzzle.addCoins(puzzle.coinsEarned);
       denyClick = false;
       
       print(puzzle.getSizeAndMaxMoves(selectedLevel));
@@ -510,7 +509,7 @@ if (animationStarted && showCoinAnimation)
   CoinAnimation(
     start: Offset(MediaQuery.of(context).size.width / 2, MediaQuery.of(context).size.height / 2),
     end: Offset(50, 75),
-    numberOfCoins: _coinsEarned,
+    numberOfCoins: puzzle.coinsEarned,
   ),
 
           ConfettiWidget(

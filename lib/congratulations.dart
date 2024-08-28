@@ -107,8 +107,12 @@ class _CongratulationsScreenState extends State<CongratulationsScreen>
                       builder: (context) => ChangeNotifierProvider(
                         create: (_) => PuzzleModel(
                             size: _nextLevel < 5 ? 2 : 3,
-                            level: _nextLevel < 5 ? _nextLevel : _nextLevel - 3),
-                        child: PuzzleScreen(currentLevel: widget.currentLevel,),
+                            level: _nextLevel < 5 ? _nextLevel : _nextLevel - 3, colorMapping: {
+    1: worlds[currentWorld - 1].colors[0],
+    2: worlds[currentWorld - 1].colors[1] ,
+    3: worlds[currentWorld - 1].colors[2],
+  }),
+                        child: PuzzleScreen(),
                       ),
                     ),
                   );

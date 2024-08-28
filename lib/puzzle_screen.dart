@@ -1,5 +1,8 @@
 import 'dart:ffi';
+import 'dart:math';
 
+import 'package:color_puzzle/action_Button.dart';
+import 'package:color_puzzle/custom_info_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'puzzle_model.dart';
@@ -8,12 +11,12 @@ import 'shop_screen.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/services.dart';
 
-
+int selectedLevel = 1;
+int aHints = 3;
+int aRems = 5;
 
 class PuzzleScreen extends StatefulWidget {
-  int currentLevel;
 
-  PuzzleScreen({required this.currentLevel});
 
   @override
   State<PuzzleScreen> createState() => _PuzzleScreenState();
@@ -27,7 +30,10 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
   bool showBanner = false;
   bool showCoinAnimation = false;
   bool animationStarted = false;
+  bool denyClick = false;
   double pi = 3.1415926535897932;
+  bool isRemoveTileMode = false;
+  final Random _random = Random();
 
   @override
  void initState() {
@@ -58,65 +64,117 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
 
     return Scaffold(
       backgroundColor: Colors.blue[50], // Playful background color
+
       body: Stack(
         children: [
           Column(
             children: [
-              SizedBox(height: 60),
+              SizedBox(height: 50),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildIconButton(
-                      icon: Icons.home,
-                      color: Colors.orangeAccent,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => RoadMapScreen(currentLevel: widget.currentLevel),
-                          ),
-                        );
-                      },
+                    Container(
+                      height: 65,
+                      width: 150,
+                      child: Stack(
+                        children: [
+                          Positioned(
+                                    top: 16,
+                                    left: 16,
+                                    child: CustomInfoButton(
+                                      value: '$coins',
+                                      targetColor: -1, // No target color needed here
+                                      movesLeft: -1, // No moves left needed here
+                                      iconPath: 'images/coins.png', // Path to your coin icon
+                                      backgroundColor: Colors.blueGrey[400]!,
+                                      textColor: Colors.white,
+                                    ),
+                                  ),
+                        ],
+                      ),
                     ),
-                    _buildIconButton(
-                      icon: Icons.shopping_cart,
-                      color: Colors.orangeAccent,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => ShopScreen(),
-                          ),
-                        );
+                    PopupMenuButton<String>(
+                      icon: Icon(Icons.settings, color: Colors.grey),
+                      onSelected: (String value) {
+                        switch (value) {
+                          case 'home':
+                            Navigator.of(context).pushReplacement(
+                              FadePageRoute(
+                                page: ChangeNotifierProvider.value(
+                                  value: puzzle,
+                                  child: RoadMapScreen(),
+                                ),
+                              ),
+                            );
+                            break;
+                          case 'shop':
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => ShopScreen(),
+                              ),
+                            );
+                            break;
+                          case 'refresh':
+                            if (coins >= 10 || worlds[currentWorld-1].maxLevel > selectedLevel) {
+                          if(worlds[currentWorld-1].maxLevel <= selectedLevel) {
+                            coins -= 10;
+                          }
+                          puzzle.refreshGrid(puzzle.maxMoves, puzzle.size);
+                        } else {
+                          //_showSnackbar(context, "Not enough coins to use Refresh.");
+                          return;
+                        }
+                            break;
+                          case 'next':
+                            if (coins >= 100 || worlds[currentWorld-1].maxLevel > selectedLevel){
+                              if(worlds[currentWorld-1].maxLevel <= selectedLevel) {
+                                coins -= 100;
+                              }
+                        //Watch Ad, when following level isn't unlocked
+                                
+                                if (selectedLevel >= 69 && worlds[currentWorld+1].maxLevel == 0) {
+                                  puzzle.updateWorldLevel(currentWorld + 1, 1);
+                                }
+                                if (selectedLevel < 100) {
+                                  puzzle.updateWorldLevel(currentWorld, selectedLevel + 1);
+                                    selectedLevel += 1;
+                                      denyClick = false;
+                                }
+      Navigator.of(context).pushReplacement(
+        FadePageRoute(
+          page: ChangeNotifierProvider(
+            create: (_) => PuzzleModel(
+              size: puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2,
+              level: puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2,
+              colorMapping: {
+    1: worlds[currentWorld - 1].colors[0],
+    2: worlds[currentWorld - 1].colors[1] ,
+    3: worlds[currentWorld - 1].colors[2],
+  }
+            ),
+            child: selectedLevel < 100 ? PuzzleScreen() : RoadMapScreen(), 
+          ),
+        ),
+      );
+                      }
+                            break;
+                        }
                       },
-                    ),
-                    _buildIconButton(
-                      icon: Icons.diamond,
-                      color: Colors.orangeAccent,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => ShopScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildIconButton(
-                      icon: Icons.refresh,
-                      color: Colors.orangeAccent,
-                      onPressed: () {
-                        puzzle.grid = puzzle.savedGrid.map((row) => List<int>.from(row)).toList();
-                        puzzle.resetMoves();
-                        puzzle.moveWhereError = -1;
-                        puzzle.clicks = puzzle.savedClicks.map((click) => List<int>.from(click)).toList();
-                      },
+                      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                        _buildPopupMenuItem('home', 'Home', Icons.home, Colors.orangeAccent),
+                        _buildPopupMenuItem('shop', 'Shop', Icons.shopping_cart, Colors.orangeAccent),
+                        _buildPopupMenuItem('refresh', 'New Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 10 Coins' : ""}', Icons.refresh, Colors.orangeAccent),
+                        _buildPopupMenuItem('next', 'Skip Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 100 Coins' : ""}', Icons.skip_next, Colors.orangeAccent),
+                      ],
                     ),
                   ],
                 ),
               ),
               SizedBox(height: 20),
               Text(
-                'Level ${widget.currentLevel}',
+                'Level ${selectedLevel}',
                 style: TextStyle(
                   color: Colors.blueGrey[800],
                   fontSize: 26,
@@ -124,50 +182,39 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                   fontFamily: 'Quicksand',
                 ),
               ),
-              SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Container(
+                height: 100,
+                child: Stack(
                   children: [
-                    Column(
-                      children: [
-                        Text(
-                          'Target',
-                          style: TextStyle(
-                            color: Colors.deepPurple[700],
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        _buildTargetColorBox(puzzle.targetColor, puzzle.targetColorNumber),
-                      ],
+                    Positioned(
+                              top: 40, // Adjust depending on level position
+                              left: 0,
+                              right: 0,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                    CustomInfoButton(
+                      value: '', // No value needed here
+                      targetColor: puzzle.targetColorNumber, // Target color
+                      movesLeft: -1, // No moves left needed here
+                      iconPath: '', // No icon needed
+                      backgroundColor: Colors.grey[100]!,
+                      textColor: Colors.black,
+                      isLarge: true, // Increase size
                     ),
-                    Column(
-                      children: [
-                        Text(
-                          'Moves left',
-                          style: TextStyle(
-                            color: Colors.deepPurple[700],
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Container(
-                          height: 50,
-                          child: Text(
-                            (puzzle.maxMoves - puzzle.moves).toString(),
-                            style: TextStyle(
-                              color: Colors.black87,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                    
+                    CustomInfoButton(
+                      value: '', // No value needed here
+                      targetColor: -1, // No target color needed here
+                      movesLeft: (puzzle.maxMoves - puzzle.moves), // Number of moves left
+                      iconPath: '', // No icon needed
+                      backgroundColor: Colors.grey[100]!,
+                      textColor: Colors.black,
+                      isLarge: true, // Increase size
+                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
@@ -192,22 +239,40 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                       scale: _animation,
                       child: GestureDetector(
                         onTap: () {
-                          puzzle.clickTile(x, y, false);
+                          if (!animationStarted && !showBanner && !denyClick) {
+
+if (isRemoveTileMode) {
+                              // Remove the tile
+                              puzzle.clickTile(x, y, false, true);
+                              //_showSnackbar(context, "Tile removed.");
+                              setState(() {
+                                isRemoveTileMode = false; // Exit remove mode after removing a tile
+                              });
+                            } else {
+                                puzzle.clickTile(x, y, false, false);
+                            }
+
+
                           if (puzzle.isGridFilledWithTargetColor()) {
+                            denyClick = true;
                             _confettiController.play();
                             HapticFeedback.heavyImpact();
                             _animationController.forward().then((_) {
-                              Future.delayed(Duration(milliseconds: 100), () {
+                              Future.delayed(Duration(milliseconds: 300), () {
                                 _animationController.reverse().then((_) {
+                                  Future.delayed(Duration(milliseconds: 500), () {
                                   setState(() {
                                     showBanner = true;
-                                  });
+                                  });});
                                 });
                               });
                             });
+                            
                           } else {
                             HapticFeedback.selectionClick();
                           }
+                          }
+                          
                         },
                         child: AnimatedContainer(
                           duration: Duration(milliseconds: 200),
@@ -252,29 +317,106 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                   },
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 50, left: 50),
-                child: Row(
-                  children: [
-                    Image.asset(
-                      'images/coins.png',
-                      width: 24,
-                      height: 24,
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      '$coins',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
+
+          Positioned(
+  bottom: 32,
+  left: 16,
+  right: 16,
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    children: [
+      CustomActionButton(
+        icon: Icons.help_outline,
+        onPressed: () {
+          if(aHints > 0) {
+            bool hintUsed = puzzle.getHint();
+              if (hintUsed) {
+                //_showSnackbar(context, "You made a mistake and have been reset to the last correct state.");
+              } else {
+                Future.delayed(Duration(milliseconds: 500), () {
+                  puzzle.clearHint();
+                });
+              }
+          } else {
+            if (coins < 50) {
+                //_showSnackbar(context, "Not enough coins to use Hint.");
+                return;
+              } else {
+                bool hintUsed = puzzle.getHint();
+              if (hintUsed) {
+                //_showSnackbar(context, "You made a mistake and have been reset to the last correct state.");
+              } else {
+                Future.delayed(Duration(milliseconds: 500), () {
+                  puzzle.clearHint();
+                });
+              }
+              }
+          }
+            
+              
+              
+        },
+        count: aHints, // Number of hints available
+        gradientColors: [Colors.green, Colors.greenAccent],
+        iconColor: Colors.white,
+        badgeColor: const Color.fromARGB(255, 40, 27, 27),
+      ),
+      
+      CustomActionButton(
+        icon: Icons.remove_circle_outline,
+        onPressed: () {
+          setState(() {
+            if (aRems > 0) {
+              aRems -= 1;
+
+            } else {
+              coins -= 30;
+            }
+                 isRemoveTileMode = true;     
+                    });
+        },
+        count: aRems, // Number of removes available
+        gradientColors: [Color.fromARGB(255, 255, 68, 0), Colors.orangeAccent],
+        iconColor: Colors.white,
+        badgeColor: const Color.fromARGB(255, 40, 27, 27),
+      ),
+      CustomActionButton(
+        icon: Icons.undo,
+        onPressed: () {
+          // Your logic here
+
+              puzzle.undoMove();
+              
+            
+         
+        },
+        count: -1, // Number of swaps available
+        gradientColors: [Color.fromARGB(255, 176, 2, 124), Color.fromARGB(255, 255, 0, 81)],
+        iconColor: Colors.white,
+        badgeColor: const Color.fromARGB(255, 40, 27, 27),
+      ),
+            CustomActionButton(
+        icon: Icons.refresh,
+        onPressed: () {
+          puzzle.grid = puzzle.savedGrid.map((row) => List<int>.from(row)).toList();
+                        puzzle.resetMoves();
+                        puzzle.moveWhereError = -1;
+                        puzzle.clicks = puzzle.savedClicks.map((click) => List<int>.from(click)).toList();
+                        puzzle.undoStack.clear();
+        },
+        count: -1, // Number of refreshes available
+        gradientColors: [Color.fromARGB(255, 63, 3, 165), Colors.deepPurpleAccent],
+        iconColor: Colors.white,
+        badgeColor: const Color.fromARGB(255, 40, 27, 27),
+      ),
+    ],
+  ),
+),
+
+
+
           
           if (showBanner && !animationStarted)
   Positioned.fill(
@@ -310,22 +452,40 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
 
     } else {
       setState(() {
+        
       animationStarted = true;
       showCoinAnimation = true;
-      widget.currentLevel += 1;
+      if (selectedLevel < 100) {
+        puzzle.updateWorldLevel(currentWorld, selectedLevel + 1);
+                                    selectedLevel += 1;
+                                      denyClick = false;
+                                }
+
+      if (selectedLevel >= 69 && worlds[currentWorld+1].maxLevel == 0) {
+                                  puzzle.updateWorldLevel(currentWorld + 1, 1);
+                                }
+      
     });
 
     // Delay navigation to ensure the coin animation completes
     Future.delayed(Duration(milliseconds: 800), () {
       puzzle.addCoins(_coinsEarned);
+      denyClick = false;
+      
+      print(puzzle.getSizeAndMaxMoves(selectedLevel));
       Navigator.of(context).pushReplacement(
         FadePageRoute(
           page: ChangeNotifierProvider(
             create: (_) => PuzzleModel(
-              size: puzzle.getSizeAndMaxMoves(widget.currentLevel)["size"] ?? 2,
-              level: puzzle.getSizeAndMaxMoves(widget.currentLevel)["maxMoves"] ?? 2,
+              size: puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2,
+              level: puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2,
+              colorMapping: {
+    1: worlds[currentWorld - 1].colors[0],
+    2: worlds[currentWorld - 1].colors[1] ,
+    3: worlds[currentWorld - 1].colors[2],
+  }
             ),
-            child: PuzzleScreen(currentLevel: widget.currentLevel),
+            child: selectedLevel < 100 ? PuzzleScreen() : RoadMapScreen(), 
           ),
         ),
       );
@@ -349,87 +509,22 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
 if (animationStarted && showCoinAnimation)
   CoinAnimation(
     start: Offset(MediaQuery.of(context).size.width / 2, MediaQuery.of(context).size.height / 2),
-    end: Offset(50, MediaQuery.of(context).size.height - 75),
+    end: Offset(50, 75),
     numberOfCoins: _coinsEarned,
   ),
 
           ConfettiWidget(
             confettiController: _confettiController,
             blastDirection: pi / 5,
-            minBlastForce: 5,
-            maxBlastForce: 40,
+            minBlastForce: _random.nextInt(7) + 2,
+            maxBlastForce: _random.nextInt(30) + 10,
             emissionFrequency: 1,
-            numberOfParticles: 10,
+            numberOfParticles: _random.nextInt(15) + 5,
             gravity: 0.15,
             colors: [Colors.pink, Colors.orange, Colors.yellow, Colors.green, Colors.blue],
           ),
+        
         ],
-      ),
-      floatingActionButton: PopupMenuButton<String>(
-        onSelected: (value) {
-          switch (value) {
-            case 'Hint':
-              if (coins < 50) {
-                _showSnackbar(context, "Not enough coins to use $value.");
-                return;
-              }
-              
-              bool hintUsed = puzzle.getHint();
-              if (hintUsed) {
-                _showSnackbar(context, "You made a mistake and have been reset to the last correct state.");
-              } else {
-                Future.delayed(Duration(milliseconds: 500), () {
-                  puzzle.clearHint();
-                });
-              }
-              break;
-            case 'Reset Level':
-              if (coins >= 10) {
-                coins -= 10;
-                puzzle.refreshGrid(puzzle.maxMoves, puzzle.size);
-              } else {
-                _showSnackbar(context, "Not enough coins to use $value.");
-                return;
-              }
-              break;
-            case 'Remove one Tile':
-              // Implement the functionality to remove one tile here
-              _showSnackbar(context, "One tile removed.");
-              break;
-            case 'Swap':
-              // Implement the functionality to swap tiles here
-              _showSnackbar(context, "Tiles swapped.");
-              break;
-          }
-        },
-        itemBuilder: (context) => [
-          _buildPopupMenuItem('Hint', 'Hint - 50 coins', Icons.help_outline, Colors.orangeAccent),
-          _buildPopupMenuItem('Reset Level', 'Get New Level - 10 coins', Icons.refresh, Colors.orangeAccent),
-          _buildPopupMenuItem('Remove one Tile', 'Remove one Tile - 30 coins', Icons.remove_circle_outline, Colors.orangeAccent),
-          _buildPopupMenuItem('Swap', 'Swap - 30 coins', Icons.swap_horiz, Colors.orangeAccent),
-        ],
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: Colors.orangeAccent,
-            shape: BoxShape.rectangle,
-            borderRadius: BorderRadius.all(Radius.circular(20)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 8,
-                offset: Offset(2, 2),
-              ),
-            ],
-          ),
-          child: Center(
-            child: Icon(
-              Icons.more_horiz,
-              color: Colors.white,
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -481,6 +576,42 @@ if (animationStarted && showCoinAnimation)
       ),
     );
   }
+
+   Widget _buildActionIconButton({required IconData icon, required Color color, required void Function() onPressed, required int count}) {
+  return Column(
+    children: [
+      Container(
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 8,
+              offset: Offset(2, 2),
+            ),
+          ],
+        ),
+        child: IconButton(
+          icon: Icon(icon, color: Colors.white),
+          onPressed: onPressed,
+        ),
+      ),
+      SizedBox(height: 4),
+      Text(
+        count.toString(),
+        style: TextStyle(
+          color: Colors.black,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ],
+  );
+}
+
+
+
+}
 
   Widget _buildIconButton({required IconData icon, required Color color, required void Function() onPressed}) {
     return Container(
@@ -543,7 +674,6 @@ if (animationStarted && showCoinAnimation)
       duration: Duration(seconds: 2),
     ));
   }
-}
 
 class AnimatedText extends StatefulWidget {
   @override

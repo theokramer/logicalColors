@@ -29,7 +29,7 @@ class CustomInfoButton extends StatelessWidget {
     double padding = isLarge ? 10 : 6;
 
     return Container(
-      padding: EdgeInsets.symmetric(vertical: padding, horizontal: padding * 2),
+      padding: EdgeInsets.symmetric(vertical: padding, horizontal: padding),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),

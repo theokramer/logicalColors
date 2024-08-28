@@ -65,7 +65,7 @@ class CustomActionButton extends StatelessWidget {
               ),
               if (count == 0)
                 SizedBox(
-                  width: 95, height: 80,
+                  width: 90, height: 80,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [

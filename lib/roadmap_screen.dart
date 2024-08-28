@@ -15,8 +15,8 @@ class RoadMapScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Road Map', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.orange,
+        title: Text('Road Map', style: TextStyle(color: Colors.black)),
+        backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
       body: Stack(
@@ -41,16 +41,16 @@ class RoadMapScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: isWorldUnlocked ? Colors.orange : Colors.white,
+                        color: isWorldUnlocked ? worlds[worldIndex].colors[1] : Colors.white,
                       ),
                     ),
                     subtitle: Text(
                       isWorldUnlocked
                           ? 'Levels 1-${world.maxLevel}'
-                          : 'Reach Level ${worldIndex * 10 + 60} in World ${worldIndex} to unlock',
+                          : puzzle.getMaxLevelForWorld(worldIndex - 1) >= (worldIndex-1) * 10 + 60 ? 'Reach Level ${worldIndex * 10 + 60} in World ${worldIndex} to unlock' : "Locked",
                       style: TextStyle(
                         fontSize: 16,
-                        color: isWorldUnlocked ? Colors.orangeAccent : Colors.white,
+                        color: isWorldUnlocked ? worlds[worldIndex].colors[1] : Colors.white,
                       ),
                     ),
                     onTap: isWorldUnlocked
@@ -90,6 +90,11 @@ class RoadMapScreen extends StatelessWidget {
                           create: (_) => PuzzleModel(
                             size: puzzle.getSizeAndMaxMoves((highestWorldIndex - 1)  + highestLevelIndex)["size"] ?? 2,
                             level: puzzle.getSizeAndMaxMoves((highestWorldIndex - 1)  + highestLevelIndex)["maxMoves"] ?? 2,
+                            colorMapping: {
+    1: worlds[currentWorld - 1].colors[0],
+    2: worlds[currentWorld - 1].colors[1] ,
+    3: worlds[currentWorld - 1].colors[2],
+  }
                           ),
                           child: PuzzleScreen(),
                         ),
@@ -102,7 +107,7 @@ class RoadMapScreen extends StatelessWidget {
                       ),
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        backgroundColor: Colors.orange,
+                        backgroundColor: worlds[result['highestWorldIndex'] ?? 1].colors[1],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -137,7 +142,7 @@ class LevelSelectionScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('World $worldIndex Levels', style: TextStyle(color: Colors.white),),
-        backgroundColor: Colors.orange,
+        backgroundColor: worlds[worldIndex - 1].colors[1],
       ),
       body: GridView.builder(
         padding: EdgeInsets.all(16),
@@ -161,6 +166,11 @@ class LevelSelectionScreen extends StatelessWidget {
                           create: (_) => PuzzleModel(
                             size: puzzle.getSizeAndMaxMoves(levelNumber)["size"] ?? 2,
                             level: puzzle.getSizeAndMaxMoves(levelNumber)["maxMoves"] ?? 2,
+                            colorMapping: {
+    1: worlds[currentWorld - 1].colors[0],
+    2: worlds[currentWorld - 1].colors[1] ,
+    3: worlds[currentWorld - 1].colors[2],
+  }
                           ),
                           child: PuzzleScreen(),
                         ),
@@ -170,7 +180,7 @@ class LevelSelectionScreen extends StatelessWidget {
                 : null,
             child: Container(
               decoration: BoxDecoration(
-                color: isLevelUnlocked ? Colors.orange : Colors.grey,
+                color: isLevelUnlocked ? worlds[worldIndex - 1].colors[1] : Colors.grey,
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:color_puzzle/coin_manager.dart';
+import 'package:color_puzzle/hints_manager.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -252,6 +253,25 @@ class PuzzleModel with ChangeNotifier {
     notifyListeners();
   }
 
+    Future<void> addHints(int amount) async {
+    await HintsManager.addHints(amount);
+    notifyListeners();
+  }
+
+  Future<void> addRems(int amount) async {
+    await RemsManager.addRems(amount);
+    notifyListeners();
+  }
+
+  Future<void> removeRems(int amount) async {
+    await RemsManager.subtractRems(amount);
+    notifyListeners();
+  }
+
+  
+
+
+
   Future<void> subtractCoins(int amount) async {
     await CoinManager.subtractCoins(amount);
     if (await CoinManager.loadCoins() < 0) await CoinManager.saveCoins(0);
@@ -320,9 +340,9 @@ class PuzzleModel with ChangeNotifier {
       if (moves < maxMoves) {
         
         if(!gotHint) {
-          if(aHints > 0) {
+          if(await HintsManager.loadHints() > 0) {
             gotHint = true;
-            aHints -= 1;
+            HintsManager.subtractHints(1);
                       var hint = clicks[0];
         setHint(hint[0], hint[1]); // Set hint coordinates
           } else {

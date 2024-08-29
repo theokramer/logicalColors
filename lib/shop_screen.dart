@@ -1,3 +1,4 @@
+import 'package:color_puzzle/hints_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'custom_info_button.dart'; // Dein CustomInfoButton
@@ -14,6 +15,13 @@ class _ShopScreenState extends State<ShopScreen> {
     await context.read<CoinProvider>().addCoins(amount); // Verwende den Provider
   }
 
+  void addHints(int amount) async {
+    await context.read<HintsProvider>().addHints(amount); // Verwende den Provider
+  }
+  void addRems(int amount) async {
+    await context.read<RemsProvider>().addRems(amount); // Verwende den Provider
+  }
+
   void subtractCoins(int amount) async {
     await context.read<CoinProvider>().subtractCoins(amount); // Verwende den Provider
   }
@@ -24,6 +32,12 @@ class _ShopScreenState extends State<ShopScreen> {
 
     if (type == 2) {
       addCoins(value);
+    }
+    if(type == 0) {
+      addHints(value);
+    }
+    if(type == 1) {
+      addRems(value);
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:color_puzzle/coin_manager.dart';
+import 'package:color_puzzle/hints_manager.dart';
 import 'package:color_puzzle/roadmap_screen.dart';
 import 'package:color_puzzle/shop_screen.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +30,8 @@ class MyApp extends StatelessWidget {
           ), // Initial Coins setzen
         ),
         ChangeNotifierProvider(create: (_) => CoinProvider()),
+        ChangeNotifierProvider(create: (_) => HintsProvider()),
+        ChangeNotifierProvider(create: (_) => RemsProvider()),
       ],
       child: MaterialApp(
         title: 'Color Change Puzzle',

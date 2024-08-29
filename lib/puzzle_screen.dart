@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:color_puzzle/action_Button.dart';
 import 'package:color_puzzle/coin_manager.dart';
 import 'package:color_puzzle/custom_info_button.dart';
+import 'package:color_puzzle/hints_manager.dart';
 import 'package:color_puzzle/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -16,8 +17,6 @@ import 'dart:async';
 
 
 int selectedLevel = 1;
-int aHints = 1;
-int aRems = 2;
 bool tutorialActive = true;
 enum TutorialStep { none, step1, step2, completed }
 
@@ -74,25 +73,33 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
     Future<void> handleBuyHint() async {
     if (await CoinManager.loadCoins() >= 200) {
 
-        await CoinManager.subtractCoins(200);
-        setState(() {
-            aHints += 5;
-        });
-        
-        
+        subtractCoins(200);
+        addHints(5);
 
     } else {
     }
     Navigator.pop(context);
   }
 
+    void addCoins(int amount) async {
+    await context.read<CoinProvider>().addCoins(amount); // Verwende den Provider
+  }
+
+  void addHints(int amount) async {
+    await context.read<HintsProvider>().addHints(amount); // Verwende den Provider
+  }
+  void addRems(int amount) async {
+    await context.read<RemsProvider>().addRems(amount); // Verwende den Provider
+  }
+
+   void subtractCoins(int amount) async {
+    await context.read<CoinProvider>().subtractCoins(amount); // Verwende den Provider
+  }
+
       Future<void> handleBuyRem() async {
     if (await CoinManager.loadCoins() >= 200) {
-      await CoinManager.subtractCoins(200);
-      setState(() {
-        aRems += 5;
-        
-      });
+      subtractCoins(200);
+      addRems(5);
     } else {
       // Handle not enough coins
     }
@@ -101,16 +108,13 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
 
   void handleWatchAdForHints() {
     // Implement your ad logic here
-    setState(() {
-      aHints += 5;
-    });
+    addHints(5);
   }
 
     void handleWatchAdForRems() {
     // Implement your ad logic here
-    setState(() {
-      aRems += 5;
-    });
+    addRems(5);
+    
   }
 
   @override
@@ -124,6 +128,8 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
     Future.microtask(() => context.read<CoinProvider>().loadCoins());
+    Future.microtask(() => context.read<HintsProvider>().loadHints());
+    Future.microtask(() => context.read<RemsProvider>().loadRems());
 
     return Scaffold(
       backgroundColor: Colors.blue[50], // Playful background color
@@ -424,60 +430,69 @@ if (isRemoveTileMode) {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          CustomActionButton(
-            icon: Icons.lightbulb,
-            onPressed: () async {
-                  if (aHints > 0) {
-            bool hintUsed =await puzzle.getHint();
-            if (hintUsed) {
-              // Your hint used logic here
-            } else {
-              Future.delayed(Duration(milliseconds: 500), () {
-                puzzle.clearHint();
-              });
-            }
-          } else {
-            showGadgetPopup(
-                context,
-                'Hinweise',
-                handleBuyHint,
-                handleWatchAdForHints,
-                [Colors.amber, Colors.orange]
-              );
-          }
-              
-              
-            },
-            count: aHints, // Number of hints available
-            gradientColors: [Colors.amber, Colors.orange],
-            iconColor: Colors.white,
-          ),
-          CustomActionButton(
-            icon: Icons.colorize,
-            onPressed: () {
-              if(!denyClick) {
-                
-            if (aRems > 0) {
-              setState(() {
-              aRems -= 1;
-              isRemoveTileMode = true;
-              });
-            } else {
-              showGadgetPopup(
-                context,
-                'Colorizer',
-                handleBuyRem,
-                handleWatchAdForRems,
-                [Color.fromARGB(255, 176, 2, 124), Color.fromARGB(255, 255, 0, 81)]
-              );
-            }
-            
-          
+          Consumer<HintsProvider>(
+            builder: (context, hintsProvider, child) {
+              return CustomActionButton(
+                icon: Icons.lightbulb,
+                onPressed: () async {
+                      if (hintsProvider.hints > 0) {
+                bool hintUsed =await puzzle.getHint();
+                if (hintUsed) {
+                  // Your hint used logic here
+                } else {
+                  Future.delayed(Duration(milliseconds: 500), () {
+                    puzzle.clearHint();
+                  });
+                }
+              } else {
+                showGadgetPopup(
+                    context,
+                    'Hinweise',
+                    handleBuyHint,
+                    handleWatchAdForHints,
+                    [Colors.amber, Colors.orange]
+                  );
               }
-            },
-            count: aRems, // Number of removes available
-            gradientColors: [Color.fromARGB(255, 176, 2, 124), Color.fromARGB(255, 255, 0, 81)],
-            iconColor: Colors.white,
+                  
+                  
+                },
+                count: hintsProvider.hints, // Number of hints available
+                gradientColors: [Colors.amber, Colors.orange],
+                iconColor: Colors.white,
+              );
+            }
+          ),
+          Consumer<RemsProvider>(
+
+            builder: (context, remsProvider, child) {
+              return CustomActionButton(
+                icon: Icons.colorize,
+                onPressed: () {
+                  if(!denyClick) {
+                    
+                if (remsProvider.rems > 0) {
+                  setState(() {
+                  puzzle.removeRems(1);
+                  isRemoveTileMode = true;
+                  });
+                } else {
+                  showGadgetPopup(
+                    context,
+                    'Colorizer',
+                    handleBuyRem,
+                    handleWatchAdForRems,
+                    [Color.fromARGB(255, 176, 2, 124), Color.fromARGB(255, 255, 0, 81)]
+                  );
+                }
+                
+              
+                  }
+                },
+                count: remsProvider.rems, // Number of removes available
+                gradientColors: [Color.fromARGB(255, 176, 2, 124), Color.fromARGB(255, 255, 0, 81)],
+                iconColor: Colors.white,
+              );
+            }
           ),
           CustomActionButton(
             icon: Icons.undo,
@@ -548,12 +563,12 @@ if (showBanner && !animationStarted)
                               puzzle.addCoins(puzzle.coinsEarned);
                               if(getsLightBulb == 1) {
                                 setState(() {
-                                  aHints += 1;
+                                  puzzle.addHints(1);
                                 });
                               }
                               if(getsLightBulb == 2) {
                                 setState(() {
-                                  aRems += 1;
+                                  puzzle.addRems(1);
                                 });
                               }
                               denyClick = false;
@@ -656,12 +671,12 @@ if (showBanner && !animationStarted)
                             }
                               if(getsLightBulb == 1) {
                                 setState(() {
-                                  aHints += 1;
+                                  puzzle.addHints(1);
                                 });
                               }
                               if(getsLightBulb == 2) {
                                 setState(() {
-                                  aRems += 1;
+                                  puzzle.addRems(1);
                                 });
                               }
                               denyClick = false;

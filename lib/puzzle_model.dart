@@ -4,7 +4,7 @@ import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-int coins = 100;
+int coins = 250;
 int currentWorld = 1;
 
   List<World> worlds = [

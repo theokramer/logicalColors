@@ -71,6 +71,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
       });
     } else {
     }
+    Navigator.pop(context);
   }
 
       void handleBuyRem() {
@@ -83,6 +84,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
     } else {
       // Handle not enough coins
     }
+    Navigator.pop(context);
   }
 
   void handleWatchAdForHints() {
@@ -123,27 +125,40 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      height: 65,
-                      width: 150,
-                      child: Stack(
-                        children: [
-                          Positioned(
-                                    top: 16,
-                                    left: 16,
-                                    child: CustomInfoButton(
-                                      value: '$coins',
-                                      targetColor: -1, // No target color needed here
-                                      movesLeft: -1, // No moves left needed here
-                                      iconPath: 'images/coins.png', // Path to your coin icon
-                                      backgroundColor: Colors.blueGrey[400]!,
-                                      textColor: Colors.white,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                              FadePageRoute(
+                                page: ChangeNotifierProvider.value(
+                                  value: puzzle,
+                                  child: ShopScreen(),
+                                ),
+                              ),
+                            );
+                      },
+                      child: Container(
+                        height: 65,
+                        width: 150,
+                        child: Stack(
+                          children: [
+                            Positioned(
+                                      top: 16,
+                                      left: 16,
+                                      child: CustomInfoButton(
+                                        value: '$coins',
+                                        targetColor: -1, // No target color needed here
+                                        movesLeft: -1, // No moves left needed here
+                                        iconPath: 'images/coins.png', // Path to your coin icon
+                                        backgroundColor: Colors.blueGrey[400]!,
+                                        textColor: Colors.white,
+                                      ),
                                     ),
-                                  ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     PopupMenuButton<String>(
+                      offset: Offset(-10, 50),
                       enabled: !denyClick,
                       icon: Icon(Icons.settings, color: Colors.grey),
                       onSelected: 
@@ -161,8 +176,11 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                             break;
                           case 'shop':
                             Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => ShopScreen(),
+                              FadePageRoute(
+                                page: ChangeNotifierProvider.value(
+                                  value: puzzle,
+                                  child: ShopScreen(),
+                                ),
                               ),
                             );
                             break;
@@ -213,10 +231,10 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                         }
                       },
                       itemBuilder:  (BuildContext context) => <PopupMenuEntry<String>>[
-                        _buildPopupMenuItem('home', 'Home', Icons.home, Colors.orangeAccent),
-                        _buildPopupMenuItem('shop', 'Shop', Icons.shopping_cart, Colors.orangeAccent),
-                        _buildPopupMenuItem('refresh', 'New Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 10 Coins' : ""}', Icons.refresh, Colors.orangeAccent),
-                        _buildPopupMenuItem('next', 'Skip Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 100 Coins' : ""}', Icons.skip_next, Colors.orangeAccent),
+                        _buildPopupMenuItem('home', 'Home', Icons.home, Colors.indigo),
+                        _buildPopupMenuItem('shop', 'Shop', Icons.shopping_cart, Colors.indigo),
+                        _buildPopupMenuItem('refresh', 'New Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 10 Coins' : ""}', Icons.refresh, Colors.indigo),
+                        _buildPopupMenuItem('next', 'Skip Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 100 Coins' : ""}', Icons.skip_next, Colors.indigo),
                       ] ,
                     ),
                   ],

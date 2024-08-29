@@ -1,10 +1,48 @@
-import 'package:color_puzzle/custom_info_button.dart';
-import 'package:color_puzzle/puzzle_model.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'custom_info_button.dart'; // Dein CustomInfoButton
+import 'coin_manager.dart'; // Dein CoinManager
 
-class ShopScreen extends StatelessWidget {
+class ShopScreen extends StatefulWidget {
+  @override
+  State<ShopScreen> createState() => _ShopScreenState();
+}
+
+class _ShopScreenState extends State<ShopScreen> {
+
+  void addCoins(int amount) async {
+    await context.read<CoinProvider>().addCoins(amount); // Verwende den Provider
+  }
+
+  void subtractCoins(int amount) async {
+    await context.read<CoinProvider>().subtractCoins(amount); // Verwende den Provider
+  }
+
+  void buy(Map<String, dynamic> item) async {
+    int type = item['type'] as int;
+    int value = int.parse(item['title'] as String);
+
+    if (type == 2) {
+      addCoins(value);
+    }
+  }
+
+  Future<void> handleBuyHint() async {
+    if (context.read<CoinProvider>().coins >= 200) {
+      await context.read<CoinProvider>().subtractCoins(200);
+      setState(() {
+        // Hier sollten eventuell weitere Änderungen am Zustand vorgenommen werden
+      });
+    } else {
+      // Nicht genügend Coins
+    }
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
+    Future.microtask(() => context.read<CoinProvider>().loadCoins());
+
     return Scaffold(
       backgroundColor: Colors.indigo[900],
       appBar: AppBar(
@@ -13,26 +51,32 @@ class ShopScreen extends StatelessWidget {
           'Shop',
           style: TextStyle(color: Colors.white),
         ),
-        actions: [Container(
-                      height: 65,
-                      width: 150,
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            top: 10,
-                                    right: 16,
-                                    child: CustomInfoButton(
-                                      value: '$coins',
-                                      targetColor: -1, // No target color needed here
-                                      movesLeft: -1, // No moves left needed here
-                                      iconPath: 'images/coins.png', // Path to your coin icon
-                                      backgroundColor: Colors.blueGrey[400]!,
-                                      textColor: Colors.white,
-                                    ),
-                                  ),
-                        ],
-                      ),
-                    ),],
+        actions: [
+          Container(
+            height: 65,
+            width: 150,
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 16,
+                  left: 16,
+                  child: Consumer<CoinProvider>(
+                    builder: (context, coinProvider, child) {
+                      return CustomInfoButton(
+                        value: '${coinProvider.coins}', // Verwende die Coins aus dem Provider
+                        targetColor: -1,
+                        movesLeft: -1,
+                        iconPath: 'images/coins.png',
+                        backgroundColor: Colors.blueGrey[400]!,
+                        textColor: Colors.white,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         backgroundColor: Colors.indigo[800],
         centerTitle: true,
       ),
@@ -83,76 +127,75 @@ class ShopScreen extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
-                    
                   ],
                 ),
               ),
             ],
           ),
           SizedBox(height: 16),
-        Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Column(
-      children: [
-        Image.asset(
-          "images/coins.png",
-          height: 35,
-        ),
-        SizedBox(height: 20),
-        const Text(
-          "3000",
-          style: TextStyle(
-            fontSize: 20.0,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      ],
-    ),
+                children: [
+                  Image.asset(
+                    "images/coins.png",
+                    height: 35,
+                  ),
+                  SizedBox(height: 20),
+                  const Text(
+                    "3000",
+                    style: TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
               const Column(
-      children: [
-        Icon(Icons.lightbulb, size: 35, color: Colors.white,),
-        SizedBox(height: 20),
-        Text(
-          "5",
-          style: TextStyle(
-            fontSize: 20.0,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      ],
-    ),
+                children: [
+                  Icon(Icons.lightbulb, size: 35, color: Colors.white,),
+                  SizedBox(height: 20),
+                  Text(
+                    "5",
+                    style: TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
               const Column(
-      children: [
-        Icon(Icons.colorize, size: 35,color: Colors.white),
-        SizedBox(height: 20),
-        Text(
-          "3",
-          style: TextStyle(
-            fontSize: 20.0,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      ],
-    )
+                children: [
+                  Icon(Icons.colorize, size: 35, color: Colors.white),
+                  SizedBox(height: 20),
+                  Text(
+                    "3",
+                    style: TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
           SizedBox(height: 16),
           Container(
             decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            offset: Offset(0, 4),
-            blurRadius: 4.0,
-          ),
-        ],
-      ),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  offset: Offset(0, 4),
+                  blurRadius: 4.0,
+                ),
+              ],
+            ),
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 18),
               child: Row(
@@ -163,7 +206,7 @@ class ShopScreen extends StatelessWidget {
                     alignment: Alignment.center,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Functionality to activate the bundle
+                        // Funktionalität zum Aktivieren des Bundles
                       },
                       child: Text('EUR 4.99', style: TextStyle(color: Colors.white),),
                       style: ElevatedButton.styleFrom(
@@ -205,7 +248,6 @@ class ShopScreen extends StatelessWidget {
 
   Widget _buildShopItemsGrid() {
     final items = [
-
       {'title': '1', 'price': 'Gratis!', 'type': 0},
       {'title': '6', 'price': '200 Coins', 'type': 0},
       {'title': '10', 'price': '200 Coins', 'type': 1},
@@ -215,8 +257,6 @@ class ShopScreen extends StatelessWidget {
       {'title': '2500', 'price': '5.99€', 'type': 2},
       {'title': '6000', 'price': '9.99€', 'type': 2},
       {'title': '15000', 'price': '15.99€', 'type': 2},
-      
-
     ];
 
     return GridView.builder(
@@ -229,7 +269,11 @@ class ShopScreen extends StatelessWidget {
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        return _buildShopItemCard(item['title'] as String, item['price'] as String, item['type'] as int);
+        return GestureDetector(
+          onTap: () {
+            buy(item); // Rufe die Kauf-Funktion mit dem Artikel auf
+          },
+          child: _buildShopItemCard(item['title'] as String, item['price'] as String, item['type'] as int));
       },
     );
   }
@@ -252,10 +296,9 @@ class ShopScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            type == 0 ? Icon(Icons.lightbulb, size: 40, color: Colors.white,) : type == 1 ? Icon(Icons.colorize, size: 40, color: Colors.white,) : Image.asset(
-          "images/coins.png",
-          height: 40,
-        ),
+            type == 0 ? Icon(Icons.lightbulb, size: 40, color: Colors.white,) :
+            type == 1 ? Icon(Icons.colorize, size: 40, color: Colors.white,) :
+            Image.asset("images/coins.png", height: 40),
             SizedBox(height: 10.0),
             Text(
               title,
@@ -273,7 +316,6 @@ class ShopScreen extends StatelessWidget {
                 fontSize: 16.0,
                 fontWeight: FontWeight.bold,
                 color: Colors.amber[300],
-                
               ),
               textAlign: TextAlign.center,
             ),
@@ -282,9 +324,8 @@ class ShopScreen extends StatelessWidget {
       ),
     );
   }
-}
 
-Widget _buildNoAdsBundleSection() {
+  Widget _buildNoAdsBundleSection() {
     return Container(
       padding: EdgeInsets.all(10.0),
       decoration: BoxDecoration(
@@ -325,7 +366,7 @@ Widget _buildNoAdsBundleSection() {
           ),
           ElevatedButton(
             onPressed: () {
-              // Functionality to activate the bundle
+              // Funktionalität zum Aktivieren des Bundles
             },
             child: Text('EUR 2.99', style: TextStyle(color: Colors.white),),
             style: ElevatedButton.styleFrom(
@@ -339,3 +380,4 @@ Widget _buildNoAdsBundleSection() {
       ),
     );
   }
+}

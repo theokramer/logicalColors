@@ -2,6 +2,7 @@ import 'dart:ffi';
 import 'dart:math';
 
 import 'package:color_puzzle/action_Button.dart';
+import 'package:color_puzzle/coin_manager.dart';
 import 'package:color_puzzle/custom_info_button.dart';
 import 'package:color_puzzle/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 
+
 int selectedLevel = 1;
 int aHints = 1;
 int aRems = 2;
@@ -20,7 +22,6 @@ bool tutorialActive = true;
 enum TutorialStep { none, step1, step2, completed }
 
 TutorialStep currentTutorialStep = TutorialStep.step1;
-
  
 class PuzzleScreen extends StatefulWidget {
 
@@ -46,6 +47,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
 
   @override
  void initState() {
+    
     super.initState();
     _confettiController = ConfettiController(duration: const Duration(milliseconds: 500));
     _animationController = AnimationController(
@@ -69,22 +71,25 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
     });
   }
 
-    void handleBuyHint() {
-    if (coins >= 200) {
-      setState(() {
-        coins -= 200;
-        aHints += 5;
+    Future<void> handleBuyHint() async {
+    if (await CoinManager.loadCoins() >= 200) {
+
+        await CoinManager.subtractCoins(200);
+        setState(() {
+            aHints += 5;
+        });
         
-      });
+        
+
     } else {
     }
     Navigator.pop(context);
   }
 
-      void handleBuyRem() {
-    if (coins >= 200) {
+      Future<void> handleBuyRem() async {
+    if (await CoinManager.loadCoins() >= 200) {
+      await CoinManager.subtractCoins(200);
       setState(() {
-        coins -= 200;
         aRems += 5;
         
       });
@@ -118,6 +123,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
+    Future.microtask(() => context.read<CoinProvider>().loadCoins());
 
     return Scaffold(
       backgroundColor: Colors.blue[50], // Playful background color
@@ -151,98 +157,106 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                             Positioned(
                                       top: 16,
                                       left: 16,
-                                      child: CustomInfoButton(
-                                        value: '$coins',
-                                        targetColor: -1, // No target color needed here
-                                        movesLeft: -1, // No moves left needed here
-                                        iconPath: 'images/coins.png', // Path to your coin icon
-                                        backgroundColor: Colors.blueGrey[400]!,
-                                        textColor: Colors.white,
-                                      ),
+                                      child: Consumer<CoinProvider>(
+              builder: (context, coinProvider, child) {
+                return CustomInfoButton(
+                  value: '${coinProvider.coins}', // Verwende die Coins aus dem Provider
+                  targetColor: -1,
+                  movesLeft: -1,
+                  iconPath: 'images/coins.png',
+                  backgroundColor: Colors.blueGrey[400]!,
+                  textColor: Colors.white,
+                );
+              },
+            ),
                                     ),
                           ],
                         ),
                       ),
                     ),
-                    PopupMenuButton<String>(
-                      offset: Offset(-10, 50),
-                      enabled: !denyClick,
-                      icon: Icon(Icons.settings, color: Colors.grey),
-                      onSelected: 
-                      (String value) {
-                        switch (value) {
-                          case 'home':
-                            Navigator.of(context).pushReplacement(
-                              FadePageRoute(
-                                page: ChangeNotifierProvider.value(
-                                  value: puzzle,
-                                  child: RoadMapScreen(),
-                                ),
-                              ),
-                            );
-                            break;
-                          case 'shop':
-                            Navigator.of(context).push(
-                              FadePageRoute(
-                                page: ChangeNotifierProvider.value(
-                                  value: puzzle,
-                                  child: ShopScreen(),
-                                ),
-                              ),
-                            );
-                            break;
-                          case 'refresh':
-                            if (coins >= 10 || worlds[currentWorld-1].maxLevel > selectedLevel) {
-                          if(worlds[currentWorld-1].maxLevel <= selectedLevel) {
-                            coins -= 10;
-                          }
-                          puzzle.refreshGrid(puzzle.maxMoves, puzzle.size);
-                        } else {
-                          //_showSnackbar(context, "Not enough coins to use Refresh.");
-                          return;
-                        }
-                            break;
-                          case 'next':
-                            if (coins >= 100 || worlds[currentWorld-1].maxLevel > selectedLevel){
+                    Consumer<CoinProvider>(
+                      builder: (context, coinProvider, child) {
+                        return PopupMenuButton<String>(
+                          offset: Offset(-10, 50),
+                          enabled: !denyClick,
+                          icon: Icon(Icons.settings, color: Colors.grey),
+                          onSelected: 
+                          (String value) {
+                            switch (value) {
+                              case 'home':
+                                Navigator.of(context).pushReplacement(
+                                  FadePageRoute(
+                                    page: ChangeNotifierProvider.value(
+                                      value: puzzle,
+                                      child: RoadMapScreen(),
+                                    ),
+                                  ),
+                                );
+                                break;
+                              case 'shop':
+                                Navigator.of(context).push(
+                                  FadePageRoute(
+                                    page: ChangeNotifierProvider.value(
+                                      value: puzzle,
+                                      child: ShopScreen(),
+                                    ),
+                                  ),
+                                );
+                                break;
+                              case 'refresh':
+                                if (coinProvider.coins >= 10 || worlds[currentWorld-1].maxLevel > selectedLevel) {
                               if(worlds[currentWorld-1].maxLevel <= selectedLevel) {
-                                coins -= 100;
+                                coinProvider.subtractCoins(10);
                               }
-                        //Watch Ad, when following level isn't unlocked
-                                
-                                if (selectedLevel >= 69 && worlds[currentWorld+1].maxLevel == 0) {
-                                  puzzle.updateWorldLevel(currentWorld + 1, 1);
-                                }
-                                if (selectedLevel < 100) {
-                                  puzzle.updateWorldLevel(currentWorld, selectedLevel + 1);
-                                    selectedLevel += 1;
-                                      denyClick = false;
-                                }
-      Navigator.of(context).pushReplacement(
-        FadePageRoute(
-          page: ChangeNotifierProvider(
-            create: (_) => PuzzleModel(
-              size: puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2,
-              level: puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2,
-              colorMapping: {
-    1: worlds[currentWorld - 1].colors[0],
-    2: worlds[currentWorld - 1].colors[1] ,
-    3: worlds[currentWorld - 1].colors[2],
-  }
-            ),
-            child: selectedLevel < 100 ? PuzzleScreen() : RoadMapScreen(), 
-          ),
-        ),
-      );
+                              puzzle.refreshGrid(puzzle.maxMoves, puzzle.size);
+                            } else {
+                              //_showSnackbar(context, "Not enough coins to use Refresh.");
+                              return;
+                            }
+                                break;
+                              case 'next':
+                                if (coinProvider.coins >= 100 || worlds[currentWorld-1].maxLevel > selectedLevel){
+                                  if(worlds[currentWorld-1].maxLevel <= selectedLevel) {
+                                    coinProvider.subtractCoins(100);
+                                  }
+                            //Watch Ad, when following level isn't unlocked
+                                    
+                                    if (selectedLevel >= 69 && worlds[currentWorld+1].maxLevel == 0) {
+                                      puzzle.updateWorldLevel(currentWorld + 1, 1);
+                                    }
+                                    if (selectedLevel < 100) {
+                                      puzzle.updateWorldLevel(currentWorld, selectedLevel + 1);
+                                        selectedLevel += 1;
+                                          denyClick = false;
+                                    }
+                              Navigator.of(context).pushReplacement(
+                                FadePageRoute(
+                                  page: ChangeNotifierProvider(
+                                    create: (_) => PuzzleModel(
+                                      size: puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2,
+                                      level: puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2,
+                                      colorMapping: {
+                            1: worlds[currentWorld - 1].colors[0],
+                            2: worlds[currentWorld - 1].colors[1] ,
+                            3: worlds[currentWorld - 1].colors[2],
+                          }
+                                    ),
+                                    child: selectedLevel < 100 ? PuzzleScreen() : RoadMapScreen(), 
+                                  ),
+                                ),
+                              );
+                          }
+                                break;
+                            }
+                          },
+                          itemBuilder:  (BuildContext context) => <PopupMenuEntry<String>>[
+                            _buildPopupMenuItem('home', 'Home', Icons.home, Colors.indigo),
+                            _buildPopupMenuItem('shop', 'Shop', Icons.shopping_cart, Colors.indigo),
+                            _buildPopupMenuItem('refresh', 'New Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 10 Coins' : ""}', Icons.refresh, Colors.indigo),
+                            _buildPopupMenuItem('next', 'Skip Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 100 Coins' : ""}', Icons.skip_next, Colors.indigo),
+                          ] ,
+                        );
                       }
-                            break;
-                        }
-                      },
-                      itemBuilder:  (BuildContext context) => <PopupMenuEntry<String>>[
-                        _buildPopupMenuItem('home', 'Home', Icons.home, Colors.indigo),
-                        _buildPopupMenuItem('shop', 'Shop', Icons.shopping_cart, Colors.indigo),
-                        _buildPopupMenuItem('refresh', 'New Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 10 Coins' : ""}', Icons.refresh, Colors.indigo),
-                        _buildPopupMenuItem('next', 'Skip Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 100 Coins' : ""}', Icons.skip_next, Colors.indigo),
-                      ] ,
                     ),
                   ],
                 ),
@@ -412,9 +426,9 @@ if (isRemoveTileMode) {
         children: [
           CustomActionButton(
             icon: Icons.lightbulb,
-            onPressed: () {
+            onPressed: () async {
                   if (aHints > 0) {
-            bool hintUsed = puzzle.getHint();
+            bool hintUsed =await puzzle.getHint();
             if (hintUsed) {
               // Your hint used logic here
             } else {
@@ -927,24 +941,28 @@ void showGadgetPopup(BuildContext context, String gadgetName, Function onBuyPres
                     ),
                   ),
                   SizedBox(height: 15,),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      coins >= 200 ? onBuyPressed() : Navigator.of(context).popAndPushNamed("/shop");
-                    },
-                    icon: Icon(Icons.monetization_on),
-                    label: Text(
-                      '200 Coins',
-                      style: TextStyle(
-                        fontFamily: 'Quicksand',
-                        fontSize: 16,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      backgroundColor: gradientColors.first, // Farbe angepasst
-                      foregroundColor: Colors.white,
-                    ),
+                  Consumer<CoinProvider>(
+                    builder: (context, coinProvider, child)  {
+                      return ElevatedButton.icon(
+                        onPressed: () {
+                          coinProvider.coins >= 200 ? onBuyPressed() : Navigator.of(context).popAndPushNamed("/shop");
+                        },
+                        icon: Icon(Icons.monetization_on),
+                        label: Text(
+                          '200 Coins',
+                          style: TextStyle(
+                            fontFamily: 'Quicksand',
+                            fontSize: 16,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          backgroundColor: gradientColors.first, // Farbe angepasst
+                          foregroundColor: Colors.white,
+                        ),
+                      );
+                    }
                   ),
                 ],
               ),

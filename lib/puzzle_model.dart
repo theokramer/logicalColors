@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:color_puzzle/coin_manager.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-int coins = 250;
 int currentWorld = 1;
 
   List<World> worlds = [
@@ -247,14 +247,14 @@ class PuzzleModel with ChangeNotifier {
   }
   
 
-  void addCoins(int amount) {
-    coins += amount;
+  Future<void> addCoins(int amount) async {
+    await CoinManager.addCoins(amount);
     notifyListeners();
   }
 
-  void subtractCoins(int amount) {
-    coins -= amount;
-    if (coins < 0) coins = 0;
+  Future<void> subtractCoins(int amount) async {
+    await CoinManager.subtractCoins(amount);
+    if (await CoinManager.loadCoins() < 0) await CoinManager.saveCoins(0);
     notifyListeners();
   }
 
@@ -307,7 +307,7 @@ class PuzzleModel with ChangeNotifier {
   }
 
 
-  bool getHint() {
+  Future<bool> getHint() async {
     bool resetOccurred = false;
 
     if (moveWhereError != -1) {
@@ -326,7 +326,7 @@ class PuzzleModel with ChangeNotifier {
                       var hint = clicks[0];
         setHint(hint[0], hint[1]); // Set hint coordinates
           } else {
-            if(coins >= 50) {
+            if(await CoinManager.loadCoins() >= 50) {
             gotHint = true;
           subtractCoins(50);
           

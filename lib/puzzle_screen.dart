@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:color_puzzle/action_Button.dart';
 import 'package:color_puzzle/custom_info_button.dart';
+import 'package:color_puzzle/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'puzzle_model.dart';
@@ -15,7 +16,12 @@ import 'dart:async';
 int selectedLevel = 1;
 int aHints = 1;
 int aRems = 2;
+bool tutorialActive = true;
+enum TutorialStep { none, step1, step2, completed }
 
+TutorialStep currentTutorialStep = TutorialStep.step1;
+
+ 
 class PuzzleScreen extends StatefulWidget {
 
 
@@ -36,6 +42,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
   final Random _random = Random();
   bool showStartBanner = true;
   int getsLightBulb = 0;
+  
 
   @override
  void initState() {
@@ -328,14 +335,13 @@ if (isRemoveTileMode) {
                             } else {
                                 getsLightBulb = _random.nextInt(15) + 1;
                             }
-                            
 
                             _confettiController.play();
                             HapticFeedback.heavyImpact();
                             _animationController.forward().then((_) {
-                              Future.delayed(Duration(milliseconds: 300), () {
+                              Future.delayed(Duration(milliseconds: tutorialActive ? 600 : 300), () {
                                 _animationController.reverse().then((_) {
-                                  Future.delayed(Duration(milliseconds: 500), () {
+                                  Future.delayed(Duration(milliseconds: tutorialActive ? 1000 : 500), () {
                                   setState(() {
                                     showBanner = true;
                                   });});
@@ -350,7 +356,7 @@ if (isRemoveTileMode) {
                           
                         },
                         child: AnimatedContainer(
-                          duration: Duration(milliseconds: 200),
+                          duration: Duration(milliseconds: 400),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [tileColor.withOpacity(0.8), tileColor],
@@ -392,6 +398,7 @@ if (isRemoveTileMode) {
                   },
                 ),
               ),
+              tutorialActive ? CustomOverlay(message: currentTutorialStep == TutorialStep.step1 ? 'Click on the tile to change its color' : currentTutorialStep == TutorialStep.step2 ? 'When clicking on a tile, you also change the color of its neighbours' : "Fill the Grid with the Color indicated!", onClose: () {},) : SizedBox(),
             ],
           ),
 
@@ -490,6 +497,7 @@ if (isRemoveTileMode) {
     ),
   ],
 ),
+
 
           
 if (showBanner && !animationStarted)
@@ -603,6 +611,7 @@ if (showBanner && !animationStarted)
                         // Continue button
                         GestureDetector(
                           onTap: () {
+                            
                             if (!animationStarted) {
                             setState(() {
                               animationStarted = true;
@@ -620,6 +629,17 @@ if (showBanner && !animationStarted)
                             // Delay navigation to ensure coin animation completes
                             Future.delayed(Duration(milliseconds: 800), () {
                               puzzle.addCoins(puzzle.coinsEarned);
+                              switch(currentTutorialStep) {
+                              
+                              case TutorialStep.none:
+
+                              case TutorialStep.step1:
+                                currentTutorialStep = TutorialStep.step2;
+                              case TutorialStep.step2:
+                                currentTutorialStep = TutorialStep.completed;
+                              case TutorialStep.completed:
+                                tutorialActive = false;
+                            }
                               if(getsLightBulb == 1) {
                                 setState(() {
                                   aHints += 1;
@@ -935,6 +955,51 @@ void showGadgetPopup(BuildContext context, String gadgetName, Function onBuyPres
     },
   );
 }
+
+
+Widget buildTutorialOverlay() {
+  switch (currentTutorialStep) {
+    case TutorialStep.step1:
+      return Center(
+        child: AlertDialog(
+          title: Text("Step 1: Tap the Tile"),
+          content: Text("Tap the tile to change its color."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  showStartBanner = false;
+                  denyClick = false;
+                });
+              },
+              child: Text("Got it!"),
+            ),
+          ],
+        ),
+      );
+    case TutorialStep.step2:
+      return Center(
+        child: AlertDialog(
+          title: Text("Step 2: Tap the Correct Tile"),
+          content: Text("Tap the correct tile to change its color, including neighboring tiles."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  showStartBanner = false;
+                  denyClick = false;
+                });
+              },
+              child: Text("Next"),
+            ),
+          ],
+        ),
+      );
+    default:
+      return SizedBox.shrink();
+  }
+}
+
 
 
 

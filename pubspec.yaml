@@ -32,7 +32,6 @@ dependencies:
     sdk: flutter
   provider: ^6.0.5
   confetti: ^0.7.0
-  in_app_purchase: ^2.0.1
 
 
 

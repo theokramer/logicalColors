@@ -1,21 +1,15 @@
 PODS:
   - Flutter (1.0.0)
-  - in_app_purchase_storekit (0.0.1):
-    - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - in_app_purchase_storekit (from `.symlinks/plugins/in_app_purchase_storekit/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  in_app_purchase_storekit:
-    :path: ".symlinks/plugins/in_app_purchase_storekit/ios"
 
 SPEC CHECKSUMS:
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  in_app_purchase_storekit: 6dec89fe3b9698847ed4aaf65fde6c17491620ad
 
 PODFILE CHECKSUM: 819463e6a0290f5a72f145ba7cde16e8b6ef0796
 

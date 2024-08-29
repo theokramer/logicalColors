@@ -292,6 +292,9 @@ class PuzzleModel with ChangeNotifier {
       clickTile(x, y, true, false);
       clicks[i] = [x, y];
       savedClicks[i] = [x, y];  // Deep copy the individual list
+      if(tutorialActive && currentTutorialStep != TutorialStep.completed) {
+      setHint(x, y);
+    }
     }
 
     // Save the current state of the grid
@@ -300,6 +303,7 @@ class PuzzleModel with ChangeNotifier {
         _savedGrid[i][j] = _grid[i][j];
       }
     }
+    
   }
 
 

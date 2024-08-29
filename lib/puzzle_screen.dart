@@ -10,10 +10,11 @@ import 'roadmap_screen.dart';
 import 'shop_screen.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 
 int selectedLevel = 1;
-int aHints = 3;
-int aRems = 5;
+int aHints = 1;
+int aRems = 2;
 
 class PuzzleScreen extends StatefulWidget {
 
@@ -26,14 +27,15 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
   late ConfettiController _confettiController;
   late AnimationController _animationController;
   late Animation<double> _animation;
-  final int _coinsEarned = 10;
   bool showBanner = false;
   bool showCoinAnimation = false;
   bool animationStarted = false;
-  bool denyClick = false;
+  bool denyClick = true;
   double pi = 3.1415926535897932;
   bool isRemoveTileMode = false;
   final Random _random = Random();
+  bool showStartBanner = true;
+  int getsLightBulb = 0;
 
   @override
  void initState() {
@@ -49,6 +51,54 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
         curve: Curves.easeInOut,
       ),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Timer(Duration(seconds: 2), () {
+      setState(() {
+        showStartBanner = false;
+        denyClick = false;
+      });
+    });
+      //_showLevelStartInfo();
+    });
+  }
+
+    void handleBuyHint() {
+    if (coins >= 200) {
+      setState(() {
+        coins -= 200;
+        aHints += 5;
+        
+      });
+    } else {
+    }
+    Navigator.pop(context);
+  }
+
+      void handleBuyRem() {
+    if (coins >= 200) {
+      setState(() {
+        coins -= 200;
+        aRems += 5;
+        
+      });
+    } else {
+      // Handle not enough coins
+    }
+    Navigator.pop(context);
+  }
+
+  void handleWatchAdForHints() {
+    // Implement your ad logic here
+    setState(() {
+      aHints += 5;
+    });
+  }
+
+    void handleWatchAdForRems() {
+    // Implement your ad logic here
+    setState(() {
+      aRems += 5;
+    });
   }
 
   @override
@@ -75,29 +125,44 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      height: 65,
-                      width: 150,
-                      child: Stack(
-                        children: [
-                          Positioned(
-                                    top: 16,
-                                    left: 16,
-                                    child: CustomInfoButton(
-                                      value: '$coins',
-                                      targetColor: -1, // No target color needed here
-                                      movesLeft: -1, // No moves left needed here
-                                      iconPath: 'images/coins.png', // Path to your coin icon
-                                      backgroundColor: Colors.blueGrey[400]!,
-                                      textColor: Colors.white,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                              FadePageRoute(
+                                page: ChangeNotifierProvider.value(
+                                  value: puzzle,
+                                  child: ShopScreen(),
+                                ),
+                              ),
+                            );
+                      },
+                      child: Container(
+                        height: 65,
+                        width: 150,
+                        child: Stack(
+                          children: [
+                            Positioned(
+                                      top: 16,
+                                      left: 16,
+                                      child: CustomInfoButton(
+                                        value: '$coins',
+                                        targetColor: -1, // No target color needed here
+                                        movesLeft: -1, // No moves left needed here
+                                        iconPath: 'images/coins.png', // Path to your coin icon
+                                        backgroundColor: Colors.blueGrey[400]!,
+                                        textColor: Colors.white,
+                                      ),
                                     ),
-                                  ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     PopupMenuButton<String>(
+                      offset: Offset(-10, 50),
+                      enabled: !denyClick,
                       icon: Icon(Icons.settings, color: Colors.grey),
-                      onSelected: (String value) {
+                      onSelected: 
+                      (String value) {
                         switch (value) {
                           case 'home':
                             Navigator.of(context).pushReplacement(
@@ -111,8 +176,11 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                             break;
                           case 'shop':
                             Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => ShopScreen(),
+                              FadePageRoute(
+                                page: ChangeNotifierProvider.value(
+                                  value: puzzle,
+                                  child: ShopScreen(),
+                                ),
                               ),
                             );
                             break;
@@ -162,12 +230,12 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                             break;
                         }
                       },
-                      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                        _buildPopupMenuItem('home', 'Home', Icons.home, Colors.orangeAccent),
-                        _buildPopupMenuItem('shop', 'Shop', Icons.shopping_cart, Colors.orangeAccent),
-                        _buildPopupMenuItem('refresh', 'New Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 10 Coins' : ""}', Icons.refresh, Colors.orangeAccent),
-                        _buildPopupMenuItem('next', 'Skip Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 100 Coins' : ""}', Icons.skip_next, Colors.orangeAccent),
-                      ],
+                      itemBuilder:  (BuildContext context) => <PopupMenuEntry<String>>[
+                        _buildPopupMenuItem('home', 'Home', Icons.home, Colors.indigo),
+                        _buildPopupMenuItem('shop', 'Shop', Icons.shopping_cart, Colors.indigo),
+                        _buildPopupMenuItem('refresh', 'New Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 10 Coins' : ""}', Icons.refresh, Colors.indigo),
+                        _buildPopupMenuItem('next', 'Skip Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 100 Coins' : ""}', Icons.skip_next, Colors.indigo),
+                      ] ,
                     ),
                   ],
                 ),
@@ -255,6 +323,13 @@ if (isRemoveTileMode) {
 
                           if (puzzle.isGridFilledWithTargetColor()) {
                             denyClick = true;
+                            if(worlds[currentWorld].maxLevel >= selectedLevel) {
+                              getsLightBulb = -1;
+                            } else {
+                                getsLightBulb = _random.nextInt(15) + 1;
+                            }
+                            
+
                             _confettiController.play();
                             HapticFeedback.heavyImpact();
                             _animationController.forward().then((_) {
@@ -320,183 +395,281 @@ if (isRemoveTileMode) {
             ],
           ),
 
-          Positioned(
-  bottom: 32,
-  left: 16,
-  right: 16,
-  child: Row(
-    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-    children: [
-      CustomActionButton(
-        icon: Icons.help_outline,
-        onPressed: () {
-          if(aHints > 0) {
+          Column(
+  mainAxisAlignment: MainAxisAlignment.end,
+  children: [
+    Padding(
+      padding: const EdgeInsets.only(bottom: 40.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          CustomActionButton(
+            icon: Icons.lightbulb,
+            onPressed: () {
+                  if (aHints > 0) {
             bool hintUsed = puzzle.getHint();
-              if (hintUsed) {
-                //_showSnackbar(context, "You made a mistake and have been reset to the last correct state.");
-              } else {
-                Future.delayed(Duration(milliseconds: 500), () {
-                  puzzle.clearHint();
-                });
-              }
-          } else {
-            if (coins < 50) {
-                //_showSnackbar(context, "Not enough coins to use Hint.");
-                return;
-              } else {
-                bool hintUsed = puzzle.getHint();
-              if (hintUsed) {
-                //_showSnackbar(context, "You made a mistake and have been reset to the last correct state.");
-              } else {
-                Future.delayed(Duration(milliseconds: 500), () {
-                  puzzle.clearHint();
-                });
-              }
-              }
-          }
-            
-              
-              
-        },
-        count: aHints, // Number of hints available
-        gradientColors: [Colors.green, Colors.greenAccent],
-        iconColor: Colors.white,
-        badgeColor: const Color.fromARGB(255, 40, 27, 27),
-      ),
-      
-      CustomActionButton(
-        icon: Icons.remove_circle_outline,
-        onPressed: () {
-          setState(() {
-            if (aRems > 0) {
-              aRems -= 1;
-
+            if (hintUsed) {
+              // Your hint used logic here
             } else {
-              coins -= 30;
+              Future.delayed(Duration(milliseconds: 500), () {
+                puzzle.clearHint();
+              });
             }
-                 isRemoveTileMode = true;     
-                    });
-        },
-        count: aRems, // Number of removes available
-        gradientColors: [Color.fromARGB(255, 255, 68, 0), Colors.orangeAccent],
-        iconColor: Colors.white,
-        badgeColor: const Color.fromARGB(255, 40, 27, 27),
-      ),
-      CustomActionButton(
-        icon: Icons.undo,
-        onPressed: () {
-          // Your logic here
-
-              puzzle.undoMove();
+          } else {
+            showGadgetPopup(
+                context,
+                'Hinweise',
+                handleBuyHint,
+                handleWatchAdForHints,
+                [Colors.amber, Colors.orange]
+              );
+          }
               
+              
+            },
+            count: aHints, // Number of hints available
+            gradientColors: [Colors.amber, Colors.orange],
+            iconColor: Colors.white,
+          ),
+          CustomActionButton(
+            icon: Icons.colorize,
+            onPressed: () {
+              if(!denyClick) {
+                
+            if (aRems > 0) {
+              setState(() {
+              aRems -= 1;
+              isRemoveTileMode = true;
+              });
+            } else {
+              showGadgetPopup(
+                context,
+                'Colorizer',
+                handleBuyRem,
+                handleWatchAdForRems,
+                [Color.fromARGB(255, 176, 2, 124), Color.fromARGB(255, 255, 0, 81)]
+              );
+            }
             
-         
-        },
-        count: -1, // Number of swaps available
-        gradientColors: [Color.fromARGB(255, 176, 2, 124), Color.fromARGB(255, 255, 0, 81)],
-        iconColor: Colors.white,
-        badgeColor: const Color.fromARGB(255, 40, 27, 27),
+          
+              }
+            },
+            count: aRems, // Number of removes available
+            gradientColors: [Color.fromARGB(255, 176, 2, 124), Color.fromARGB(255, 255, 0, 81)],
+            iconColor: Colors.white,
+          ),
+          CustomActionButton(
+            icon: Icons.undo,
+            onPressed: () {
+              if(!denyClick) {
+                puzzle.undoMove();
+              }
+            },
+            count: -1, // Infinite undo available
+            gradientColors: [Color.fromARGB(255, 255, 68, 0), Colors.orangeAccent],
+            
+            iconColor: Colors.white,
+          ),
+          CustomActionButton(
+            icon: Icons.refresh,
+            onPressed: () {
+              if(!denyClick) {
+                puzzle.grid = puzzle.savedGrid.map((row) => List<int>.from(row)).toList();
+              puzzle.resetMoves();
+              puzzle.moveWhereError = -1;
+              puzzle.clicks = puzzle.savedClicks.map((click) => List<int>.from(click)).toList();
+              puzzle.undoStack.clear();
+              }
+            },
+            count: -1, // Infinite refresh available
+            gradientColors: [Color.fromARGB(255, 63, 3, 165), Colors.deepPurpleAccent],
+            iconColor: Colors.white,
+          ),
+        ],
       ),
-            CustomActionButton(
-        icon: Icons.refresh,
-        onPressed: () {
-          puzzle.grid = puzzle.savedGrid.map((row) => List<int>.from(row)).toList();
-                        puzzle.resetMoves();
-                        puzzle.moveWhereError = -1;
-                        puzzle.clicks = puzzle.savedClicks.map((click) => List<int>.from(click)).toList();
-                        puzzle.undoStack.clear();
-        },
-        count: -1, // Number of refreshes available
-        gradientColors: [Color.fromARGB(255, 63, 3, 165), Colors.deepPurpleAccent],
-        iconColor: Colors.white,
-        badgeColor: const Color.fromARGB(255, 40, 27, 27),
-      ),
-    ],
-  ),
+    ),
+  ],
 ),
 
-
-
           
-          if (showBanner && !animationStarted)
+if (showBanner && !animationStarted)
   Positioned.fill(
     child: Stack(
       children: [
+        // Background overlay with a subtle dark tint
         Container(
-          color: Colors.black.withOpacity(0.6),
+          color: Colors.black.withOpacity(0.5),
           child: Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  color: Colors.deepPurple,
-                  padding: EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Level Complete!',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Quicksand',
+                // Main banner with rounded corners and light shadow
+                GestureDetector(
+                  onTap: () {
+                    // Button action
+                          if (!animationStarted) {
+                            setState(() {
+                              animationStarted = true;
+                              showCoinAnimation = true;
+                              if (selectedLevel < 100) {
+                                puzzle.updateWorldLevel(currentWorld, selectedLevel + 1);
+                                selectedLevel += 1;
+                                denyClick = false;
+                              }
+                              if (selectedLevel >= 69 && worlds[currentWorld + 1].maxLevel == 0) {
+                                puzzle.updateWorldLevel(currentWorld + 1, 1);
+                              }
+                            });
+
+                            // Delay navigation to ensure coin animation completes
+                            Future.delayed(Duration(milliseconds: 800), () {
+                              puzzle.addCoins(puzzle.coinsEarned);
+                              if(getsLightBulb == 1) {
+                                setState(() {
+                                  aHints += 1;
+                                });
+                              }
+                              if(getsLightBulb == 2) {
+                                setState(() {
+                                  aRems += 1;
+                                });
+                              }
+                              denyClick = false;
+
+                              Navigator.of(context).pushReplacement(
+                                FadePageRoute(
+                                  page: ChangeNotifierProvider(
+                                    create: (_) => PuzzleModel(
+                                      size: puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2,
+                                      level: puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2,
+                                      colorMapping: {
+                                        1: worlds[currentWorld - 1].colors[0],
+                                        2: worlds[currentWorld - 1].colors[1],
+                                        3: worlds[currentWorld - 1].colors[2],
+                                      },
+                                    ),
+                                    child: selectedLevel < 100 ? PuzzleScreen() : RoadMapScreen(),
+                                  ),
+                                ),
+                              );
+                            });
+                          }
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          spreadRadius: 2,
                         ),
-                      ),
-                      SizedBox(height: 20),
-                      animationStarted ? Container(height: 200,) :
-                      _buildCoinDisplay(_coinsEarned),
-                      SizedBox(height: 20),
-                      GestureDetector(
-  onTap: () {
-    if (animationStarted) {
-
-    } else {
-      setState(() {
-        
-      animationStarted = true;
-      showCoinAnimation = true;
-      if (selectedLevel < 100) {
-        puzzle.updateWorldLevel(currentWorld, selectedLevel + 1);
-                                    selectedLevel += 1;
-                                      denyClick = false;
-                                }
-
-      if (selectedLevel >= 69 && worlds[currentWorld+1].maxLevel == 0) {
-                                  puzzle.updateWorldLevel(currentWorld + 1, 1);
-                                }
-      
-    });
-
-    // Delay navigation to ensure the coin animation completes
-    Future.delayed(Duration(milliseconds: 800), () {
-      puzzle.addCoins(_coinsEarned);
-      denyClick = false;
-      
-      print(puzzle.getSizeAndMaxMoves(selectedLevel));
-      Navigator.of(context).pushReplacement(
-        FadePageRoute(
-          page: ChangeNotifierProvider(
-            create: (_) => PuzzleModel(
-              size: puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2,
-              level: puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2,
-              colorMapping: {
-    1: worlds[currentWorld - 1].colors[0],
-    2: worlds[currentWorld - 1].colors[1] ,
-    3: worlds[currentWorld - 1].colors[2],
-  }
+                      ],
+                    ),
+                    padding: EdgeInsets.symmetric(vertical: 30, horizontal: 30),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Title text
+                        Text(
+                          'Level Complete!',
+                          style: TextStyle(
+                            color: Colors.blueGrey[800],
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Quicksand',
+                          ),
+                        ),
+                        SizedBox(height: 15),
+                        // Coin display or animation
+                        Row(mainAxisAlignment: getsLightBulb == 1 || getsLightBulb == 2 ?MainAxisAlignment.spaceAround : MainAxisAlignment.center,
+                          children: [
+                          animationStarted
+                            ? SizedBox(height: 100)
+                            : _buildCoinDisplay(puzzle.coinsEarned),
+                            getsLightBulb == 1 || getsLightBulb == 2 ? Row( children: [(Icon(getsLightBulb == 1 ? Icons.lightbulb : Icons.colorize, color: Colors.amber, size: 80) ), SizedBox(width: 30),
+          Text(
+            '1',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
             ),
-            child: selectedLevel < 100 ? PuzzleScreen() : RoadMapScreen(), 
-          ),
-        ),
-      );
-    });
-    }
-    
-  },
-  child: animationStarted ? Text("") : AnimatedText(),
-)
+          ),]): SizedBox(),
+                        ],),
+                          
+                        SizedBox(height: 20),
+                        // Continue button
+                        GestureDetector(
+                          onTap: () {
+                            if (!animationStarted) {
+                            setState(() {
+                              animationStarted = true;
+                              showCoinAnimation = true;
+                              if (selectedLevel < 100) {
+                                puzzle.updateWorldLevel(currentWorld, selectedLevel + 1);
+                                selectedLevel += 1;
+                                denyClick = false;
+                              }
+                              if (selectedLevel >= 69 && worlds[currentWorld + 1].maxLevel == 0) {
+                                puzzle.updateWorldLevel(currentWorld + 1, 1);
+                              }
+                            });
 
-                    ],
+                            // Delay navigation to ensure coin animation completes
+                            Future.delayed(Duration(milliseconds: 800), () {
+                              puzzle.addCoins(puzzle.coinsEarned);
+                              if(getsLightBulb == 1) {
+                                setState(() {
+                                  aHints += 1;
+                                });
+                              }
+                              if(getsLightBulb == 2) {
+                                setState(() {
+                                  aRems += 1;
+                                });
+                              }
+                              denyClick = false;
+
+                              Navigator.of(context).pushReplacement(
+                                FadePageRoute(
+                                  page: ChangeNotifierProvider(
+                                    create: (_) => PuzzleModel(
+                                      size: puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2,
+                                      level: puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2,
+                                      colorMapping: {
+                                        1: worlds[currentWorld - 1].colors[0],
+                                        2: worlds[currentWorld - 1].colors[1],
+                                        3: worlds[currentWorld - 1].colors[2],
+                                      },
+                                    ),
+                                    child: selectedLevel < 100 ? PuzzleScreen() : RoadMapScreen(),
+                                  ),
+                                ),
+                              );
+                            });
+                          }
+                          },
+                          child: Container(height: 60, child: AnimatedText())
+                          /*ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 40),
+                            backgroundColor: Colors.deepPurple,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: Text(
+                            'Next Level',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ), */
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -506,28 +679,265 @@ if (isRemoveTileMode) {
       ],
     ),
   ),
+
+// Confetti effect
 if (animationStarted && showCoinAnimation)
   CoinAnimation(
     start: Offset(MediaQuery.of(context).size.width / 2, MediaQuery.of(context).size.height / 2),
     end: Offset(50, 75),
-    numberOfCoins: _coinsEarned,
+    numberOfCoins: puzzle.coinsEarned,
   ),
 
-          ConfettiWidget(
-            confettiController: _confettiController,
-            blastDirection: pi / 5,
-            minBlastForce: _random.nextInt(7) + 2,
-            maxBlastForce: _random.nextInt(30) + 10,
-            emissionFrequency: 1,
-            numberOfParticles: _random.nextInt(15) + 5,
-            gravity: 0.15,
-            colors: [Colors.pink, Colors.orange, Colors.yellow, Colors.green, Colors.blue],
-          ),
-        
+ConfettiWidget(
+  confettiController: _confettiController,
+  blastDirectionality: BlastDirectionality.explosive, // Adjusts the direction
+  minBlastForce: 5,
+  maxBlastForce: 20,
+  emissionFrequency: 0.3,
+  numberOfParticles: 15,
+  gravity: 0.1,
+  colors: [Colors.lightBlueAccent, Colors.lightGreen, Colors.pinkAccent, Colors.yellow],
+),
+
+        if (showStartBanner)
+            Center(
+              child: AlertDialog(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                contentPadding: EdgeInsets.all(20),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Level ${selectedLevel}',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        CustomInfoButton(
+                          value: '', // No value needed here
+                          targetColor: puzzle.targetColorNumber, // Target color
+                          movesLeft: -1, // No moves left needed here
+                          iconPath: '', // No icon needed
+                          backgroundColor: Colors.grey[200]!,
+                          textColor: Colors.black,
+                          isLarge: true, // Increase size
+                        ),
+                        CustomInfoButton(
+                          value: '', // No value needed here
+                          targetColor: -1, // No target color needed here
+                          movesLeft: puzzle.maxMoves, // Number of moves
+                          iconPath: '', // No icon needed
+                          backgroundColor: Colors.grey[200]!,
+                          textColor: Colors.black,
+                          isLarge: true, // Increase size
+                        ),
+                        CustomInfoButton(
+                          value: '${puzzle.size}x${puzzle.size}', // Display grid size
+                          targetColor: -1, // No target color needed here
+                          movesLeft: -1, // No moves left needed here
+                          iconPath: '', // No icon needed
+                          backgroundColor: Colors.grey[200]!,
+                          textColor: Colors.black,
+                          isLarge: true, // Increase size
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
+
+  void _showLevelStartInfo() {
+    final puzzle = Provider.of<PuzzleModel>(context, listen: false);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          contentPadding: EdgeInsets.all(20),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Level ${selectedLevel}',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  CustomInfoButton(
+                    value: '', 
+                    targetColor: puzzle.targetColorNumber, 
+                    movesLeft: -1, 
+                    iconPath: '', 
+                    backgroundColor: Colors.grey[200]!,
+                    textColor: Colors.black,
+                    isLarge: true,
+                  ),
+                  CustomInfoButton(
+                    value: '', 
+                    targetColor: -1, 
+                    movesLeft: puzzle.maxMoves, 
+                    iconPath: '', 
+                    backgroundColor: Colors.grey[200]!,
+                    textColor: Colors.black,
+                    isLarge: true,
+                  ),
+                  CustomInfoButton(
+                    value: '${puzzle.size}x${puzzle.size}', 
+                    targetColor: -1, 
+                    movesLeft: -1, 
+                    iconPath: '', 
+                    backgroundColor: Colors.grey[200]!,
+                    textColor: Colors.black,
+                    isLarge: true,
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Dismiss the dialog
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+                ),
+                child: Text(
+                  'Start',
+                  style: TextStyle(fontSize: 20, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+void showGadgetPopup(BuildContext context, String gadgetName, Function onBuyPressed, Function onWatchAdPressed, List<Color> gradientColors) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.blueGrey[400],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Container(
+          
+          padding: EdgeInsets.all(25),
+          height: 400, // Höhe angepasst
+          width: MediaQuery.of(context).size.width * 0.75, // Breite angepasst
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Mehr $gadgetName erhalten',
+                style: TextStyle(
+                  color: Colors.white, // Farbe angepasst
+                  fontFamily: 'Quicksand',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22, // Größe angepasst
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+
+                  Icon(
+                    gadgetName == "Colorizer" ? Icons.colorize : Icons.lightbulb,
+                    size: 60, // Größe des Icons
+                    color: gradientColors.first, // Farbe des Icons
+                  ),
+                  SizedBox(width: 25,),
+              Text(
+                'x6', // Anzahl der Aktionen
+                style: TextStyle(
+                  color: gradientColors.first,
+                  fontFamily: 'Quicksand',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                ),
+              ),
+
+                ],
+              ),
+              
+              SizedBox(height: 20),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      onWatchAdPressed();
+                      Navigator.of(context).pop();
+                    },
+                    icon: Icon(Icons.play_circle_fill),
+                    label: Text(
+                      'Werbung',
+                      style: TextStyle(
+                        fontFamily: 'Quicksand',
+                        fontSize: 16,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      backgroundColor: gradientColors.first, // Farbe angepasst
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 15,),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      coins >= 200 ? onBuyPressed() : Navigator.of(context).popAndPushNamed("/shop");
+                    },
+                    icon: Icon(Icons.monetization_on),
+                    label: Text(
+                      '200 Coins',
+                      style: TextStyle(
+                        fontFamily: 'Quicksand',
+                        fontSize: 16,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      backgroundColor: gradientColors.first, // Farbe angepasst
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+
+
 
   PopupMenuEntry<String> _buildPopupMenuItem(String value, String text, IconData icon, Color color) {
     return PopupMenuItem<String>(
@@ -544,33 +954,23 @@ if (animationStarted && showCoinAnimation)
 
   Widget _buildCoinDisplay(int coinsEarned) {
     return Container(
-      height: 200,
-      child: Column(
+      height: 120,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Image.asset(
-            'images/coins.png',
-            width: 130,
-            height: 130,
-          ),
-          SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'images/coin.png',
-                width: 35,
-                height: 35,
-              ),
-              SizedBox(width: 10),
-              Text(
-                '$coinsEarned',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+        'images/coins.png',
+        width: 80,
+        height: 80,
+      ),
+          SizedBox(width: 30),
+          Text(
+            '$coinsEarned',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -694,12 +1094,12 @@ class _AnimatedTextState extends State<AnimatedText> with SingleTickerProviderSt
     )..repeat(reverse: true);
 
     _colorAnimation = ColorTween(
-      begin: Colors.yellow[200],
-      end: Colors.yellow[400],
+      begin: Colors.indigo[300],
+      end: Colors.indigo[500],
     ).animate(_controller);
 
     _sizeAnimation = Tween<double>(
-      begin: 22,
+      begin: 25,
       end: 28,
     ).animate(_controller);
   }

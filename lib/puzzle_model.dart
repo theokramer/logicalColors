@@ -4,13 +4,13 @@ import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-int coins = 5000;
+int coins = 250;
 int currentWorld = 1;
 
   List<World> worlds = [
   World(
     id: 1,
-    maxLevel: 100,
+    maxLevel: 80,
     colors: const [
       Color.fromARGB(255, 166, 231, 189),
       Color(0xff2d6a4f),
@@ -63,6 +63,7 @@ class PuzzleModel with ChangeNotifier {
   int _elapsedTime;
   int _targetColorNumber;
   int moveWhereError = -1;
+  int _coinsEarned;
 
   final List<List<dynamic>> _undoStack = []; // Stack für Undo-Funktion
   List<List<int>> _grid;
@@ -72,7 +73,6 @@ class PuzzleModel with ChangeNotifier {
   List<List<int>> savedClicks;
   
   bool gotHint = false;
-  int aHints = 0; // Assuming aHints is used somewhere else
 
   final Map<int, Color> _colorMapping;
   final Map<int, int> _numberMapping = {1: 2, 2: 3, 3: 1};
@@ -93,6 +93,7 @@ class PuzzleModel with ChangeNotifier {
       _lastCorrectGrid = List.generate(size, (_) => List.generate(size, (_) => 1)),
       clicks = List.generate(level, (_) => []),
       savedClicks = List.generate(level, (_) => []),
+      _coinsEarned = 10,
       _targetColorNumber = 1,
       _colorMapping = {
         1: worlds[currentWorld - 1].colors[0],
@@ -113,6 +114,7 @@ class PuzzleModel with ChangeNotifier {
   Color get targetColor => _colorMapping[_targetColorNumber] ?? Colors.transparent;
   int? get hintX => _hintX;
   int? get hintY => _hintY;
+  int get coinsEarned => _coinsEarned;
 
   // Setters
   set grid(List<List<int>> newGrid) {
@@ -243,6 +245,7 @@ class PuzzleModel with ChangeNotifier {
     moveWhereError = -1;
     _initializeGrid();
   }
+  
 
   void addCoins(int amount) {
     coins += amount;
@@ -270,7 +273,11 @@ class PuzzleModel with ChangeNotifier {
     void _initializeGrid() {
     _targetColorNumber = _random.nextInt(3) + 1; // Target color number to achieve
     setTargetColor(_targetColorNumber);
-
+    if(worlds[currentWorld-1].maxLevel <= selectedLevel) {
+    _coinsEarned = (5 * (selectedLevel * _random.nextDouble()) + 5).floor();
+    } else {
+      _coinsEarned = 5;
+    }
     // Initialize the grid with the target color
     for (int i = 0; i < size; i++) {
       for (int j = 0; j < size; j++) {
@@ -306,7 +313,7 @@ class PuzzleModel with ChangeNotifier {
       resetOccurred = true;
       undoStack.clear();
     } else {
-      if (moves < maxMoves - 1) {
+      if (moves < maxMoves) {
         
         if(!gotHint) {
           if(aHints > 0) {

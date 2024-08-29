@@ -1,4 +1,5 @@
 import 'package:color_puzzle/roadmap_screen.dart';
+import 'package:color_puzzle/shop_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'puzzle_model.dart'; // Make sure to import your model
@@ -24,10 +25,11 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        initialRoute: '/puzzle',
+        initialRoute: '/',
         routes: {
-        '/puzzle': (context) => PuzzleScreen(),
+        '/': (context) => PuzzleScreen(),
         '/roadmap': (context) => RoadMapScreen(),
+        '/shop': (context) => ShopScreen(),
       },
       ),
     );

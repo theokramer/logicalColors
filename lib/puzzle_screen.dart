@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:color_puzzle/action_Button.dart';
 import 'package:color_puzzle/coin_manager.dart';
 import 'package:color_puzzle/custom_info_button.dart';
+import 'package:color_puzzle/difficulty_bar.dart';
 import 'package:color_puzzle/hints_manager.dart';
 import 'package:color_puzzle/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +19,7 @@ import 'dart:async';
 
 int selectedLevel = 1;
 bool tutorialActive = true;
-enum TutorialStep { none, step1, step2, completed }
+enum TutorialStep { none, step1, step2, step3, completed }
 
 TutorialStep currentTutorialStep = TutorialStep.step1;
  
@@ -40,7 +41,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
   double pi = 3.1415926535897932;
   bool isRemoveTileMode = false;
   final Random _random = Random();
-  bool showStartBanner = true;
+  bool showStartBanner = currentTutorialStep != TutorialStep.step1 && currentTutorialStep != TutorialStep.step2;
   int getsLightBulb = 0;
   
 
@@ -59,11 +60,45 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
         curve: Curves.easeInOut,
       ),
     );
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Timer(Duration(seconds: 2), () {
+      
+      switch(currentTutorialStep) {
+                              
+                              case TutorialStep.none:
+                              setState(() {
+                                tutorialActive = false;
+                              });
+                                  
+                              case TutorialStep.step1:
+                                setState(() {
+                                  currentTutorialStep = TutorialStep.step2;
+                                });
+                                
+                              case TutorialStep.step2:
+                                setState(() {
+                                  currentTutorialStep = TutorialStep.step3;
+                                  _showInfoDialogStart(context);
+                                });
+                              case TutorialStep.step3:
+                                setState(() {
+                                  
+                                  currentTutorialStep = TutorialStep.completed;
+                                });
+
+                              case TutorialStep.completed:
+                                setState(() {
+                                  tutorialActive = false;
+                                  currentTutorialStep = TutorialStep.none;
+                                });
+
+                            }
+      //Zeit erhöhen in Production
+      Timer(Duration(milliseconds: 2000), () {
       setState(() {
         showStartBanner = false;
         denyClick = false;
+        
       });
     });
       //_showLevelStartInfo();
@@ -71,10 +106,21 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
   }
 
     Future<void> handleBuyHint() async {
-    if (await CoinManager.loadCoins() >= 200) {
+    if (await CoinManager.loadCoins() >= 500) {
 
-        subtractCoins(200);
-        addHints(5);
+        subtractCoins(500);
+        addHints(3);
+
+    } else {
+    }
+    Navigator.pop(context);
+  }
+
+      Future<void> handleBuyHintSale() async {
+    if (await CoinManager.loadCoins() >= 300) {
+
+        subtractCoins(300);
+        addHints(3);
 
     } else {
     }
@@ -97,8 +143,8 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
   }
 
       Future<void> handleBuyRem() async {
-    if (await CoinManager.loadCoins() >= 200) {
-      subtractCoins(200);
+    if (await CoinManager.loadCoins() >= 500) {
+      subtractCoins(500);
       addRems(5);
     } else {
       // Handle not enough coins
@@ -108,7 +154,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
 
   void handleWatchAdForHints() {
     // Implement your ad logic here
-    addHints(5);
+    addHints(3);
   }
 
     void handleWatchAdForRems() {
@@ -172,6 +218,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                   iconPath: 'images/coins.png',
                   backgroundColor: Colors.blueGrey[400]!,
                   textColor: Colors.white,
+                  isLarge: 2,
                 );
               },
             ),
@@ -180,6 +227,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                         ),
                       ),
                     ),
+                    
                     Consumer<CoinProvider>(
                       builder: (context, coinProvider, child) {
                         return PopupMenuButton<String>(
@@ -277,43 +325,56 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                   fontFamily: 'Quicksand',
                 ),
               ),
-              Container(
-                height: 100,
-                child: Stack(
-                  children: [
-                    Positioned(
-                              top: 40, // Adjust depending on level position
-                              left: 0,
-                              right: 0,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                    CustomInfoButton(
-                      value: '', // No value needed here
-                      targetColor: puzzle.targetColorNumber, // Target color
-                      movesLeft: -1, // No moves left needed here
-                      iconPath: '', // No icon needed
-                      backgroundColor: Colors.grey[100]!,
-                      textColor: Colors.black,
-                      isLarge: true, // Increase size
-                    ),
-                    
-                    CustomInfoButton(
-                      value: '', // No value needed here
-                      targetColor: -1, // No target color needed here
-                      movesLeft: (puzzle.maxMoves - puzzle.moves), // Number of moves left
-                      iconPath: '', // No icon needed
-                      backgroundColor: Colors.grey[100]!,
-                      textColor: Colors.black,
-                      isLarge: true, // Increase size
-                    ),
-                                ],
-                              ),
-                            ),
-                  ],
+              Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 5.0),
+              child: GestureDetector(
+                onTap: () {
+                  showDifficultyInfo(context);
+                },
+                child: HorizontalDifficultyBar(
+                  gridSize: puzzle.size,  // Assuming `puzzle.size` corresponds to the grid size
+                  maxMoves: puzzle.maxMoves,  // Assuming `puzzle.maxMoves` is the maximum number of moves for the level
+                  colors: worlds[currentWorld - 1].colors
                 ),
               ),
-              SizedBox(height: 30),
+            ),
+            SizedBox(height: 10,),
+              Container(
+  height: 100,
+  child: Stack(
+    children: [
+      Positioned(
+        top: 10, // Adjust depending on level position
+        left: 0,
+        right: 0,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            CustomInfoButton(
+              value: '', // No value needed here
+              targetColor: puzzle.targetColorNumber, // Target color
+              movesLeft: (puzzle.maxMoves - puzzle.moves), // No moves left needed here
+              iconPath: '', // No icon needed
+              backgroundColor: Colors.grey[100]!,
+              textColor: Colors.black,
+              isLarge: 0, // Increase size
+            ),
+            CustomInfoButton(
+              value: '', // No value needed here
+              targetColor: -1, // No target color needed here
+              movesLeft: (puzzle.maxMoves - puzzle.moves), // Number of moves left
+              iconPath: '', // No icon needed
+              backgroundColor: Colors.grey[100]!,
+              textColor: Colors.black,
+              isLarge: 0, // Increase size
+            ),
+          ],
+        ),
+      ),
+    ],
+  ),
+),
+              SizedBox(height: 10,),
               Expanded(
                 child: GridView.builder(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -321,7 +382,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                     crossAxisSpacing: 8.0,
                     mainAxisSpacing: 8.0,
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 24.0),
+                  padding: EdgeInsets.symmetric(horizontal: 35.0),
                   itemCount: puzzle.size * puzzle.size,
                   itemBuilder: (context, index) {
                     int x = index ~/ puzzle.size;
@@ -335,25 +396,52 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                       child: GestureDetector(
                         onTap: () {
                           if (!animationStarted && !showBanner && !denyClick) {
-
-if (isRemoveTileMode) {
+                           //print(((_random.nextInt(8)) + (calculateDifficulty(puzzle.maxMoves, puzzle.size) * 3)).floor() - 7);
+                        if (isRemoveTileMode) {
                               // Remove the tile
                               puzzle.clickTile(x, y, false, true);
+                              
                               //_showSnackbar(context, "Tile removed.");
                               setState(() {
                                 isRemoveTileMode = false; // Exit remove mode after removing a tile
                               });
                             } else {
+                              puzzle.countClicks += 1;
+    if(puzzle.maxMoves < 3) {
+        if(puzzle.countClicks > 3 * puzzle.maxMoves) {
+            puzzle.getHint();
+            puzzle.countClicks = 0;
+        }
+    } else {
+      if(puzzle.countClicks > 0.5 * puzzle.maxMoves) {
+        puzzle.countClicks = double.negativeInfinity;
+        showGadgetPopup(
+                    context,
+                    'Hinweise',
+                    handleBuyHintSale,
+                    handleWatchAdForHints,
+                    [Colors.amber, Colors.orange],
+                    true
+                  );
+      }
+
+    }
+    
                                 puzzle.clickTile(x, y, false, false);
                             }
 
 
                           if (puzzle.isGridFilledWithTargetColor()) {
                             denyClick = true;
-                            if(worlds[currentWorld].maxLevel >= selectedLevel) {
+                            
+                            if(worlds[currentWorld - 1].maxLevel > selectedLevel) {
                               getsLightBulb = -1;
                             } else {
-                                getsLightBulb = _random.nextInt(15) + 1;
+                                setState(() {
+                                  getsLightBulb =  ((_random.nextInt(8)) + (calculateDifficulty(puzzle.maxMoves, puzzle.size) * 3)).floor() - 7;
+                                });
+                                
+                                
                             }
 
                             _confettiController.play();
@@ -384,7 +472,7 @@ if (isRemoveTileMode) {
                               end: Alignment.bottomRight,
                             ),
                             border: isHintTile
-                                ? Border.all(color: Colors.yellowAccent, width: 4)
+                                ? Border.all(color: Colors.amber, width: 5)
                                 : null,
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
@@ -418,15 +506,16 @@ if (isRemoveTileMode) {
                   },
                 ),
               ),
-              tutorialActive ? CustomOverlay(message: currentTutorialStep == TutorialStep.step1 ? 'Click on the tile to change its color' : currentTutorialStep == TutorialStep.step2 ? 'When clicking on a tile, you also change the color of its neighbours' : "Fill the Grid with the Color indicated!", onClose: () {},) : SizedBox(),
             ],
           ),
+
+          
 
           Column(
   mainAxisAlignment: MainAxisAlignment.end,
   children: [
     Padding(
-      padding: const EdgeInsets.only(bottom: 40.0),
+      padding: const EdgeInsets.only(bottom: 20.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -440,9 +529,9 @@ if (isRemoveTileMode) {
                 if (hintUsed) {
                   // Your hint used logic here
                 } else {
-                  Future.delayed(Duration(milliseconds: 500), () {
+                  /*Future.delayed(Duration(milliseconds: 500), () {
                     puzzle.clearHint();
-                  });
+                  });*/
                 }
               } else {
                 showGadgetPopup(
@@ -450,7 +539,8 @@ if (isRemoveTileMode) {
                     'Hinweise',
                     handleBuyHint,
                     handleWatchAdForHints,
-                    [Colors.amber, Colors.orange]
+                    [Colors.amber, Colors.orange], 
+                    false
                   );
               }
                   
@@ -481,7 +571,8 @@ if (isRemoveTileMode) {
                     'Colorizer',
                     handleBuyRem,
                     handleWatchAdForRems,
-                    [Color.fromARGB(255, 176, 2, 124), Color.fromARGB(255, 255, 0, 81)]
+                    [Color.fromARGB(255, 176, 2, 124), Color.fromARGB(255, 255, 0, 81)],
+                    false
                   );
                 }
                 
@@ -527,6 +618,13 @@ if (isRemoveTileMode) {
   ],
 ),
 
+tutorialActive && currentTutorialStep != TutorialStep.none ? Column(
+  mainAxisAlignment: MainAxisAlignment.end,
+  children: [
+    AnimatedCustomOverlay(message: currentTutorialStep == TutorialStep.step2 ? 'Click on the tile to change its color' : currentTutorialStep == TutorialStep.step3 ? 'When clicking on a tile, you also change the color of its neighbours' : "Fill the Grid with the Color indicated!", onClose: () {},),
+  ],
+) : SizedBox(),
+
 
           
 if (showBanner && !animationStarted)
@@ -569,6 +667,11 @@ if (showBanner && !animationStarted)
                               if(getsLightBulb == 2) {
                                 setState(() {
                                   puzzle.addRems(1);
+                                });
+                              }
+                              if(getsLightBulb >= 3) {
+                                setState(() {
+                                  puzzle.addHints(2);
                                 });
                               }
                               denyClick = false;
@@ -620,14 +723,14 @@ if (showBanner && !animationStarted)
                         ),
                         SizedBox(height: 15),
                         // Coin display or animation
-                        Row(mainAxisAlignment: getsLightBulb == 1 || getsLightBulb == 2 ?MainAxisAlignment.spaceAround : MainAxisAlignment.center,
+                        Row(mainAxisAlignment: getsLightBulb >= 1 ?MainAxisAlignment.spaceAround : MainAxisAlignment.center,
                           children: [
                           animationStarted
                             ? SizedBox(height: 100)
                             : _buildCoinDisplay(puzzle.coinsEarned),
-                            getsLightBulb == 1 || getsLightBulb == 2 ? Row( children: [(Icon(getsLightBulb == 1 ? Icons.lightbulb : Icons.colorize, color: Colors.amber, size: 80) ), SizedBox(width: 30),
+                            getsLightBulb >= 1 ? Row( children: [(Icon(getsLightBulb == 1 || getsLightBulb >= 3 ? Icons.lightbulb : Icons.colorize, color: Colors.amber, size: 80) ), SizedBox(width: 30),
           Text(
-            '1',
+            getsLightBulb >= 3 ? '2' : '1',
             style: TextStyle(
               color: Colors.black,
               fontSize: 32,
@@ -658,17 +761,9 @@ if (showBanner && !animationStarted)
                             // Delay navigation to ensure coin animation completes
                             Future.delayed(Duration(milliseconds: 800), () {
                               puzzle.addCoins(puzzle.coinsEarned);
-                              switch(currentTutorialStep) {
+                              print("HIER");
+                              print(currentTutorialStep);
                               
-                              case TutorialStep.none:
-
-                              case TutorialStep.step1:
-                                currentTutorialStep = TutorialStep.step2;
-                              case TutorialStep.step2:
-                                currentTutorialStep = TutorialStep.completed;
-                              case TutorialStep.completed:
-                                tutorialActive = false;
-                            }
                               if(getsLightBulb == 1) {
                                 setState(() {
                                   puzzle.addHints(1);
@@ -677,6 +772,11 @@ if (showBanner && !animationStarted)
                               if(getsLightBulb == 2) {
                                 setState(() {
                                   puzzle.addRems(1);
+                                });
+                              }
+                              if(getsLightBulb >= 3) {
+                                setState(() {
+                                  puzzle.addHints(2);
                                 });
                               }
                               denyClick = false;
@@ -765,7 +865,8 @@ ConfettiWidget(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 20),
+                    HorizontalDifficultyBar(gridSize: puzzle.size, maxMoves: puzzle.maxMoves, colors: worlds[currentWorld - 1].colors),
+                    SizedBox(height: 20,),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -776,7 +877,7 @@ ConfettiWidget(
                           iconPath: '', // No icon needed
                           backgroundColor: Colors.grey[200]!,
                           textColor: Colors.black,
-                          isLarge: true, // Increase size
+                          isLarge: 1, // Increase size
                         ),
                         CustomInfoButton(
                           value: '', // No value needed here
@@ -785,7 +886,7 @@ ConfettiWidget(
                           iconPath: '', // No icon needed
                           backgroundColor: Colors.grey[200]!,
                           textColor: Colors.black,
-                          isLarge: true, // Increase size
+                          isLarge: 1, // Increase size
                         ),
                         CustomInfoButton(
                           value: '${puzzle.size}x${puzzle.size}', // Display grid size
@@ -794,7 +895,7 @@ ConfettiWidget(
                           iconPath: '', // No icon needed
                           backgroundColor: Colors.grey[200]!,
                           textColor: Colors.black,
-                          isLarge: true, // Increase size
+                          isLarge: 1, // Increase size
                         ),
                       ],
                     ),
@@ -804,6 +905,66 @@ ConfettiWidget(
             ),
         ],
       ),
+    );
+  }
+
+  void _showInfoDialogStart(BuildContext contex) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Grid einfärben'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min, // To fit the content size
+            children: [
+              Text(
+                'Fülle das gesamte Raster mit der ausgewählten Farbe. Wenn du ein Feld anklickst, verändert sich dessen Farbe und die Farbe aller angrenzenden Felder'
+              ),
+              const SizedBox(height: 30), // Space between text and GIF
+            Image.asset(
+              'images/tutorial_animation.gif', // Replace with your local path to the GIF
+              height: 250, // Adjust the height as needed
+              fit: BoxFit.cover, // Adjust to cover or contain based on the look you want
+            ),
+            ],
+          ),
+          
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+    // Öffnet den Info-Screen, wenn die Schwierigkeitsleiste angeklickt wird.
+  void showDifficultyInfo(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Difficulty Explanation'),
+          content: Text(
+            'The difficulty bar indicates how challenging the current puzzle is. '
+            'Light segments indicate an easier puzzle, darker segments indicate moderate difficulty, '
+            'and dark segments indicate a higher level of difficulty. The bar fills up based on the '
+            'maximum number of moves and grid size, providing a visual representation of the challenge level.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -839,7 +1000,7 @@ ConfettiWidget(
                     iconPath: '', 
                     backgroundColor: Colors.grey[200]!,
                     textColor: Colors.black,
-                    isLarge: true,
+                    isLarge: 0,
                   ),
                   CustomInfoButton(
                     value: '', 
@@ -848,7 +1009,7 @@ ConfettiWidget(
                     iconPath: '', 
                     backgroundColor: Colors.grey[200]!,
                     textColor: Colors.black,
-                    isLarge: true,
+                    isLarge: 0,
                   ),
                   CustomInfoButton(
                     value: '${puzzle.size}x${puzzle.size}', 
@@ -857,7 +1018,7 @@ ConfettiWidget(
                     iconPath: '', 
                     backgroundColor: Colors.grey[200]!,
                     textColor: Colors.black,
-                    isLarge: true,
+                    isLarge: 0,
                   ),
                 ],
               ),
@@ -882,7 +1043,7 @@ ConfettiWidget(
     );
   }
 
-void showGadgetPopup(BuildContext context, String gadgetName, Function onBuyPressed, Function onWatchAdPressed, List<Color> gradientColors) {
+void showGadgetPopup(BuildContext context, String gadgetName, Function onBuyPressed, Function onWatchAdPressed, List<Color> gradientColors, bool sale) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -898,7 +1059,7 @@ void showGadgetPopup(BuildContext context, String gadgetName, Function onBuyPres
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Mehr $gadgetName erhalten',
+                sale ? "Mehr $gadgetName mit 200 Coins Rabatt erhalten" :'Mehr $gadgetName erhalten',
                 style: TextStyle(
                   color: Colors.white, // Farbe angepasst
                   fontFamily: 'Quicksand',
@@ -919,7 +1080,7 @@ void showGadgetPopup(BuildContext context, String gadgetName, Function onBuyPres
                   ),
                   SizedBox(width: 25,),
               Text(
-                'x6', // Anzahl der Aktionen
+                gadgetName == "Colorizer" ? 'x5' : 'x3', // Anzahl der Aktionen
                 style: TextStyle(
                   color: gradientColors.first,
                   fontFamily: 'Quicksand',
@@ -960,11 +1121,11 @@ void showGadgetPopup(BuildContext context, String gadgetName, Function onBuyPres
                     builder: (context, coinProvider, child)  {
                       return ElevatedButton.icon(
                         onPressed: () {
-                          coinProvider.coins >= 200 ? onBuyPressed() : Navigator.of(context).popAndPushNamed("/shop");
+                          coinProvider.coins >= 300 ? onBuyPressed() : Navigator.of(context).popAndPushNamed("/shop");
                         },
                         icon: Icon(Icons.monetization_on),
                         label: Text(
-                          '200 Coins',
+                          sale ? '300 Coins' : '500 Coins',
                           style: TextStyle(
                             fontFamily: 'Quicksand',
                             fontSize: 16,
@@ -990,7 +1151,7 @@ void showGadgetPopup(BuildContext context, String gadgetName, Function onBuyPres
 }
 
 
-Widget buildTutorialOverlay() {
+/*Widget buildTutorialOverlay() {
   switch (currentTutorialStep) {
     case TutorialStep.step1:
       return Center(
@@ -1031,7 +1192,7 @@ Widget buildTutorialOverlay() {
     default:
       return SizedBox.shrink();
   }
-}
+}*/
 
 
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:color_puzzle/coin_manager.dart';
+import 'package:color_puzzle/difficulty_bar.dart';
 import 'package:color_puzzle/hints_manager.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
@@ -11,25 +12,26 @@ int currentWorld = 1;
   List<World> worlds = [
   World(
     id: 1,
-    maxLevel: 80,
+    maxLevel: 1,
     colors: const [
-      Color.fromARGB(255, 166, 231, 189),
-      Color(0xff2d6a4f),
-      Color(0xff081c15),
+      Color(0xff48cae4),
+      Color(0xff0077b6),
+      Color.fromARGB(255, 0, 37, 89),
+      
     ],
   ),
   World(
     id: 2,
-    maxLevel: 100,
+    maxLevel: 0,
     colors: const [
-      Color(0xff48cae4),
-      Color(0xff0077b6),
-      Color(0xff000814),
+      Color(0xff9CDBA6),
+      Color(0xff50B498),
+      Color(0xff468585),
     ],
   ),
   World(
     id: 3,
-    maxLevel: 1,
+    maxLevel: 0,
     colors: const [
       Color(0xffdb222a),
       Color(0xff7c2e41),
@@ -65,6 +67,7 @@ class PuzzleModel with ChangeNotifier {
   int _targetColorNumber;
   int moveWhereError = -1;
   int _coinsEarned;
+  double countClicks = 0;
 
   final List<List<dynamic>> _undoStack = []; // Stack für Undo-Funktion
   List<List<int>> _grid;
@@ -144,15 +147,25 @@ class PuzzleModel with ChangeNotifier {
   }
 
   int getMaxLevelForWorld(int worldId) {
-    return worlds.firstWhere((w) => w.id == worldId).maxLevel;
+  // Use `orElse` to handle the case when no element matches the condition
+  var world = worlds.firstWhere((w) => w.id == worldId, orElse: () => World(id: -1, maxLevel: -1, colors: []));
+  
+  // Check if the world is null, and handle it appropriately
+  if (world == null) {
+    // Return a default max level, e.g., 0, or handle the error as needed
+    return 0; // or handle the error according to your app's logic
   }
+
+  return world.maxLevel;
+}
+
 
   Map<String, int> getSizeAndMaxMoves(int level) {
     int s = currentWorld == 1 ? 1 : 2; // Grid-Size
     int m = 1; // MaxMoves
     int startLevel = 1; // Startlevel für die aktuelle Grid-Size
 
-    if (currentWorld == 1 && level < 11) {
+    if (currentWorld == 1 && level < 17) {
       switch (level) {
         case 1:
           s = 1; m = 1;
@@ -169,8 +182,27 @@ class PuzzleModel with ChangeNotifier {
         case 7:
         case 8:
         case 9:
-        case 10:
           s = 2; m = 3;
+        case 10:
+          s = 3; m = 1;
+          break;
+        case 11:
+          s = 3; m = 2;
+          break;
+        case 12:
+          s = 3; m = 2;
+          break;
+        case 13:
+          s = 3; m = 3;
+          break;
+        case 14:
+          s = 3; m = 3;
+          break;
+        case 15:
+          s = 3; m = 4;
+          break;
+        case 16:
+          s = 3; m = 4;
           break;
         default:
           s = 2; m = 3;
@@ -178,14 +210,14 @@ class PuzzleModel with ChangeNotifier {
       return {"size": s, "maxMoves": m};
     }
 
-    while (level < 70) {
+    while (level < 40) {
       if (currentWorld == 1) {
-        int levelsForCurrentSize = ((s + 0.8) * (s + 0.8)).floor();
+        int levelsForCurrentSize = ((s ) * (s - 0.8)).floor();
         int endLevel = startLevel + levelsForCurrentSize - 1;
 
         if (level <= endLevel) {
-          m = (1 + (log(level - startLevel + 1) / log(2.5))).ceil();
-          int maxMovesForCurrentSize = (s * 2.2).floor();
+          m = (1 + (log(level - startLevel + 1) / log(1.8))).ceil();
+          int maxMovesForCurrentSize = (s * 1.5).floor();
           m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
           break;
         }
@@ -208,13 +240,13 @@ class PuzzleModel with ChangeNotifier {
       }
     }
 
-    if (level >= 70) {
+    if (level >= 40) {
       s = 5;
       m = currentWorld == 1 ? 7 : 6;
       int tempLvl = level - 1;
       int set = 0;
-      while (tempLvl > 70) {
-        if (set == 2) {
+      while (tempLvl > 40) {
+        if (set == 2 || tempLvl >= 65) {
           set = 0;
           if (s > m - 5 && s > 4) {
             s = s - 1;
@@ -290,11 +322,29 @@ class PuzzleModel with ChangeNotifier {
     notifyListeners();
   }
 
+  int calculateCoinsEarned(int maxMoves, int size, int selectedLevel) {
+  double difficulty = calculateDifficulty(maxMoves, size) * 5;
+
+  // Skaliere die Schwierigkeit stärker für höhere Belohnungen
+  num difficultyWeight = difficulty > 1 ? pow(difficulty, 2.3) : difficulty;
+
+  // Dynamische Anpassung der Coins-Belohnung basierend auf Level und Schwierigkeit
+  double baseCoins = difficultyWeight * 1; // Grundwert pro Schwierigkeit
+  double levelFactor = log(selectedLevel + 1); // sorgt für geringeren Einfluss bei kleinen Levels
+
+  // Endberechnung der Coins mit minimalen und maximalen Grenzen
+  int coinsEarned = (baseCoins + levelFactor).clamp(1, 1000).ceil(); // z.B. Mindestwert 1, Maximalwert 1000
+
+  return coinsEarned;
+}
+
+
     void _initializeGrid() {
     _targetColorNumber = _random.nextInt(3) + 1; // Target color number to achieve
     setTargetColor(_targetColorNumber);
     if(worlds[currentWorld-1].maxLevel <= selectedLevel) {
-    _coinsEarned = (5 * (selectedLevel * _random.nextDouble()) + 5).floor();
+      _coinsEarned = calculateCoinsEarned(maxMoves, size, selectedLevel);
+    //_coinsEarned = ((calculateDifficulty(maxMoves, size) * 100 + (selectedLevel * 0.3)) * 0.5).ceil();
     } else {
       _coinsEarned = 5;
     }
@@ -402,6 +452,9 @@ void clickTile(int x, int y, bool reversed, bool oneTile) {
   bool found = false;
 
   if (!reversed && !oneTile) {
+    
+    
+    
     // Save the removed hint for undo functionality
     List<int>? removedHint;
 

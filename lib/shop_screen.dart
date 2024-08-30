@@ -1,4 +1,5 @@
 import 'package:color_puzzle/hints_manager.dart';
+import 'package:color_puzzle/puzzle_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'custom_info_button.dart'; // Dein CustomInfoButton
@@ -29,16 +30,27 @@ class _ShopScreenState extends State<ShopScreen> {
   void buy(Map<String, dynamic> item) async {
     int type = item['type'] as int;
     int value = int.parse(item['title'] as String);
+    int costs = 0;
+    if(item['price'] == "Gratis" || type == 2) {
+      costs = 0;
+    } else {
+      costs = int.parse(item['price'] as String);
+    }
+    
 
     if (type == 2) {
       addCoins(value);
+      
     }
-    if(type == 0) {
+    if(type == 0 && await CoinManager.loadCoins() > costs) {
       addHints(value);
+      subtractCoins(costs);
     }
-    if(type == 1) {
+    if(type == 1 && await CoinManager.loadCoins() > costs) {
       addRems(value);
+      subtractCoins(costs);
     }
+    
   }
 
   Future<void> handleBuyHint() async {
@@ -68,12 +80,13 @@ class _ShopScreenState extends State<ShopScreen> {
         actions: [
           Container(
             height: 65,
-            width: 150,
+            width: 100,
             child: Stack(
               children: [
                 Positioned(
-                  top: 16,
-                  left: 16,
+                  top: 10,
+                  left: 0,
+
                   child: Consumer<CoinProvider>(
                     builder: (context, coinProvider, child) {
                       return CustomInfoButton(
@@ -83,6 +96,7 @@ class _ShopScreenState extends State<ShopScreen> {
                         iconPath: 'images/coins.png',
                         backgroundColor: Colors.blueGrey[400]!,
                         textColor: Colors.white,
+                        isLarge: 2,
                       );
                     },
                   ),
@@ -135,7 +149,7 @@ class _ShopScreenState extends State<ShopScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Entfernt Vollbildwerbung. Videos und Banner mit Belohnungen sind weiterhin verfügbar.',
+                      'Entfernt Vollbildwerbung. Werbungen für Belohnungen sind weiterhin verfügbar.',
                       style: TextStyle(
                         fontSize: 14.0,
                         color: Colors.white,
@@ -158,7 +172,7 @@ class _ShopScreenState extends State<ShopScreen> {
                   ),
                   SizedBox(height: 20),
                   const Text(
-                    "3000",
+                    "5000",
                     style: TextStyle(
                       fontSize: 20.0,
                       fontWeight: FontWeight.bold,
@@ -172,7 +186,7 @@ class _ShopScreenState extends State<ShopScreen> {
                   Icon(Icons.lightbulb, size: 35, color: Colors.white,),
                   SizedBox(height: 20),
                   Text(
-                    "5",
+                    "10",
                     style: TextStyle(
                       fontSize: 20.0,
                       fontWeight: FontWeight.bold,
@@ -186,7 +200,7 @@ class _ShopScreenState extends State<ShopScreen> {
                   Icon(Icons.colorize, size: 35, color: Colors.white),
                   SizedBox(height: 20),
                   Text(
-                    "3",
+                    "10",
                     style: TextStyle(
                       fontSize: 20.0,
                       fontWeight: FontWeight.bold,
@@ -263,14 +277,14 @@ class _ShopScreenState extends State<ShopScreen> {
   Widget _buildShopItemsGrid() {
     final items = [
       {'title': '1', 'price': 'Gratis!', 'type': 0},
-      {'title': '6', 'price': '200 Coins', 'type': 0},
-      {'title': '10', 'price': '200 Coins', 'type': 1},
-      {'title': '50', 'price': 'Werbung\nansehen', 'type': 2},
-      {'title': '150', 'price': '0.99€', 'type': 2},
-      {'title': '900', 'price': '2.99€', 'type': 2},
-      {'title': '2500', 'price': '5.99€', 'type': 2},
-      {'title': '6000', 'price': '9.99€', 'type': 2},
-      {'title': '15000', 'price': '15.99€', 'type': 2},
+      {'title': '3', 'price': '500', 'type': 0},
+      {'title': '5', 'price': '500', 'type': 1},
+      {'title': '500', 'price': 'Werbung\nansehen', 'type': 2},
+      {'title': '1500', 'price': '0.99€', 'type': 2},
+      {'title': '5000', 'price': '2.99€', 'type': 2},
+      {'title': '15000', 'price': '5.99€', 'type': 2},
+      {'title': '40000', 'price': '9.99€', 'type': 2},
+      {'title': '100000', 'price': '15.99€', 'type': 2},
     ];
 
     return GridView.builder(
@@ -324,15 +338,23 @@ class _ShopScreenState extends State<ShopScreen> {
               ),
             ),
             Spacer(),
-            Text(
-              price,
-              style: TextStyle(
-                fontSize: 16.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.amber[300],
-              ),
-              textAlign: TextAlign.center,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  price,
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber[300],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                (type == 0 || type == 1) && price != 'Gratis!' ? SizedBox(width: 8,) : SizedBox(),
+                (type == 0 || type == 1) && price != 'Gratis!' ? Image.asset("images/coins.png", height: 15) : SizedBox(),
+              ],
             ),
+            
           ],
         ),
       ),
@@ -354,13 +376,13 @@ class _ShopScreenState extends State<ShopScreen> {
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Keine-Werbung',
+                'Keine Werbung',
                 style: TextStyle(
                   fontSize: 20.0,
                   fontWeight: FontWeight.bold,
@@ -369,7 +391,7 @@ class _ShopScreenState extends State<ShopScreen> {
               ),
               SizedBox(height: 5),
               Text(
-                'Entfernt Vollbildwerbung. Videos und Banner mit\nBelohnungen sind weiterhin verfügbar.',
+                'Entfernt Vollbildwerbung. Werbungen für\nBelohnungen sind weiterhin verfügbar.',
                 style: TextStyle(
                   fontSize: 8.5,
                   fontWeight: FontWeight.bold,
@@ -378,6 +400,7 @@ class _ShopScreenState extends State<ShopScreen> {
               ),
             ],
           ),
+          Spacer(),
           ElevatedButton(
             onPressed: () {
               // Funktionalität zum Aktivieren des Bundles

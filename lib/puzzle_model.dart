@@ -362,7 +362,7 @@ class PuzzleModel with ChangeNotifier {
       clickTile(x, y, true, false);
       clicks[i] = [x, y];
       savedClicks[i] = [x, y];  // Deep copy the individual list
-      if(tutorialActive && currentTutorialStep != TutorialStep.completed) {
+      if(tutorialActive && currentTutorialStep != TutorialStep.step3 && currentTutorialStep != TutorialStep.completed && currentTutorialStep != TutorialStep.none) {
       setHint(x, y);
     }
     }

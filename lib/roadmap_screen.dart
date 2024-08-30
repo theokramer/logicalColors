@@ -25,7 +25,7 @@ class RoadMapScreen extends StatelessWidget {
             itemCount: worlds.length,
             itemBuilder: (context, worldIndex) {
               final world = worlds[worldIndex];
-              bool isWorldUnlocked = worldIndex == 0 || puzzle.getMaxLevelForWorld(worldIndex) >= worldIndex * 10 + 60;
+              bool isWorldUnlocked = worldIndex == 0 || puzzle.getMaxLevelForWorld(worldIndex) >= 50;
 
               return Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -136,8 +136,8 @@ class LevelSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
-    int worldStartLevel = (worldIndex - 1) * 100 + 1;
-    int worldEndLevel = (worldIndex) * 100;
+    int worldStartLevel = (worldIndex - 1) * 75 + 1;
+    int worldEndLevel = (worldIndex) * 75;
 
     return Scaffold(
       appBar: AppBar(
@@ -216,12 +216,12 @@ class RoadMapUtils {
 
     for (int worldIndex = 0; worldIndex < worlds.length; worldIndex++) {
       final world = worlds[worldIndex];
-      bool isWorldUnlocked = worldIndex == 0 || puzzle.getMaxLevelForWorld(worldIndex) >= 70;
+      bool isWorldUnlocked = worldIndex == 0 || puzzle.getMaxLevelForWorld(worldIndex) >= 50;
 
       if (isWorldUnlocked) {
         int currentMaxLevel = puzzle.getMaxLevelForWorld(worldIndex + 1);
-        int worldStartLevel = (worldIndex) * 100 + 1;
-        int worldEndLevel = (worldIndex + 1) * 100;
+        int worldStartLevel = (worldIndex) * 75 + 1;
+        int worldEndLevel = (worldIndex + 1) * 75;
 
         // Update highest world index and highest level index
         if (worldIndex > highestWorldIndex) {

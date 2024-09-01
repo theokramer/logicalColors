@@ -1,5 +1,6 @@
 import 'package:color_puzzle/puzzle_model.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
+import 'package:color_puzzle/shop_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -12,6 +13,7 @@ class CustomInfoButton extends StatefulWidget {
   final Color textColor;
   final int isLarge; // New parameter to adjust size
   final bool blink;
+  final bool originShop;
 
   CustomInfoButton({
     required this.value,
@@ -22,6 +24,7 @@ class CustomInfoButton extends StatefulWidget {
     required this.textColor,
     this.blink = false,
     this.isLarge = 0, // Default to false
+    this.originShop = false
   });
 
   @override
@@ -71,6 +74,8 @@ class _CustomInfoButtonState extends State<CustomInfoButton> with SingleTickerPr
     _controller.forward();
   }
 
+
+
   @override
   void dispose() {
     _controller.dispose(); // Dispose the controller when the widget is removed
@@ -86,7 +91,15 @@ class _CustomInfoButtonState extends State<CustomInfoButton> with SingleTickerPr
 
     return GestureDetector(
       
-      onTap: () => widget.isLarge != 1 ? _showInfoDialog(context) : null, // Show info dialog on tap
+      onTap: tutorialActive ? null : () => widget.isLarge != 1 && widget.isLarge != 2 ? _showInfoDialog(context) : widget.isLarge == 2 && !widget.originShop ? 
+      (Navigator.of(context).push(
+                                  FadePageRoute(
+                                    page: ChangeNotifierProvider.value(
+                                      value: puzzle,
+                                      child: ShopScreen(),
+                                    ),
+                                  ),
+                                )) : null, // Show info dialog on tap
       child: AnimatedBuilder(
         animation: _colorAnimation,
         builder: (context, child) {

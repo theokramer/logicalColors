@@ -226,7 +226,7 @@ switch(currentTutorialStep) {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
-                      onTap: () {
+                      onTap: tutorialActive ? null : () {
                         Navigator.of(context).push(
                               FadePageRoute(
                                 page: ChangeNotifierProvider.value(
@@ -262,7 +262,8 @@ switch(currentTutorialStep) {
                         ),
                       ),
                     ),
-                    
+                    //Remove option to leave Screen when tutorial is active
+                    tutorialActive ? Text("") : 
                     Consumer<CoinProvider>(
                       builder: (context, coinProvider, child) {
                         return PopupMenuButton<String>(
@@ -336,6 +337,27 @@ switch(currentTutorialStep) {
                               );
                           }
                                 break;
+                              case 'tutorial':
+                                tutorialActive = true;
+                                currentTutorialStep = TutorialStep.step1;
+                                selectedLevel = 1;
+                                currentWorld = 1;
+                                 Navigator.of(context).pushReplacement(
+                                FadePageRoute(
+                                  page: ChangeNotifierProvider(
+                                    create: (_) => PuzzleModel(
+                                      size: 1,
+                                      level: 1,
+                                      colorMapping: {
+                            1: worlds[currentWorld - 1].colors[0],
+                            2: worlds[currentWorld - 1].colors[1] ,
+                            3: worlds[currentWorld - 1].colors[2],
+                          }
+                                    ),
+                                    child: PuzzleScreen(), 
+                                  ),
+                                ),
+                              );
                             }
                           },
                           itemBuilder:  (BuildContext context) => <PopupMenuEntry<String>>[
@@ -343,6 +365,7 @@ switch(currentTutorialStep) {
                             _buildPopupMenuItem('shop', 'Shop', Icons.shopping_cart, Colors.indigo),
                             _buildPopupMenuItem('refresh', 'New Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 10 Coins' : ""}', Icons.refresh, Colors.indigo),
                             _buildPopupMenuItem('next', 'Skip Level ${worlds[currentWorld-1].maxLevel <= selectedLevel ? '– 100 Coins' : ""}', Icons.skip_next, Colors.indigo),
+                            _buildPopupMenuItem('tutorial', 'Watch the Tutorial', Icons.cast_for_education, Colors.indigo),
                           ] ,
                         );
                       }
@@ -896,12 +919,12 @@ switch(currentTutorialStep) {
               },
               child: Container(width:  MediaQuery.of(context).size.width, height:  MediaQuery.of(context).size.height, color: Colors.transparent, child: 
             GestureDetector(
-              onTap: () {
+              onTap: !tutorialActive ? () {
                 setState(() {
                   showStartBanner = false;
                 denyClick = false;
                 });
-              },
+              } : null,
               child: Center(
                 child: AlertDialog(
                   backgroundColor: Colors.white,

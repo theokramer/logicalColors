@@ -9,6 +9,7 @@ import 'package:color_puzzle/hints_manager.dart';
 import 'package:color_puzzle/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'puzzle_model.dart';
 import 'roadmap_screen.dart';
 import 'shop_screen.dart';
@@ -17,7 +18,7 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 
 
-int selectedLevel = 2;
+int selectedLevel = 1;
 bool tutorialActive = true;
 enum TutorialStep { none, step1, step2, step3, completed }
 Timer? _timer; // Declare the timer at the class level
@@ -42,9 +43,15 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
   double pi = 3.1415926535897932;
   bool isRemoveTileMode = false;
   final Random _random = Random();
-  bool showStartBanner = currentTutorialStep != TutorialStep.step1 && currentTutorialStep != TutorialStep.step2 && currentTutorialStep != TutorialStep.step3;
+  bool showStartBanner = (currentTutorialStep != TutorialStep.step1 && currentTutorialStep != TutorialStep.step2 && currentTutorialStep != TutorialStep.step3) || !tutorialActive;
   int getsLightBulb = 0;
-  
+
+
+
+Future<void> saveTutorial(bool tutorial) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool('tutorialActive', tutorial);
+}
 
   @override
  void initState() {
@@ -67,11 +74,13 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
       
-      switch(currentTutorialStep) {
+      if(tutorialActive == true) {
+switch(currentTutorialStep) {
                               
                               case TutorialStep.none:
                               setState(() {
                                 tutorialActive = false;
+                                saveTutorial(tutorialActive);
                               });
                               break;
                                   
@@ -97,12 +106,15 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                                 setState(() {
                                   tutorialActive = false;
                                   currentTutorialStep = TutorialStep.none;
+                                  saveTutorial(tutorialActive);
                                 });
                                 break;
 
                             }
+      }
+      
       //Zeit erhöhen in Production
-      if(currentTutorialStep == TutorialStep.none) {
+      if(currentTutorialStep == TutorialStep.none || tutorialActive == false) {
           _timer = Timer(Duration(milliseconds: 7000), () {
 
             if (mounted) {
@@ -381,7 +393,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
               backgroundColor: Colors.grey[100]!,
               textColor: Colors.black,
               isLarge: 0, // Increase size
-              blink: currentTutorialStep == TutorialStep.completed,
+              blink: currentTutorialStep == TutorialStep.completed && tutorialActive,
             ),
             
             CustomInfoButton(
@@ -446,7 +458,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                     handleBuyHintSale,
                     handleWatchAdForHints,
                     [Colors.amber, Colors.orange],
-                    true
+                    false //Change this Line to true, if you want sale for 200 coins
                   );
       }
       
@@ -647,7 +659,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
       tutorialActive && currentTutorialStep != TutorialStep.none ? Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          AnimatedCustomOverlay(blink: currentTutorialStep == TutorialStep.step2, message: currentTutorialStep == TutorialStep.step2 ? 'Click on the tile to change its color' : currentTutorialStep == TutorialStep.step3 ? 'Click to change color of its neighbours' : "Fill the Grid with the Color indicated!", onClose: () {},),
+          AnimatedCustomOverlay(blink: currentTutorialStep == TutorialStep.step2 && tutorialActive, message: currentTutorialStep == TutorialStep.step2 && tutorialActive ? 'Click on the tile to change its color' : currentTutorialStep == TutorialStep.step3 && tutorialActive ? 'Click to change color of its neighbours' : "Fill the Grid with the Color indicated!", onClose: () {},),
         ],
       ) : SizedBox(),
       
@@ -787,8 +799,6 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                             // Delay navigation to ensure coin animation completes
                             Future.delayed(Duration(milliseconds: 800), () {
                               puzzle.addCoins(puzzle.coinsEarned);
-                              print("HIER");
-                              print(currentTutorialStep);
                               
                               if(getsLightBulb == 1) {
                                 setState(() {

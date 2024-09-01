@@ -13,9 +13,16 @@ import 'puzzle_screen.dart'; // Import your screen
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   int maxLevel = await loadWorldProgress(currentWorld); // Load progress for the current world
+  tutorialActive = await loadTutorial();
   selectedLevel = maxLevel;
   runApp(MyApp(maxLevel: maxLevel));
 }
+
+
+  Future<bool> loadTutorial() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('tutorialActive') ?? true; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+} 
 
 // Load the progress of the specific world
 Future<int> loadWorldProgress(int worldId) async {

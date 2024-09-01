@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
   double calculateDifficulty(int maxMoves, int gridSize) {
-    double difficulty = ((maxMoves * 3) / ((gridSize * gridSize) + 6)) * 0.9; // Adjusting the multiplier to keep within 0 to 1 range
+    double difficulty = ((maxMoves * 3) / ((gridSize * gridSize) + 10)) * 1.1; // Adjusting the multiplier to keep within 0 to 1 range
     return difficulty.clamp(0.0, 1.0);
   }
 

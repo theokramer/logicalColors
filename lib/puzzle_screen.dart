@@ -98,7 +98,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                             }
       //Zeit erhöhen in Production
       if(currentTutorialStep == TutorialStep.none) {
-          Timer(Duration(milliseconds: 10000), () {
+          Timer(Duration(milliseconds: 7000), () {
       setState(() {
         showStartBanner = false;
         denyClick = false;
@@ -329,7 +329,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                   ],
                 ),
               ),
-              SizedBox(height: 10),
+              //SizedBox(height: 10),
               Text(
                 'Level ${selectedLevel}',
                 style: TextStyle(
@@ -352,7 +352,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                 ),
               ),
             ),
-            SizedBox(height: 10,),
+            //SizedBox(height: 10,),
               Container(
         height: 90,
         child: Stack(
@@ -390,7 +390,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
           ],
         ),
       ),
-      SizedBox(height: 20,),
+      //SizedBox(height: 20,),
               Expanded(
                 child: GridView.builder(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -429,7 +429,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
             puzzle.countClicks = 0;
         }
           } else {
-      if(puzzle.countClicks > 0.5 * puzzle.maxMoves) {
+      if(puzzle.countClicks > 5 * puzzle.maxMoves) {
         puzzle.countClicks = double.negativeInfinity;
         showGadgetPopup(
                     context,
@@ -869,7 +869,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
             GestureDetector(
               onTap: () {
                 if(showStartBanner) {
-            setState(() {
+              setState(() {
               showStartBanner = false;
                 denyClick = false;
             });

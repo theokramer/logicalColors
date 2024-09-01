@@ -80,12 +80,13 @@ class _CustomInfoButtonState extends State<CustomInfoButton> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
-    double fontSize = widget.isLarge == 0 ? 20 : widget.isLarge == 1 ? 18 : 16;
-    double iconSize = widget.isLarge == 0 ? 34 : widget.isLarge == 1 ? 22 : 16;
+    double fontSize = widget.isLarge == 0 ? 20 : widget.isLarge == 1 ? 16 : 16;
+    double iconSize = widget.isLarge == 0 ? 34 : widget.isLarge == 1 ? 20 : 16;
     double padding = widget.isLarge == 0 ? 18 : widget.isLarge == 1 ? 14 : 6;
 
     return GestureDetector(
-      onTap: () => _showInfoDialog(context), // Show info dialog on tap
+      
+      onTap: () => widget.isLarge != 1 ? _showInfoDialog(context) : null, // Show info dialog on tap
       child: AnimatedBuilder(
         animation: _colorAnimation,
         builder: (context, child) {

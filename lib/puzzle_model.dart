@@ -12,7 +12,7 @@ int currentWorld = 1;
   List<World> worlds = [
   World(
     id: 1,
-    maxLevel: 1,
+    maxLevel: 80,
     colors: const [
       Color(0xff48cae4),
       Color(0xff0077b6),
@@ -22,7 +22,7 @@ int currentWorld = 1;
   ),
   World(
     id: 2,
-    maxLevel: 0,
+    maxLevel: 8,
     colors: const [
       Color(0xff9CDBA6),
       Color(0xff50B498),
@@ -165,7 +165,7 @@ class PuzzleModel with ChangeNotifier {
     int m = 1; // MaxMoves
     int startLevel = 1; // Startlevel für die aktuelle Grid-Size
 
-    if (currentWorld == 1 && level < 17) {
+    if (currentWorld == 1 && level < 13) {
       switch (level) {
         case 1:
           s = 1; m = 1;
@@ -181,43 +181,35 @@ class PuzzleModel with ChangeNotifier {
           break;
         case 7:
         case 8:
-        case 9:
           s = 2; m = 3;
-        case 10:
+          break;
+        case 9:
           s = 3; m = 1;
           break;
-        case 11:
+        case 10:
           s = 3; m = 2;
+          break;
+        case 11:
+          s = 3; m = 3;
           break;
         case 12:
-          s = 3; m = 2;
-          break;
-        case 13:
-          s = 3; m = 3;
-          break;
-        case 14:
-          s = 3; m = 3;
-          break;
-        case 15:
-          s = 3; m = 4;
-          break;
-        case 16:
           s = 3; m = 4;
           break;
         default:
           s = 2; m = 3;
+          break;
       }
       return {"size": s, "maxMoves": m};
     }
 
-    while (level < 40) {
+    while (level < 50) {
       if (currentWorld == 1) {
-        int levelsForCurrentSize = ((s ) * (s - 0.8)).floor();
+        int levelsForCurrentSize = ((s) * (s)).floor();
         int endLevel = startLevel + levelsForCurrentSize - 1;
 
         if (level <= endLevel) {
-          m = (1 + (log(level - startLevel + 1) / log(1.8))).ceil();
-          int maxMovesForCurrentSize = (s * 1.5).floor();
+          m = (1 + (log(level - startLevel + 1) / log(1.9))).ceil();
+          int maxMovesForCurrentSize = (s * 1.8).floor();
           m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
           break;
         }
@@ -230,7 +222,7 @@ class PuzzleModel with ChangeNotifier {
 
         if (level <= endLevel) {
           m = (1 + (log(level - startLevel + 1) / log(2.07))).floor();
-          int maxMovesForCurrentSize = (s * 4).floor();
+          int maxMovesForCurrentSize = (s * 5).floor();
           m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
           break;
         }
@@ -240,12 +232,12 @@ class PuzzleModel with ChangeNotifier {
       }
     }
 
-    if (level >= 40) {
+    if (level >= 50) {
       s = 5;
       m = currentWorld == 1 ? 7 : 6;
       int tempLvl = level - 1;
       int set = 0;
-      while (tempLvl > 40) {
+      while (tempLvl > 50) {
         if (set == 2 || tempLvl >= 65) {
           set = 0;
           if (s > m - 5 && s > 4) {
@@ -354,11 +346,32 @@ class PuzzleModel with ChangeNotifier {
         _grid[i][j] = _targetColorNumber;
       }
     }
+    
+    List<Click> positions = [];
 
     // Create random moves and store them in the clicks list
     for (int i = 0; i < _maxMoves; i++) {
       var x = _randomPositionNumber();
       var y = _randomPositionNumber();
+      int count = 0;
+      bool works = false;
+      while(works == false) {
+        count = 0;
+        for(int i = 0; i < positions.length; i++) {
+          if(positions[i].x == x && positions[i].y == y) {
+              count++;
+          }
+        }
+        if(count < 2) {
+          works = true;
+        } else {
+          x = _randomPositionNumber();
+          y = _randomPositionNumber();
+        }
+      }
+      positions.add(Click(x: x, y: y));
+
+
       clickTile(x, y, true, false);
       clicks[i] = [x, y];
       savedClicks[i] = [x, y];  // Deep copy the individual list
@@ -607,4 +620,14 @@ class World {
     required this.maxLevel,
     required this.colors,
   });
+}
+
+class Click {
+  final int x;
+final int y;
+
+Click({
+  required this.x,
+  required this.y,
+});
 }

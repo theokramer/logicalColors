@@ -17,9 +17,10 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 
 
-int selectedLevel = 1;
+int selectedLevel = 2;
 bool tutorialActive = true;
 enum TutorialStep { none, step1, step2, step3, completed }
+Timer? _timer; // Declare the timer at the class level
 
 TutorialStep currentTutorialStep = TutorialStep.step1;
  
@@ -98,12 +99,14 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                             }
       //Zeit erhöhen in Production
       if(currentTutorialStep == TutorialStep.none) {
-          Timer(Duration(milliseconds: 7000), () {
-      setState(() {
-        showStartBanner = false;
+          _timer = Timer(Duration(milliseconds: 7000), () {
+
+            if (mounted) {
+  setState(() {
+    showStartBanner = false;
         denyClick = false;
-        
-      });
+  });
+}
     });
       } else {
         setState(() {
@@ -179,8 +182,10 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
 
   @override
   void dispose() {
+      _timer?.cancel(); // Cancel the timer
     _confettiController.dispose();
     _animationController.dispose();
+    
     super.dispose();
   }
 

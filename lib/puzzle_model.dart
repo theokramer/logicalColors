@@ -6,13 +6,14 @@ import 'package:color_puzzle/hints_manager.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 int currentWorld = 1;
 
   List<World> worlds = [
   World(
     id: 1,
-    maxLevel: 80,
+    maxLevel: 1,
     colors: const [
       Color(0xff48cae4),
       Color(0xff0077b6),
@@ -21,8 +22,8 @@ int currentWorld = 1;
     ],
   ),
   World(
-    id: 2,
-    maxLevel: 8,
+    id: 1,
+    maxLevel: 0,
     colors: const [
       Color(0xff9CDBA6),
       Color(0xff50B498),
@@ -103,8 +104,18 @@ class PuzzleModel with ChangeNotifier {
         1: worlds[currentWorld - 1].colors[0],
         2: worlds[currentWorld - 1].colors[1],
         3: worlds[currentWorld - 1].colors[2],
-      } {
-  _initializeGrid();
+      }
+      
+      {
+    initializeProgress().then((_) {
+      var sizeAndMoves = getSizeAndMaxMoves(selectedLevel);
+      size = sizeAndMoves['size'] ?? 1;  // Sicherstellen, dass die Größe richtig gesetzt wird
+      _maxMoves = sizeAndMoves['maxMoves'] ?? 1;
+
+      _initializeGrid(); // Initialisiere das Grid mit den richtigen Werten
+    });
+    
+      
 }
 
   // Getters
@@ -138,13 +149,42 @@ class PuzzleModel with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<int> loadWorldProgress(int worldId) async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('world_$worldId') ?? 0; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+}
+
+
+Future<void> saveWorldProgress(int worldId, int level) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setInt('world_$worldId', level);
+}
+
+
   void updateWorldLevel(int worldId, int newLevel) {
-    var world = worlds.firstWhere((w) => w.id == worldId);
-    if (newLevel > world.maxLevel) {
-      world.maxLevel = newLevel;
-      notifyListeners();
-    }
+  var world = worlds.firstWhere((w) => w.id == worldId);
+  if (newLevel > world.maxLevel) {
+    world.maxLevel = newLevel;
+    saveWorldProgress(worldId, newLevel); // Speichere den neuen Fortschritt
+    notifyListeners();
   }
+}
+
+Future<void> initializeProgress() async {
+  for (var world in worlds) {
+    world.maxLevel = await loadWorldProgress(world.id);
+  }
+  if(worlds.lastIndexWhere((world) => world.maxLevel != 0) != -1) {
+selectedLevel = worlds[worlds.lastIndexWhere((world) => world.maxLevel != 0)].maxLevel; 
+  print(selectedLevel); 
+  } else {
+    selectedLevel = 1;
+  }
+  
+  _initializeGrid();
+}
+
+
 
   int getMaxLevelForWorld(int worldId) {
   // Use `orElse` to handle the case when no element matches the condition
@@ -161,6 +201,7 @@ class PuzzleModel with ChangeNotifier {
 
 
   Map<String, int> getSizeAndMaxMoves(int level) {
+    getMaxLevelForWorld(currentWorld);
     int s = currentWorld == 1 ? 1 : 2; // Grid-Size
     int m = 1; // MaxMoves
     int startLevel = 1; // Startlevel für die aktuelle Grid-Size
@@ -269,6 +310,7 @@ class PuzzleModel with ChangeNotifier {
     _undoStack.clear();
     moveWhereError = -1;
     _initializeGrid();
+        initializeProgress(); // Lade den Fortschritt
   }
   
 

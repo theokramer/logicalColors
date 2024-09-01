@@ -1,3 +1,4 @@
+import 'package:color_puzzle/main.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,14 +7,22 @@ import 'puzzle_model.dart';
 class RoadMapScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final puzzle = Provider.of<PuzzleModel>(context);
+        final puzzle = Provider.of<PuzzleModel>(context);
     final result = RoadMapUtils.findHighestUnlockedWorldAndLevel(puzzle);
 
     // Bestimme den höchsten Schwierigkeitsgrad
     int maxWorldIndex = worlds.length - 1;
     int maxLevel = puzzle.getMaxLevelForWorld(maxWorldIndex + 1);
-
-    return Scaffold(
+    return FutureBuilder<int>(
+      future: loadWorldProgress(currentWorld), // Lade den Fortschritt der aktuellen Welt
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else {
+          int maxLevel = snapshot.data ?? 1;
+          return Scaffold(
       appBar: AppBar(
         title: Text('Road Map', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
@@ -25,7 +34,7 @@ class RoadMapScreen extends StatelessWidget {
             itemCount: worlds.length,
             itemBuilder: (context, worldIndex) {
               final world = worlds[worldIndex];
-              bool isWorldUnlocked = worldIndex == 0 || puzzle.getMaxLevelForWorld(worldIndex) >= 50;
+              bool isWorldUnlocked = worldIndex == 0 || puzzle.getMaxLevelForWorld(worldIndex) >= 10;
 
               return Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -47,7 +56,7 @@ class RoadMapScreen extends StatelessWidget {
                     subtitle: Text(
                       isWorldUnlocked
                           ? 'Levels 1-${world.maxLevel}'
-                          : puzzle.getMaxLevelForWorld(worldIndex - 1) >= (worldIndex-1) * 10 + 60 ? 'Reach Level ${worldIndex * 10 + 60} in World ${worldIndex} to unlock' : "Locked",
+                          : puzzle.getMaxLevelForWorld(worldIndex - 1) >= (worldIndex-1) * 10 ? 'Reach Level ${worldIndex * 10} in World ${worldIndex} to unlock' : "Locked",
                       style: TextStyle(
                         fontSize: 16,
                         color: isWorldUnlocked ? worlds[worldIndex].colors[1] : Colors.white,
@@ -120,7 +129,8 @@ class RoadMapScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
+          );
+        }});
   }
 }
 
@@ -154,7 +164,7 @@ class LevelSelectionScreen extends StatelessWidget {
         itemCount: worldEndLevel - worldStartLevel + 1,
         itemBuilder: (context, levelIndex) {
           int levelNumber = levelIndex + 1;
-          bool isLevelUnlocked = levelNumber <= currentLevel;
+          bool isLevelUnlocked = levelNumber <= currentLevel || levelIndex == 0;
 
           return GestureDetector(
             onTap: isLevelUnlocked

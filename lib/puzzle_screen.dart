@@ -49,6 +49,10 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
   @override
  void initState() {
     super.initState();
+    for(int i = 0; i< worlds.length; i++) {
+      print(worlds[i].id);
+      print(worlds[i].maxLevel);
+    }
     _confettiController = ConfettiController(duration: const Duration(milliseconds: 500));
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -294,7 +298,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> with SingleTickerProviderSt
                                   }
                             //Watch Ad, when following level isn't unlocked
                                     
-                                    if (selectedLevel >= 69 && worlds[currentWorld+1].maxLevel == 0) {
+                                    if (selectedLevel >= 10 && worlds[currentWorld+1].maxLevel == 0) {
                                       puzzle.updateWorldLevel(currentWorld + 1, 1);
                                     }
                                     if (selectedLevel < 100) {

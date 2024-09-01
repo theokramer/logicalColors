@@ -22,7 +22,7 @@ int currentWorld = 1;
     ],
   ),
   World(
-    id: 1,
+    id: 2,
     maxLevel: 0,
     colors: const [
       Color(0xff9CDBA6),
@@ -107,15 +107,7 @@ class PuzzleModel with ChangeNotifier {
       }
       
       {
-    initializeProgress().then((_) {
-      var sizeAndMoves = getSizeAndMaxMoves(selectedLevel);
-      size = sizeAndMoves['size'] ?? 1;  // Sicherstellen, dass die Größe richtig gesetzt wird
-      _maxMoves = sizeAndMoves['maxMoves'] ?? 1;
-
-      _initializeGrid(); // Initialisiere das Grid mit den richtigen Werten
-    });
-    
-      
+    initializeProgress();
 }
 
   // Getters
@@ -174,12 +166,7 @@ Future<void> initializeProgress() async {
   for (var world in worlds) {
     world.maxLevel = await loadWorldProgress(world.id);
   }
-  if(worlds.lastIndexWhere((world) => world.maxLevel != 0) != -1) {
-selectedLevel = worlds[worlds.lastIndexWhere((world) => world.maxLevel != 0)].maxLevel; 
-  print(selectedLevel); 
-  } else {
-    selectedLevel = 1;
-  }
+  
   
   _initializeGrid();
 }

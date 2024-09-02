@@ -151,6 +151,7 @@ class _CustomInfoButtonState extends State<CustomInfoButton> with SingleTickerPr
                       color: puzzle.getColor(widget.targetColor), // Function to get color from name
                       shape: BoxShape.circle,
                     ),
+                    child: Center(child: Text("${widget.targetColor}", style: TextStyle(fontSize: widget.isLarge == 0 ? 15 : 10, color: Colors.white, fontWeight: FontWeight.bold),)),
                   ),
                 ],
                 if (widget.movesLeft > -1 && widget.targetColor == -1) ...[

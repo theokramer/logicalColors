@@ -20,6 +20,8 @@ int currentWorld = 1;
       Color.fromARGB(255, 0, 37, 89),
       
     ],
+    unlocked: true
+    
   ),
   World(
     id: 2,
@@ -29,6 +31,7 @@ int currentWorld = 1;
       Color(0xff50B498),
       Color(0xff468585),
     ],
+    unlocked: false
   ),
   World(
     id: 3,
@@ -38,6 +41,7 @@ int currentWorld = 1;
       Color(0xff7c2e41),
       Color(0xff053c5e),
     ],
+    unlocked: false
   ),
   World(
     id: 4,
@@ -47,6 +51,7 @@ int currentWorld = 1;
       Color(0xff0077b6),
       Color(0xff000814),
     ],
+    unlocked: false
   ),
   World(
     id: 5,
@@ -56,6 +61,7 @@ int currentWorld = 1;
       Color(0xff0077b6),
       Color(0xff000814),
     ],
+    unlocked: false
   ),
   // Weitere Welten hier hinzufügen...
 ];
@@ -136,8 +142,8 @@ class PuzzleModel with ChangeNotifier {
   }
 
   // Methods
-  void addWorld(int id, int maxLevel, List<Color> colors) {
-    worlds.add(World(id: id, maxLevel: maxLevel, colors: colors));
+  void addWorld(int id, int maxLevel, List<Color> colors, bool unlocked) {
+    worlds.add(World(id: id, maxLevel: maxLevel, colors: colors, unlocked: unlocked));
     notifyListeners();
   }
 
@@ -146,6 +152,15 @@ class PuzzleModel with ChangeNotifier {
   return prefs.getInt('world_$worldId') ?? 0; // 0 ist der Standardwert, wenn nichts gespeichert wurde
 }
 
+  Future<bool> loadWorldUnlocked(int worldId) async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('world_${worldId}_unlocked') ?? false; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+}
+
+Future<void> saveWorldUnlocked(int worldId, bool unlocked) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool('world_${worldId}_unlocked', unlocked);
+}
 
 Future<void> saveWorldProgress(int worldId, int level) async {
   final prefs = await SharedPreferences.getInstance();
@@ -165,17 +180,33 @@ Future<void> saveWorldProgress(int worldId, int level) async {
 Future<void> initializeProgress() async {
   for (var world in worlds) {
     world.maxLevel = await loadWorldProgress(world.id);
+    world.unlocked = await loadWorldUnlocked(world.id);
   }
   
   
   _initializeGrid();
 }
 
+bool isWorldUnlocked(int worldID) {
+  if (worldID == 0) {
+    return true;
+  }
+  try {
+    return worlds.firstWhere((world) => world.id == worldID).unlocked;
+  } catch(e) {
+    return false;
+  }
+}
+
+void unlockWorld(int worldID) {
+  worlds.firstWhere((world) => world.id == worldID).unlocked = true;
+}
+
 
 
   int getMaxLevelForWorld(int worldId) {
   // Use `orElse` to handle the case when no element matches the condition
-  var world = worlds.firstWhere((w) => w.id == worldId, orElse: () => World(id: -1, maxLevel: -1, colors: []));
+  var world = worlds.firstWhere((w) => w.id == worldId, orElse: () => World(id: -1, maxLevel: -1, colors: [], unlocked: false));
   
   // Check if the world is null, and handle it appropriately
   if (world == null) {
@@ -643,11 +674,13 @@ class World {
   final int id;
   int maxLevel;
   List<Color> colors;
+  bool unlocked;
 
   World({
     required this.id,
     required this.maxLevel,
     required this.colors,
+    required this.unlocked
   });
 }
 

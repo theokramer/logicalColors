@@ -6,6 +6,7 @@ import 'package:color_puzzle/hints_manager.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 int currentWorld = 1;
 
@@ -19,6 +20,8 @@ int currentWorld = 1;
       Color.fromARGB(255, 0, 37, 89),
       
     ],
+    unlocked: true
+    
   ),
   World(
     id: 2,
@@ -28,6 +31,7 @@ int currentWorld = 1;
       Color(0xff50B498),
       Color(0xff468585),
     ],
+    unlocked: false
   ),
   World(
     id: 3,
@@ -37,6 +41,7 @@ int currentWorld = 1;
       Color(0xff7c2e41),
       Color(0xff053c5e),
     ],
+    unlocked: false
   ),
   World(
     id: 4,
@@ -46,6 +51,7 @@ int currentWorld = 1;
       Color(0xff0077b6),
       Color(0xff000814),
     ],
+    unlocked: false
   ),
   World(
     id: 5,
@@ -55,6 +61,7 @@ int currentWorld = 1;
       Color(0xff0077b6),
       Color(0xff000814),
     ],
+    unlocked: false
   ),
   // Weitere Welten hier hinzufügen...
 ];
@@ -103,8 +110,10 @@ class PuzzleModel with ChangeNotifier {
         1: worlds[currentWorld - 1].colors[0],
         2: worlds[currentWorld - 1].colors[1],
         3: worlds[currentWorld - 1].colors[2],
-      } {
-  _initializeGrid();
+      }
+      
+      {
+    initializeProgress();
 }
 
   // Getters
@@ -133,22 +142,71 @@ class PuzzleModel with ChangeNotifier {
   }
 
   // Methods
-  void addWorld(int id, int maxLevel, List<Color> colors) {
-    worlds.add(World(id: id, maxLevel: maxLevel, colors: colors));
+  void addWorld(int id, int maxLevel, List<Color> colors, bool unlocked) {
+    worlds.add(World(id: id, maxLevel: maxLevel, colors: colors, unlocked: unlocked));
     notifyListeners();
   }
 
+  Future<int> loadWorldProgress(int worldId) async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('world_$worldId') ?? 0; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+}
+
+  Future<bool> loadWorldUnlocked(int worldId) async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('world_${worldId}_unlocked') ?? false; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+}
+
+Future<void> saveWorldUnlocked(int worldId, bool unlocked) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool('world_${worldId}_unlocked', unlocked);
+}
+
+Future<void> saveWorldProgress(int worldId, int level) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setInt('world_$worldId', level);
+}
+
+
   void updateWorldLevel(int worldId, int newLevel) {
-    var world = worlds.firstWhere((w) => w.id == worldId);
-    if (newLevel > world.maxLevel) {
-      world.maxLevel = newLevel;
-      notifyListeners();
-    }
+  var world = worlds.firstWhere((w) => w.id == worldId);
+  if (newLevel > world.maxLevel) {
+    world.maxLevel = newLevel;
+    saveWorldProgress(worldId, newLevel); // Speichere den neuen Fortschritt
+    notifyListeners();
   }
+}
+
+Future<void> initializeProgress() async {
+  for (var world in worlds) {
+    world.maxLevel = await loadWorldProgress(world.id);
+    world.unlocked = await loadWorldUnlocked(world.id);
+  }
+  
+  
+  _initializeGrid();
+}
+
+bool isWorldUnlocked(int worldID) {
+  if (worldID == 0) {
+    return true;
+  }
+  try {
+    return worlds.firstWhere((world) => world.id == worldID).unlocked;
+  } catch(e) {
+    return false;
+  }
+}
+
+void unlockWorld(int worldID) {
+  worlds.firstWhere((world) => world.id == worldID).unlocked = true;
+}
+
+
 
   int getMaxLevelForWorld(int worldId) {
   // Use `orElse` to handle the case when no element matches the condition
-  var world = worlds.firstWhere((w) => w.id == worldId, orElse: () => World(id: -1, maxLevel: -1, colors: []));
+  var world = worlds.firstWhere((w) => w.id == worldId, orElse: () => World(id: -1, maxLevel: -1, colors: [], unlocked: false));
   
   // Check if the world is null, and handle it appropriately
   if (world == null) {
@@ -161,11 +219,12 @@ class PuzzleModel with ChangeNotifier {
 
 
   Map<String, int> getSizeAndMaxMoves(int level) {
+    getMaxLevelForWorld(currentWorld);
     int s = currentWorld == 1 ? 1 : 2; // Grid-Size
     int m = 1; // MaxMoves
     int startLevel = 1; // Startlevel für die aktuelle Grid-Size
 
-    if (currentWorld == 1 && level < 17) {
+    if (currentWorld == 1 && level < 13) {
       switch (level) {
         case 1:
           s = 1; m = 1;
@@ -181,43 +240,35 @@ class PuzzleModel with ChangeNotifier {
           break;
         case 7:
         case 8:
-        case 9:
           s = 2; m = 3;
-        case 10:
+          break;
+        case 9:
           s = 3; m = 1;
           break;
-        case 11:
+        case 10:
           s = 3; m = 2;
+          break;
+        case 11:
+          s = 3; m = 3;
           break;
         case 12:
-          s = 3; m = 2;
-          break;
-        case 13:
-          s = 3; m = 3;
-          break;
-        case 14:
-          s = 3; m = 3;
-          break;
-        case 15:
-          s = 3; m = 4;
-          break;
-        case 16:
           s = 3; m = 4;
           break;
         default:
           s = 2; m = 3;
+          break;
       }
       return {"size": s, "maxMoves": m};
     }
 
-    while (level < 40) {
+    while (level < 50) {
       if (currentWorld == 1) {
-        int levelsForCurrentSize = ((s ) * (s - 0.8)).floor();
+        int levelsForCurrentSize = ((s) * (s)).floor();
         int endLevel = startLevel + levelsForCurrentSize - 1;
 
         if (level <= endLevel) {
-          m = (1 + (log(level - startLevel + 1) / log(1.8))).ceil();
-          int maxMovesForCurrentSize = (s * 1.5).floor();
+          m = (1 + (log(level - startLevel + 1) / log(1.9))).ceil();
+          int maxMovesForCurrentSize = (s * 1.8).floor();
           m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
           break;
         }
@@ -230,7 +281,7 @@ class PuzzleModel with ChangeNotifier {
 
         if (level <= endLevel) {
           m = (1 + (log(level - startLevel + 1) / log(2.07))).floor();
-          int maxMovesForCurrentSize = (s * 4).floor();
+          int maxMovesForCurrentSize = (s * 5).floor();
           m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
           break;
         }
@@ -240,12 +291,12 @@ class PuzzleModel with ChangeNotifier {
       }
     }
 
-    if (level >= 40) {
+    if (level >= 50) {
       s = 5;
       m = currentWorld == 1 ? 7 : 6;
       int tempLvl = level - 1;
       int set = 0;
-      while (tempLvl > 40) {
+      while (tempLvl > 50) {
         if (set == 2 || tempLvl >= 65) {
           set = 0;
           if (s > m - 5 && s > 4) {
@@ -277,6 +328,7 @@ class PuzzleModel with ChangeNotifier {
     _undoStack.clear();
     moveWhereError = -1;
     _initializeGrid();
+        initializeProgress(); // Lade den Fortschritt
   }
   
 
@@ -322,18 +374,18 @@ class PuzzleModel with ChangeNotifier {
     notifyListeners();
   }
 
-  int calculateCoinsEarned(int maxMoves, int size, int selectedLevel) {
-  double difficulty = calculateDifficulty(maxMoves, size) * 5;
+  int calculateCoinsEarned(int maxMoves, int size, int selectedLevel, int worldID) {
+  double difficulty = calculateDifficulty(maxMoves, size) * 7;
 
   // Skaliere die Schwierigkeit stärker für höhere Belohnungen
-  num difficultyWeight = difficulty > 1 ? pow(difficulty, 2.3) : difficulty;
+  num difficultyWeight = difficulty > 1 ? pow(difficulty, 2.5) : difficulty;
 
   // Dynamische Anpassung der Coins-Belohnung basierend auf Level und Schwierigkeit
-  double baseCoins = difficultyWeight * 1; // Grundwert pro Schwierigkeit
-  double levelFactor = log(selectedLevel + 1); // sorgt für geringeren Einfluss bei kleinen Levels
+  double baseCoins = difficultyWeight * 2; // Grundwert pro Schwierigkeit
+  double levelFactor = log(selectedLevel + 10); // sorgt für geringeren Einfluss bei kleinen Levels
 
   // Endberechnung der Coins mit minimalen und maximalen Grenzen
-  int coinsEarned = (baseCoins + levelFactor).clamp(1, 1000).ceil(); // z.B. Mindestwert 1, Maximalwert 1000
+  int coinsEarned = ((baseCoins + levelFactor) * (1 + log(worldID))).clamp(1, 1000).ceil(); // z.B. Mindestwert 1, Maximalwert 1000
 
   return coinsEarned;
 }
@@ -343,7 +395,7 @@ class PuzzleModel with ChangeNotifier {
     _targetColorNumber = _random.nextInt(3) + 1; // Target color number to achieve
     setTargetColor(_targetColorNumber);
     if(worlds[currentWorld-1].maxLevel <= selectedLevel) {
-      _coinsEarned = calculateCoinsEarned(maxMoves, size, selectedLevel);
+      _coinsEarned = calculateCoinsEarned(maxMoves, size, selectedLevel, currentWorld);
     //_coinsEarned = ((calculateDifficulty(maxMoves, size) * 100 + (selectedLevel * 0.3)) * 0.5).ceil();
     } else {
       _coinsEarned = 5;
@@ -354,15 +406,36 @@ class PuzzleModel with ChangeNotifier {
         _grid[i][j] = _targetColorNumber;
       }
     }
+    
+    List<Click> positions = [];
 
     // Create random moves and store them in the clicks list
     for (int i = 0; i < _maxMoves; i++) {
       var x = _randomPositionNumber();
       var y = _randomPositionNumber();
+      int count = 0;
+      bool works = false;
+      while(works == false) {
+        count = 0;
+        for(int i = 0; i < positions.length; i++) {
+          if(positions[i].x == x && positions[i].y == y) {
+              count++;
+          }
+        }
+        if(count < 2) {
+          works = true;
+        } else {
+          x = _randomPositionNumber();
+          y = _randomPositionNumber();
+        }
+      }
+      positions.add(Click(x: x, y: y));
+
+
       clickTile(x, y, true, false);
       clicks[i] = [x, y];
       savedClicks[i] = [x, y];  // Deep copy the individual list
-      if(tutorialActive && currentTutorialStep != TutorialStep.completed) {
+      if(tutorialActive && currentTutorialStep != TutorialStep.step3 && currentTutorialStep != TutorialStep.completed && currentTutorialStep != TutorialStep.none) {
       setHint(x, y);
     }
     }
@@ -601,10 +674,22 @@ class World {
   final int id;
   int maxLevel;
   List<Color> colors;
+  bool unlocked;
 
   World({
     required this.id,
     required this.maxLevel,
     required this.colors,
+    required this.unlocked
   });
+}
+
+class Click {
+  final int x;
+final int y;
+
+Click({
+  required this.x,
+  required this.y,
+});
 }

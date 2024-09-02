@@ -4,8 +4,9 @@ import 'dart:ui'; // For the BackdropFilter
 class AnimatedCustomOverlay extends StatefulWidget {
   final String message;
   final VoidCallback onClose;
+  final bool blink;
 
-  const AnimatedCustomOverlay({Key? key, required this.message, required this.onClose})
+  const AnimatedCustomOverlay({Key? key, required this.message, required this.onClose, required this.blink})
       : super(key: key);
 
   @override
@@ -73,7 +74,7 @@ class _AnimatedCustomOverlayState extends State<AnimatedCustomOverlay>
               builder: (context, child) {
                 return Container(
                   decoration: BoxDecoration(
-                    color: _colorAnimation.value, // Use the animated color
+                    color: widget.blink ? _colorAnimation.value : Colors.indigo.withOpacity(0.5), // Use the animated color
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.5), // Soft shadow

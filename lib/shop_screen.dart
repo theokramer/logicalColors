@@ -97,6 +97,7 @@ class _ShopScreenState extends State<ShopScreen> {
                         backgroundColor: Colors.blueGrey[400]!,
                         textColor: Colors.white,
                         isLarge: 2,
+                        originShop: true,
                       );
                     },
                   ),

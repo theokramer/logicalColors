@@ -1,3 +1,4 @@
+import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 
 class CustomActionButton extends StatelessWidget {
@@ -18,7 +19,7 @@ class CustomActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onPressed,
+      onTap: tutorialActive && count != -1 ? null : onPressed,
       child: Column(
         children: [
           Stack(

@@ -1,8 +1,10 @@
 import 'package:color_puzzle/puzzle_model.dart';
+import 'package:color_puzzle/puzzle_screen.dart';
+import 'package:color_puzzle/shop_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class CustomInfoButton extends StatelessWidget {
+class CustomInfoButton extends StatefulWidget {
   final String value;
   final int targetColor;
   final int movesLeft;
@@ -10,82 +12,160 @@ class CustomInfoButton extends StatelessWidget {
   final Color backgroundColor;
   final Color textColor;
   final int isLarge; // New parameter to adjust size
+  final bool blink;
+  final bool originShop;
 
-  const CustomInfoButton({
+  CustomInfoButton({
     required this.value,
     required this.targetColor,
     required this.movesLeft,
     required this.iconPath,
     required this.backgroundColor,
     required this.textColor,
+    this.blink = false,
     this.isLarge = 0, // Default to false
+    this.originShop = false
   });
+
+  @override
+  State<CustomInfoButton> createState() => _CustomInfoButtonState();
+}
+
+class _CustomInfoButtonState extends State<CustomInfoButton> with SingleTickerProviderStateMixin {
+
+    late AnimationController _controller;
+  late Animation<Color?> _colorAnimation;
+  int _blinkCount = 0; // To keep track of the number of blinks
+
+    @override
+    void initState() {
+    super.initState();
+
+    print(widget.blink);
+
+    // Initialize the AnimationController
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500), // Duration of one blink
+      vsync: this,
+    );
+
+    // Define the animation to transition from red to indigo
+    _colorAnimation = ColorTween(
+      begin: Colors.amber, 
+      end: Colors.orange, // End color
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut, // Smooth transition
+    ));
+
+    // Add a listener to control the blinking behavior
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed && _blinkCount < 3) {
+        // When the animation completes, reverse it to create the blink effect
+        _controller.reverse();
+        _blinkCount++;
+      } else if (status == AnimationStatus.dismissed && _blinkCount < 3) {
+        // When the reverse completes, start the forward animation again
+        _controller.forward();
+      }
+    });
+
+    // Start the animation
+    _controller.forward();
+  }
+
+
+
+  @override
+  void dispose() {
+    _controller.dispose(); // Dispose the controller when the widget is removed
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
-    double fontSize = isLarge == 0 ? 20 : isLarge == 1 ? 18 : 16;
-    double iconSize = isLarge == 0 ? 34 : isLarge == 1 ? 22 : 16;
-    double padding = isLarge == 0 ? 18 : isLarge == 1 ? 12 : 6;
+    double fontSize = widget.isLarge == 0 ? 20 : widget.isLarge == 1 ? 16 : 16;
+    double iconSize = widget.isLarge == 0 ? 34 : widget.isLarge == 1 ? 20 : 16;
+    double padding = widget.isLarge == 0 ? 18 : widget.isLarge == 1 ? 14 : 6;
 
     return GestureDetector(
-      onTap: () => _showInfoDialog(context), // Show info dialog on tap
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: padding, horizontal: padding),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(isLarge == 0 ? 15 : 10),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Coin Icon
-            iconPath != ""
-                ? Image.asset(
-                    iconPath,
-                    height: iconSize,
-                    width: iconSize,
-                  )
-                : const SizedBox(),
-            iconPath != "" ? const SizedBox(width: 8) : const SizedBox(),
-            // Coin Value
-            Text(
-              value,
-              style: TextStyle(
-                color: textColor,
-                fontWeight: FontWeight.bold,
-                fontSize: fontSize,
-              ),
-            ),
-            if (targetColor != -1) ...[
-              // Target Color
-              Text(
-                'Fill',
-                style: TextStyle(
-                    color: textColor.withOpacity(0.8),
+      
+      onTap: tutorialActive ? null : () => widget.isLarge != 1 && widget.isLarge != 2 ? _showInfoDialog(context) : widget.isLarge == 2 && !widget.originShop ? 
+      (Navigator.of(context).push(
+                                  FadePageRoute(
+                                    page: ChangeNotifierProvider.value(
+                                      value: puzzle,
+                                      child: ShopScreen(),
+                                    ),
+                                  ),
+                                )) : null, // Show info dialog on tap
+      child: AnimatedBuilder(
+        animation: _colorAnimation,
+        builder: (context, child) {
+          return Container(
+            
+            padding: EdgeInsets.symmetric(vertical: padding, horizontal: padding),
+            decoration: !widget.blink ? BoxDecoration(
+              color: widget.backgroundColor,
+              borderRadius: BorderRadius.circular(widget.isLarge == 0 ? 15 : 10),
+            ) : BoxDecoration(
+              borderRadius: BorderRadius.circular(widget.isLarge == 0 ? 15 : 10,),
+                    border: Border.all(color: _colorAnimation.value ?? Colors.amber, width: 4),
+                  ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Coin Icon
+                widget.iconPath != ""
+                    ? Image.asset(
+                        widget.iconPath,
+                        height: iconSize,
+                        width: iconSize,
+                      )
+                    : const SizedBox(),
+                widget.iconPath != "" ? const SizedBox(width: 8) : const SizedBox(),
+                // Coin Value
+                Text(
+                  widget.value,
+                  style: TextStyle(
+                    color: widget.textColor,
+                    fontWeight: FontWeight.bold,
                     fontSize: fontSize,
-                    fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                width: iconSize * 0.8,
-                height: iconSize * 0.8,
-                decoration: BoxDecoration(
-                  color: puzzle.getColor(targetColor), // Function to get color from name
-                  shape: BoxShape.circle,
+                  ),
                 ),
-              ),
-            ],
-            if (movesLeft > -1 && targetColor == -1) ...[
-              // Moves Left
-              Text(
-                '$movesLeft Moves',
-                style: TextStyle(
-                    color: textColor, fontSize: fontSize, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ],
-        ),
+                if (widget.targetColor != -1) ...[
+                  // Target Color
+                  Text(
+                    'Fill',
+                    style: TextStyle(
+                        color: widget.textColor.withOpacity(0.8),
+                        fontSize: fontSize,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    width: iconSize * 0.8,
+                    height: iconSize * 0.8,
+                    decoration: BoxDecoration(
+                      color: puzzle.getColor(widget.targetColor), // Function to get color from name
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(child: Text("${widget.targetColor}", style: TextStyle(fontSize: widget.isLarge == 0 ? 15 : 10, color: Colors.white, fontWeight: FontWeight.bold),)),
+                  ),
+                ],
+                if (widget.movesLeft > -1 && widget.targetColor == -1) ...[
+                  // Moves Left
+                  Text(
+                    '${widget.movesLeft} Moves',
+                    style: TextStyle(
+                        color: widget.textColor, fontSize: fontSize, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }
       ),
     );
   }
@@ -96,14 +176,14 @@ class CustomInfoButton extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(targetColor != - 1 ? 'Grid einfärben' : "${movesLeft == 1 ? 'Ein Schritt' : "$movesLeft Schritte"} übrig"),
+          title: Text(widget.targetColor != - 1 ? 'Grid einfärben' : "${widget.movesLeft == 1 ? 'Ein Schritt' : "${widget.movesLeft} Schritte"} übrig"),
           content: Column(
             mainAxisSize: MainAxisSize.min, // To fit the content size
             children: [
               Text(
-                targetColor != -1
-                    ? 'Fülle das gesamte Raster mit der ausgewählten Farbe. Du hast noch ${movesLeft == 1 ? 'einen Schritt' : "$movesLeft Schritte"}! Denke daran, dass auch benachbarte Felder sich verfärben'
-                    : 'Du hast noch ${movesLeft == 1 ? 'einen Schritt' : "$movesLeft Schritte"}, um das Ziel zu erreichen.',
+                widget.targetColor != -1
+                    ? 'Fülle das gesamte Raster mit der angezeigten Farbe. Du hast noch ${widget.movesLeft == 1 ? 'einen Schritt' : "${widget.movesLeft} Schritte"}! Denke daran, dass auch benachbarte Felder sich verfärben'
+                    : 'Du hast noch ${widget.movesLeft == 1 ? 'einen Schritt' : "${widget.movesLeft} Schritte"}, um das Ziel zu erreichen.',
               ),
               const SizedBox(height: 30), // Space between text and GIF
             Image.asset(

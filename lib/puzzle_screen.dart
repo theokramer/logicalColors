@@ -712,7 +712,8 @@ switch(currentTutorialStep) {
                                 selectedLevel += 1;
                                 denyClick = false;
                               }
-                              if (selectedLevel >= 69 && worlds[currentWorld + 1].maxLevel == 0) {
+                              
+                              if (selectedLevel >= 69 && currentWorld <= 4) if(worlds[currentWorld + 1].maxLevel == 0) {
                                 puzzle.updateWorldLevel(currentWorld + 1, 1);
                               }
                             });

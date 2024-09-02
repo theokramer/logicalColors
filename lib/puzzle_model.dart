@@ -149,7 +149,8 @@ class PuzzleModel with ChangeNotifier {
 
   Future<int> loadWorldProgress(int worldId) async {
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getInt('world_$worldId') ?? 0; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+  return 100;
+  //return prefs.getInt('world_$worldId') ?? 0; // 0 ist der Standardwert, wenn nichts gespeichert wurde
 }
 
   Future<bool> loadWorldUnlocked(int worldId) async {
@@ -439,7 +440,7 @@ void unlockWorld(int worldID) {
       setHint(x, y);
     }
     }
-
+    //_maxMoves *= 2;
     // Save the current state of the grid
     for (int i = 0; i < size; i++) {
       for (int j = 0; j < size; j++) {
@@ -554,6 +555,7 @@ void clickTile(int x, int y, bool reversed, bool oneTile) {
     _moves++;
   }
 
+  
   _changeColor(x, y, newColorNumber, reversed, oneTile);
   clearHint(); // Clear hint after clicking
   notifyListeners();
@@ -589,19 +591,29 @@ void clickTile(int x, int y, bool reversed, bool oneTile) {
 
     int currentColorNumber = _grid[x][y];
     if (currentColorNumber == newColorNumber) return;
-
-    _grid[x][y] = newColorNumber;
+    if(currentWorld != 2) {
+        _grid[x][y] = newColorNumber;
+    }
   if (!oneTile) {
-    if (currentWorld == 1) {
+    if (currentWorld == 1 || currentWorld == 2) {
                 _updateAdjacentTile(x - 1, y, reversed); // Up
     _updateAdjacentTile(x + 1, y, reversed); // Down
     _updateAdjacentTile(x, y - 1, reversed); // Left
     _updateAdjacentTile(x, y + 1, reversed); // Right
-    } else  if(currentWorld == 3) {
+    }
+    else  if(currentWorld == 3) {
         _updateAdjacentTile(x - 1, y - 1, reversed); // Up
     _updateAdjacentTile(x + 1, y + 1, reversed); // Down
     _updateAdjacentTile(x + 1, y - 1, reversed); // Left
     _updateAdjacentTile(x - 1, y + 1, reversed); // Right
+    } else if(currentWorld == 4) {
+      for(int i = -1; i< 2; i++) {
+        for(int j = -1; j< 2; j++) {
+          if(i == 0 && j == 0) {} else {
+            _updateAdjacentTile(x + i, y + j, reversed); // Up
+          }
+      }
+      }
     } else {
       _updateAdjacentTile(x - 2, y, reversed); // Up
     _updateAdjacentTile(x + 2, y, reversed); // Down

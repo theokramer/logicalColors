@@ -374,18 +374,18 @@ void unlockWorld(int worldID) {
     notifyListeners();
   }
 
-  int calculateCoinsEarned(int maxMoves, int size, int selectedLevel) {
-  double difficulty = calculateDifficulty(maxMoves, size) * 5;
+  int calculateCoinsEarned(int maxMoves, int size, int selectedLevel, int worldID) {
+  double difficulty = calculateDifficulty(maxMoves, size) * 7;
 
   // Skaliere die Schwierigkeit stärker für höhere Belohnungen
-  num difficultyWeight = difficulty > 1 ? pow(difficulty, 2.3) : difficulty;
+  num difficultyWeight = difficulty > 1 ? pow(difficulty, 2.5) : difficulty;
 
   // Dynamische Anpassung der Coins-Belohnung basierend auf Level und Schwierigkeit
-  double baseCoins = difficultyWeight * 1; // Grundwert pro Schwierigkeit
-  double levelFactor = log(selectedLevel + 1); // sorgt für geringeren Einfluss bei kleinen Levels
+  double baseCoins = difficultyWeight * 2; // Grundwert pro Schwierigkeit
+  double levelFactor = log(selectedLevel + 10); // sorgt für geringeren Einfluss bei kleinen Levels
 
   // Endberechnung der Coins mit minimalen und maximalen Grenzen
-  int coinsEarned = (baseCoins + levelFactor).clamp(1, 1000).ceil(); // z.B. Mindestwert 1, Maximalwert 1000
+  int coinsEarned = ((baseCoins + levelFactor) * (1 + log(worldID))).clamp(1, 1000).ceil(); // z.B. Mindestwert 1, Maximalwert 1000
 
   return coinsEarned;
 }
@@ -395,7 +395,7 @@ void unlockWorld(int worldID) {
     _targetColorNumber = _random.nextInt(3) + 1; // Target color number to achieve
     setTargetColor(_targetColorNumber);
     if(worlds[currentWorld-1].maxLevel <= selectedLevel) {
-      _coinsEarned = calculateCoinsEarned(maxMoves, size, selectedLevel);
+      _coinsEarned = calculateCoinsEarned(maxMoves, size, selectedLevel, currentWorld);
     //_coinsEarned = ((calculateDifficulty(maxMoves, size) * 100 + (selectedLevel * 0.3)) * 0.5).ceil();
     } else {
       _coinsEarned = 5;

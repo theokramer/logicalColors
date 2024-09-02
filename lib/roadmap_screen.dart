@@ -1,5 +1,7 @@
+import 'package:color_puzzle/custom_info_button.dart';
 import 'package:color_puzzle/main.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
+import 'package:color_puzzle/shop_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'coin_manager.dart'; // Import the coin manager
@@ -32,7 +34,35 @@ class RoadMapScreen extends StatelessWidget {
               title: Text('Road Map', style: TextStyle(color: Colors.black)),
               backgroundColor: Colors.white,
               automaticallyImplyLeading: false,
+              actions: [
+                Container(
+                        height: 65,
+                        width: 150,
+                        child: Stack(
+                          children: [
+                            Positioned(
+                                      top: 10,
+                                      left: 30,
+                                      child: Consumer<CoinProvider>(
+              builder: (context, coinProvider, child) {
+                return CustomInfoButton(
+                  value: '${coinProvider.coins}', // Verwende die Coins aus dem Provider
+                  targetColor: -1,
+                  movesLeft: -1,
+                  iconPath: 'images/coins.png',
+                  backgroundColor: Colors.blueGrey[400]!,
+                  textColor: Colors.white,
+                  isLarge: 2,
+                );
+              },
             ),
+                                    ),
+                          ],
+                        ),
+                      ),
+              ],
+            ),
+            
             body: Stack(
               children: [
                 ListView.builder(
@@ -60,8 +90,8 @@ class RoadMapScreen extends StatelessWidget {
                           ),
                           subtitle: Text(
                             isWorldUnlocked
-                                ? 'Levels 1-${world.maxLevel}'
-                                : 'Unlock for ${world.id * 100} coins',
+                                ? 'Levels 1-${world.maxLevel == 0 ? 1 : world.maxLevel}'
+                                : 'Unlock for ${world.id * 1000} coins',
                             style: TextStyle(
                               fontSize: 16,
                               color: isWorldUnlocked ? worlds[worldIndex].colors[1] : Colors.white,
@@ -82,17 +112,25 @@ class RoadMapScreen extends StatelessWidget {
                                 }
                               : () async {
                                   // Unlock world if coins are sufficient
-                                  if (coinProvider.coins >= (world.id * 100)) {
-                                    await coinProvider.subtractCoins(world.id * 100);
+                                  if (coinProvider.coins >= (world.id * 1000)) {
+                                    await coinProvider.subtractCoins(world.id * 1000);
                                     puzzle.unlockWorld(worldIndex);
                                     puzzle.saveWorldUnlocked(worldIndex, true);
+                                    puzzle.updateWorldLevel(currentWorld, 1);
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text('World ${world.id} unlocked!'),
                                       ),
                                     );
                                   } else {
-                                    _showInsufficientCoinsDialog(context);
+                                    (Navigator.of(context).push(
+                                  FadePageRoute(
+                                    page: ChangeNotifierProvider.value(
+                                      value: puzzle,
+                                      child: ShopScreen(),
+                                    ),
+                                  ),
+                                )); 
                                   }
                                 },
                         ),

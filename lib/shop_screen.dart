@@ -6,51 +6,56 @@ import 'custom_info_button.dart'; // Dein CustomInfoButton
 import 'coin_manager.dart'; // Dein CoinManager
 
 class ShopScreen extends StatefulWidget {
+  const ShopScreen({super.key});
+
   @override
   State<ShopScreen> createState() => _ShopScreenState();
 }
 
 class _ShopScreenState extends State<ShopScreen> {
-
   void addCoins(int amount) async {
-    await context.read<CoinProvider>().addCoins(amount); // Verwende den Provider
+    await context
+        .read<CoinProvider>()
+        .addCoins(amount); // Verwende den Provider
   }
 
   void addHints(int amount) async {
-    await context.read<HintsProvider>().addHints(amount); // Verwende den Provider
+    await context
+        .read<HintsProvider>()
+        .addHints(amount); // Verwende den Provider
   }
+
   void addRems(int amount) async {
     await context.read<RemsProvider>().addRems(amount); // Verwende den Provider
   }
 
   void subtractCoins(int amount) async {
-    await context.read<CoinProvider>().subtractCoins(amount); // Verwende den Provider
+    await context
+        .read<CoinProvider>()
+        .subtractCoins(amount); // Verwende den Provider
   }
 
   void buy(Map<String, dynamic> item) async {
     int type = item['type'] as int;
     int value = int.parse(item['title'] as String);
     int costs = 0;
-    if(item['price'] == "Gratis" || type == 2) {
+    if (item['price'] == "Gratis" || type == 2) {
       costs = 0;
     } else {
       costs = int.parse(item['price'] as String);
     }
-    
 
     if (type == 2) {
       addCoins(value);
-      
     }
-    if(type == 0 && await CoinManager.loadCoins() > costs) {
+    if (type == 0 && await CoinManager.loadCoins() > costs) {
       addHints(value);
       subtractCoins(costs);
     }
-    if(type == 1 && await CoinManager.loadCoins() > costs) {
+    if (type == 1 && await CoinManager.loadCoins() > costs) {
       addRems(value);
       subtractCoins(costs);
     }
-    
   }
 
   Future<void> handleBuyHint() async {
@@ -73,12 +78,12 @@ class _ShopScreenState extends State<ShopScreen> {
       backgroundColor: Colors.indigo[900],
       appBar: AppBar(
         foregroundColor: Colors.white,
-        title: Text(
+        title: const Text(
           'Shop',
           style: TextStyle(color: Colors.white),
         ),
         actions: [
-          Container(
+          SizedBox(
             height: 65,
             width: 100,
             child: Stack(
@@ -86,11 +91,11 @@ class _ShopScreenState extends State<ShopScreen> {
                 Positioned(
                   top: 10,
                   left: 0,
-
                   child: Consumer<CoinProvider>(
                     builder: (context, coinProvider, child) {
                       return CustomInfoButton(
-                        value: '${coinProvider.coins}', // Verwende die Coins aus dem Provider
+                        value:
+                            '${coinProvider.coins}', // Verwende die Coins aus dem Provider
                         targetColor: -1,
                         movesLeft: -1,
                         iconPath: 'images/coins.png',
@@ -114,9 +119,9 @@ class _ShopScreenState extends State<ShopScreen> {
         child: Column(
           children: [
             _buildEnhancedBundleSection(),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             _buildNoAdsBundleSection(),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Expanded(child: _buildShopItemsGrid()),
           ],
         ),
@@ -126,11 +131,11 @@ class _ShopScreenState extends State<ShopScreen> {
 
   Widget _buildEnhancedBundleSection() {
     return Container(
-      padding: EdgeInsets.all(10),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.blue[800],
         borderRadius: BorderRadius.circular(20.0),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Colors.black26,
             offset: Offset(0, 4),
@@ -143,7 +148,10 @@ class _ShopScreenState extends State<ShopScreen> {
         children: [
           const Row(
             children: [
-              Icon(Icons.ads_click, color: Colors.white,),
+              Icon(
+                Icons.ads_click,
+                color: Colors.white,
+              ),
               SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -161,7 +169,7 @@ class _ShopScreenState extends State<ShopScreen> {
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -171,9 +179,9 @@ class _ShopScreenState extends State<ShopScreen> {
                     "images/coins.png",
                     height: 35,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   const Text(
-                    "5000",
+                    "10000",
                     style: TextStyle(
                       fontSize: 20.0,
                       fontWeight: FontWeight.bold,
@@ -184,10 +192,14 @@ class _ShopScreenState extends State<ShopScreen> {
               ),
               const Column(
                 children: [
-                  Icon(Icons.lightbulb, size: 35, color: Colors.white,),
+                  Icon(
+                    Icons.lightbulb,
+                    size: 35,
+                    color: Colors.white,
+                  ),
                   SizedBox(height: 20),
                   Text(
-                    "10",
+                    "20",
                     style: TextStyle(
                       fontSize: 20.0,
                       fontWeight: FontWeight.bold,
@@ -201,7 +213,7 @@ class _ShopScreenState extends State<ShopScreen> {
                   Icon(Icons.colorize, size: 35, color: Colors.white),
                   SizedBox(height: 20),
                   Text(
-                    "10",
+                    "20",
                     style: TextStyle(
                       fontSize: 20.0,
                       fontWeight: FontWeight.bold,
@@ -212,12 +224,12 @@ class _ShopScreenState extends State<ShopScreen> {
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20.0),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black26,
                   offset: Offset(0, 4),
@@ -226,23 +238,26 @@ class _ShopScreenState extends State<ShopScreen> {
               ],
             ),
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 18),
+              padding: const EdgeInsets.symmetric(horizontal: 18),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('"Keine Werbung"-Bundle'),
+                  const Text('"Keine Werbung"-Bundle'),
                   Align(
                     alignment: Alignment.center,
                     child: ElevatedButton(
                       onPressed: () {
                         // Funktionalität zum Aktivieren des Bundles
                       },
-                      child: Text('EUR 4.99', style: TextStyle(color: Colors.white),),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green[600],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15.0),
                         ),
+                      ),
+                      child: const Text(
+                        'EUR 2.99',
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ),
@@ -262,10 +277,10 @@ class _ShopScreenState extends State<ShopScreen> {
           iconPath,
           height: 30,
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Text(
           quantity,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 20.0,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -277,19 +292,17 @@ class _ShopScreenState extends State<ShopScreen> {
 
   Widget _buildShopItemsGrid() {
     final items = [
-      {'title': '1', 'price': 'Gratis!', 'type': 0},
-      {'title': '3', 'price': '500', 'type': 0},
-      {'title': '5', 'price': '500', 'type': 1},
-      {'title': '500', 'price': 'Werbung\nansehen', 'type': 2},
-      {'title': '1500', 'price': '0.99€', 'type': 2},
-      {'title': '5000', 'price': '2.99€', 'type': 2},
-      {'title': '15000', 'price': '5.99€', 'type': 2},
-      {'title': '40000', 'price': '9.99€', 'type': 2},
-      {'title': '100000', 'price': '15.99€', 'type': 2},
+      //{'title': '1', 'price': 'Gratis!', 'type': 0},
+      {'title': '3', 'price': '200', 'type': 0},
+      {'title': '5', 'price': '200', 'type': 1},
+      {'title': '200', 'price': 'Werbung', 'type': 2},
+      {'title': '2000', 'price': '0.99€', 'type': 2},
+      {'title': '5000', 'price': '1.99€', 'type': 2},
+      {'title': '10000', 'price': '2.99€', 'type': 2},
     ];
 
     return GridView.builder(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 16.0,
         mainAxisSpacing: 16.0,
@@ -299,10 +312,11 @@ class _ShopScreenState extends State<ShopScreen> {
       itemBuilder: (context, index) {
         final item = items[index];
         return GestureDetector(
-          onTap: () {
-            buy(item); // Rufe die Kauf-Funktion mit dem Artikel auf
-          },
-          child: _buildShopItemCard(item['title'] as String, item['price'] as String, item['type'] as int));
+            onTap: () {
+              buy(item); // Rufe die Kauf-Funktion mit dem Artikel auf
+            },
+            child: _buildShopItemCard(item['title'] as String,
+                item['price'] as String, item['type'] as int));
       },
     );
   }
@@ -312,7 +326,7 @@ class _ShopScreenState extends State<ShopScreen> {
       decoration: BoxDecoration(
         color: Colors.indigo[600],
         borderRadius: BorderRadius.circular(15.0),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Colors.black26,
             offset: Offset(0, 4),
@@ -325,20 +339,30 @@ class _ShopScreenState extends State<ShopScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            type == 0 ? Icon(Icons.lightbulb, size: 40, color: Colors.white,) :
-            type == 1 ? Icon(Icons.colorize, size: 40, color: Colors.white,) :
-            Image.asset("images/coins.png", height: 40),
-            SizedBox(height: 10.0),
+            type == 0
+                ? const Icon(
+                    Icons.lightbulb,
+                    size: 40,
+                    color: Colors.white,
+                  )
+                : type == 1
+                    ? const Icon(
+                        Icons.colorize,
+                        size: 40,
+                        color: Colors.white,
+                      )
+                    : Image.asset("images/coins.png", height: 40),
+            const SizedBox(height: 10.0),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18.0,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
-            Spacer(),
+            const Spacer(),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -351,11 +375,16 @@ class _ShopScreenState extends State<ShopScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                (type == 0 || type == 1) && price != 'Gratis!' ? SizedBox(width: 8,) : SizedBox(),
-                (type == 0 || type == 1) && price != 'Gratis!' ? Image.asset("images/coins.png", height: 15) : SizedBox(),
+                (type == 0 || type == 1) && price != 'Gratis!'
+                    ? const SizedBox(
+                        width: 8,
+                      )
+                    : const SizedBox(),
+                (type == 0 || type == 1) && price != 'Gratis!'
+                    ? Image.asset("images/coins.png", height: 15)
+                    : const SizedBox(),
               ],
             ),
-            
           ],
         ),
       ),
@@ -364,11 +393,11 @@ class _ShopScreenState extends State<ShopScreen> {
 
   Widget _buildNoAdsBundleSection() {
     return Container(
-      padding: EdgeInsets.all(10.0),
+      padding: const EdgeInsets.all(10.0),
       decoration: BoxDecoration(
         color: Colors.purple[700],
         borderRadius: BorderRadius.circular(20.0),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Colors.black26,
             offset: Offset(0, 4),
@@ -379,7 +408,7 @@ class _ShopScreenState extends State<ShopScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Column(
+          const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -401,17 +430,20 @@ class _ShopScreenState extends State<ShopScreen> {
               ),
             ],
           ),
-          Spacer(),
+          const Spacer(),
           ElevatedButton(
             onPressed: () {
               // Funktionalität zum Aktivieren des Bundles
             },
-            child: Text('EUR 2.99', style: TextStyle(color: Colors.white),),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.amber[700],
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
               ),
+            ),
+            child: const Text(
+              'EUR 0.99',
+              style: TextStyle(color: Colors.white),
             ),
           ),
         ],

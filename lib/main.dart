@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:color_puzzle/coin_manager.dart';
 import 'package:color_puzzle/hints_manager.dart';
-import 'package:color_puzzle/roadmap_screen.dart';
+import 'package:color_puzzle/main_menu_screen.dart';
 import 'package:color_puzzle/shop_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -12,34 +12,35 @@ import 'puzzle_screen.dart'; // Import your screen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  int maxLevel = await loadWorldProgress(currentWorld); // Load progress for the current world
+  int maxLevel = await loadWorldProgress(
+      currentWorld); // Load progress for the current world
   tutorialActive = await loadTutorial();
   selectedLevel = maxLevel;
   runApp(MyApp(maxLevel: maxLevel));
 }
 
-
-  Future<bool> loadTutorial() async {
+Future<bool> loadTutorial() async {
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool('tutorialActive') ?? true; // 0 ist der Standardwert, wenn nichts gespeichert wurde
-} 
+  return prefs.getBool('tutorialActive') ??
+      true; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+}
 
 // Load the progress of the specific world
 Future<int> loadWorldProgress(int worldId) async {
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getInt('world_$worldId') ?? 1; 
+  return prefs.getInt('world_$worldId') ?? 1;
 }
 
 // Save the progress of the specific world
 Future<void> saveWorldProgress(int worldId, int maxLevel) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setInt('world_$worldId', maxLevel); 
+  await prefs.setInt('world_$worldId', maxLevel);
 }
 
 class MyApp extends StatelessWidget {
   final int maxLevel;
 
-  MyApp({super.key, required this.maxLevel});
+  const MyApp({super.key, required this.maxLevel});
 
   Map<String, int> getSizeAndMaxMoves(int level) {
     int s = currentWorld == 1 ? 1 : 2;
@@ -170,11 +171,12 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        initialRoute: '/',
+        initialRoute: '/menu',
         routes: {
-          '/': (context) => PuzzleScreen(),
-          '/roadmap': (context) => RoadMapScreen(),
-          '/shop': (context) => ShopScreen(),
+          '/': (context) => const PuzzleScreen(),
+          '/roadmap': (context) => const MainMenuScreen(),
+          '/shop': (context) => const ShopScreen(),
+          '/menu': (context) => const MainMenuScreen(),
         },
       ),
     );

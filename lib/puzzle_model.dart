@@ -10,59 +10,52 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 int currentWorld = 1;
 
-  List<World> worlds = [
+List<World> worlds = [
   World(
-    id: 1,
-    maxLevel: 1,
-    colors: const [
-      Color(0xff48cae4),
-      Color(0xff0077b6),
-      Color.fromARGB(255, 0, 37, 89),
-      
-    ],
-    unlocked: true
-    
-  ),
+      id: 1,
+      maxLevel: 1,
+      colors: const [
+        Color(0xff48cae4),
+        Color(0xff0077b6),
+        Color.fromARGB(255, 0, 37, 89),
+      ],
+      unlocked: true),
   World(
-    id: 2,
-    maxLevel: 0,
-    colors: const [
-      Color(0xff9CDBA6),
-      Color(0xff50B498),
-      Color(0xff468585),
-    ],
-    unlocked: false
-  ),
+      id: 2,
+      maxLevel: 0,
+      colors: const [
+        Color(0xff9CDBA6),
+        Color(0xff50B498),
+        Color(0xff468585),
+      ],
+      unlocked: false),
   World(
-    id: 3,
-    maxLevel: 0,
-    colors: const [
-      Color(0xffdb222a),
-      Color(0xff7c2e41),
-      Color(0xff053c5e),
-    ],
-    unlocked: false
-  ),
+      id: 3,
+      maxLevel: 0,
+      colors: const [
+        Color(0xffdb222a),
+        Color(0xff7c2e41),
+        Color(0xff053c5e),
+      ],
+      unlocked: false),
   World(
-    id: 4,
-    maxLevel: 0,
-    colors: const [
-      Color(0xff48cae4),
-      Color(0xff0077b6),
-      Color(0xff000814),
-    ],
-    unlocked: false
-  ),
+      id: 4,
+      maxLevel: 0,
+      colors: const [
+        Color(0xff720455),
+        Color(0xff3C0753),
+        Color(0xff030637),
+      ],
+      unlocked: false),
   World(
-    id: 5,
-    maxLevel: 0,
-    colors: const [
-      Color(0xff48cae4),
-      Color(0xff0077b6),
-      Color(0xff000814),
-    ],
-    unlocked: false
-  ),
+      id: 5,
+      maxLevel: 0,
+      colors: const [
+        Color(0xffFFBB5C),
+        Color(0xffd25E3E),
+        Color(0xffE93D2F),
+      ],
+      unlocked: false),
   // Weitere Welten hier hinzufügen...
 ];
 
@@ -82,7 +75,7 @@ class PuzzleModel with ChangeNotifier {
   List<List<int>> _lastCorrectGrid;
   List<List<int>> clicks;
   List<List<int>> savedClicks;
-  
+
   bool gotHint = false;
 
   final Map<int, Color> _colorMapping;
@@ -93,28 +86,27 @@ class PuzzleModel with ChangeNotifier {
   int? _hintY;
 
   PuzzleModel({
-  required this.size,
-  required int level,
-  required Map<int, Color> colorMapping,
-})  : _maxMoves = level,
-      _moves = 0,
-      _elapsedTime = 0,
-      _grid = List.generate(size, (_) => List.generate(size, (_) => 1)),
-      _savedGrid = List.generate(size, (_) => List.generate(size, (_) => 1)),
-      _lastCorrectGrid = List.generate(size, (_) => List.generate(size, (_) => 1)),
-      clicks = List.generate(level, (_) => []),
-      savedClicks = List.generate(level, (_) => []),
-      _coinsEarned = 10,
-      _targetColorNumber = 1,
-      _colorMapping = {
-        1: worlds[currentWorld - 1].colors[0],
-        2: worlds[currentWorld - 1].colors[1],
-        3: worlds[currentWorld - 1].colors[2],
-      }
-      
-      {
+    required this.size,
+    required int level,
+    required Map<int, Color> colorMapping,
+  })  : _maxMoves = level,
+        _moves = 0,
+        _elapsedTime = 0,
+        _grid = List.generate(size, (_) => List.generate(size, (_) => 1)),
+        _savedGrid = List.generate(size, (_) => List.generate(size, (_) => 1)),
+        _lastCorrectGrid =
+            List.generate(size, (_) => List.generate(size, (_) => 1)),
+        clicks = List.generate(level, (_) => []),
+        savedClicks = List.generate(level, (_) => []),
+        _coinsEarned = 10,
+        _targetColorNumber = 1,
+        _colorMapping = {
+          1: worlds[currentWorld - 1].colors[0],
+          2: worlds[currentWorld - 1].colors[1],
+          3: worlds[currentWorld - 1].colors[2],
+        } {
     initializeProgress();
-}
+  }
 
   // Getters
   List<List<int>> get grid => _grid;
@@ -124,7 +116,8 @@ class PuzzleModel with ChangeNotifier {
   int get targetColorNumber => _targetColorNumber;
   int get maxMoves => _maxMoves;
   int get elapsedTime => _elapsedTime;
-  Color get targetColor => _colorMapping[_targetColorNumber] ?? Colors.transparent;
+  Color get targetColor =>
+      _colorMapping[_targetColorNumber] ?? Colors.transparent;
   int? get hintX => _hintX;
   int? get hintY => _hintY;
   int get coinsEarned => _coinsEarned;
@@ -143,81 +136,75 @@ class PuzzleModel with ChangeNotifier {
 
   // Methods
   void addWorld(int id, int maxLevel, List<Color> colors, bool unlocked) {
-    worlds.add(World(id: id, maxLevel: maxLevel, colors: colors, unlocked: unlocked));
+    worlds.add(
+        World(id: id, maxLevel: maxLevel, colors: colors, unlocked: unlocked));
     notifyListeners();
   }
 
   Future<int> loadWorldProgress(int worldId) async {
-  final prefs = await SharedPreferences.getInstance();
-  return 100;
-  //return prefs.getInt('world_$worldId') ?? 0; // 0 ist der Standardwert, wenn nichts gespeichert wurde
-}
+    //!Temp
+    final prefs = await SharedPreferences.getInstance();
+    //return 100;
+    return prefs.getInt('world_$worldId') ??
+        0; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+  }
 
   Future<bool> loadWorldUnlocked(int worldId) async {
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool('world_${worldId}_unlocked') ?? false; // 0 ist der Standardwert, wenn nichts gespeichert wurde
-}
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('world_${worldId}_unlocked') ??
+        false; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+  }
 
-Future<void> saveWorldUnlocked(int worldId, bool unlocked) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setBool('world_${worldId}_unlocked', unlocked);
-}
+  Future<void> saveWorldUnlocked(int worldId, bool unlocked) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('world_${worldId}_unlocked', unlocked);
+  }
 
-Future<void> saveWorldProgress(int worldId, int level) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setInt('world_$worldId', level);
-}
-
+  Future<void> saveWorldProgress(int worldId, int level) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('world_$worldId', level);
+  }
 
   void updateWorldLevel(int worldId, int newLevel) {
-  var world = worlds.firstWhere((w) => w.id == worldId);
-  if (newLevel > world.maxLevel) {
-    world.maxLevel = newLevel;
-    saveWorldProgress(worldId, newLevel); // Speichere den neuen Fortschritt
-    notifyListeners();
+    var world = worlds.firstWhere((w) => w.id == worldId);
+    if (newLevel > world.maxLevel) {
+      world.maxLevel = newLevel;
+      saveWorldProgress(worldId, newLevel); // Speichere den neuen Fortschritt
+      notifyListeners();
+    }
   }
-}
 
-Future<void> initializeProgress() async {
-  for (var world in worlds) {
-    world.maxLevel = await loadWorldProgress(world.id);
-    world.unlocked = await loadWorldUnlocked(world.id);
+  Future<void> initializeProgress() async {
+    for (var world in worlds) {
+      world.maxLevel = await loadWorldProgress(world.id);
+      world.unlocked = await loadWorldUnlocked(world.id);
+    }
+
+    _initializeGrid();
   }
-  
-  
-  _initializeGrid();
-}
 
-bool isWorldUnlocked(int worldID) {
-  if (worldID == 0) {
-    return true;
+  bool isWorldUnlocked(int worldID) {
+    if (worldID == 0) {
+      return true;
+    }
+    try {
+      return worlds.firstWhere((world) => world.id == worldID).unlocked;
+    } catch (e) {
+      return false;
+    }
   }
-  try {
-    return worlds.firstWhere((world) => world.id == worldID).unlocked;
-  } catch(e) {
-    return false;
+
+  void unlockWorld(int worldID) {
+    worlds.firstWhere((world) => world.id == worldID).unlocked = true;
   }
-}
-
-void unlockWorld(int worldID) {
-  worlds.firstWhere((world) => world.id == worldID).unlocked = true;
-}
-
-
 
   int getMaxLevelForWorld(int worldId) {
-  // Use `orElse` to handle the case when no element matches the condition
-  var world = worlds.firstWhere((w) => w.id == worldId, orElse: () => World(id: -1, maxLevel: -1, colors: [], unlocked: false));
-  
-  // Check if the world is null, and handle it appropriately
-  if (world == null) {
-    // Return a default max level, e.g., 0, or handle the error as needed
-    return 0; // or handle the error according to your app's logic
+    // Use `orElse` to handle the case when no element matches the condition
+    return 100;
+    var world = worlds.firstWhere((w) => w.id == worldId,
+        orElse: () => World(id: -1, maxLevel: -1, colors: [], unlocked: false));
+    return world.maxLevel;
   }
-
-  return world.maxLevel;
-}
-
 
   Map<String, int> getSizeAndMaxMoves(int level) {
     getMaxLevelForWorld(currentWorld);
@@ -228,47 +215,56 @@ void unlockWorld(int worldID) {
     if (currentWorld == 1 && level < 13) {
       switch (level) {
         case 1:
-          s = 1; m = 1;
+          s = 1;
+          m = 1;
           break;
         case 2:
         case 3:
-          s = 2; m = 1;
+          s = 2;
+          m = 1;
           break;
         case 4:
         case 5:
         case 6:
-          s = 2; m = 2;
+          s = 2;
+          m = 2;
           break;
         case 7:
         case 8:
-          s = 2; m = 3;
+          s = 2;
+          m = 3;
           break;
         case 9:
-          s = 3; m = 1;
+          s = 3;
+          m = 1;
           break;
         case 10:
-          s = 3; m = 2;
+          s = 3;
+          m = 2;
           break;
         case 11:
-          s = 3; m = 3;
+          s = 3;
+          m = 3;
           break;
         case 12:
-          s = 3; m = 4;
+          s = 3;
+          m = 4;
           break;
         default:
-          s = 2; m = 3;
+          s = 2;
+          m = 3;
           break;
       }
       return {"size": s, "maxMoves": m};
     }
 
     while (level < 50) {
-      if (currentWorld == 1) {
+      if (currentWorld < 10) {
         int levelsForCurrentSize = ((s) * (s)).floor();
         int endLevel = startLevel + levelsForCurrentSize - 1;
 
         if (level <= endLevel) {
-          m = (1 + (log(level - startLevel + 1) / log(1.9))).ceil();
+          m = (1 + (log((level - startLevel) + 1) / log(1.9))).ceil();
           int maxMovesForCurrentSize = (s * 1.8).floor();
           m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
           break;
@@ -276,7 +272,8 @@ void unlockWorld(int worldID) {
 
         s++;
         startLevel = endLevel + 1;
-      } else {
+      }
+      /*else {
         int levelsForCurrentSize = ((s + 0.6) * (s + 0.6)).floor();
         int endLevel = startLevel + levelsForCurrentSize - 1;
 
@@ -289,7 +286,7 @@ void unlockWorld(int worldID) {
 
         s++;
         startLevel = endLevel + 1;
-      }
+      }*/
     }
 
     if (level >= 50) {
@@ -321,24 +318,25 @@ void unlockWorld(int worldID) {
     _moves = 0;
     _elapsedTime = 0;
     _grid = List.generate(newSize, (_) => List.generate(newSize, (_) => 1));
-    _savedGrid = List.generate(newSize, (_) => List.generate(newSize, (_) => 1));
-    _lastCorrectGrid = List.generate(newSize, (_) => List.generate(newSize, (_) => 1));
+    _savedGrid =
+        List.generate(newSize, (_) => List.generate(newSize, (_) => 1));
+    _lastCorrectGrid =
+        List.generate(newSize, (_) => List.generate(newSize, (_) => 1));
     clicks = List.generate(newLevel, (_) => []);
     savedClicks = List.generate(newLevel, (_) => []);
     _targetColorNumber = 1;
     _undoStack.clear();
     moveWhereError = -1;
     _initializeGrid();
-        initializeProgress(); // Lade den Fortschritt
+    initializeProgress(); // Lade den Fortschritt
   }
-  
 
   Future<void> addCoins(int amount) async {
     await CoinManager.addCoins(amount);
     notifyListeners();
   }
 
-    Future<void> addHints(int amount) async {
+  Future<void> addHints(int amount) async {
     await HintsManager.addHints(amount);
     notifyListeners();
   }
@@ -352,10 +350,6 @@ void unlockWorld(int worldID) {
     await RemsManager.subtractRems(amount);
     notifyListeners();
   }
-
-  
-
-
 
   Future<void> subtractCoins(int amount) async {
     await CoinManager.subtractCoins(amount);
@@ -375,31 +369,39 @@ void unlockWorld(int worldID) {
     notifyListeners();
   }
 
-  int calculateCoinsEarned(int maxMoves, int size, int selectedLevel, int worldID) {
-  double difficulty = calculateDifficulty(maxMoves, size) * 7;
+  int calculateCoinsEarned(
+      int maxMoves, int size, int selectedLevel, int worldID) {
+    double difficulty = calculateDifficulty(maxMoves, size) * 6;
 
-  // Skaliere die Schwierigkeit stärker für höhere Belohnungen
-  num difficultyWeight = difficulty > 1 ? pow(difficulty, 2.5) : difficulty;
+    // Skaliere die Schwierigkeit stärker für höhere Belohnungen
+    num difficultyWeight = difficulty > 1 ? pow(difficulty, 2.2) : difficulty;
 
-  // Dynamische Anpassung der Coins-Belohnung basierend auf Level und Schwierigkeit
-  double baseCoins = difficultyWeight * 2; // Grundwert pro Schwierigkeit
-  double levelFactor = log(selectedLevel + 10); // sorgt für geringeren Einfluss bei kleinen Levels
+    // Dynamische Anpassung der Coins-Belohnung basierend auf Level und Schwierigkeit
+    double baseCoins = difficultyWeight * 2; // Grundwert pro Schwierigkeit
+    double levelFactor =
+        log(selectedLevel); // sorgt für geringeren Einfluss bei kleinen Levels
 
-  // Endberechnung der Coins mit minimalen und maximalen Grenzen
-  int coinsEarned = ((baseCoins + levelFactor) * (1 + log(worldID))).clamp(1, 1000).ceil(); // z.B. Mindestwert 1, Maximalwert 1000
+    // Endberechnung der Coins mit minimalen und maximalen Grenzen
+    int coinsEarned = ((baseCoins + levelFactor) * log(1 + (worldID)))
+        .clamp(1, 1000)
+        .ceil(); // z.B. Mindestwert 1, Maximalwert 1000
 
-  return coinsEarned;
-}
+    return coinsEarned;
+  }
 
-
-    void _initializeGrid() {
-    _targetColorNumber = _random.nextInt(3) + 1; // Target color number to achieve
+  void _initializeGrid() {
+    _targetColorNumber =
+        _random.nextInt(3) + 1; // Target color number to achieve
     setTargetColor(_targetColorNumber);
-    if(worlds[currentWorld-1].maxLevel <= selectedLevel) {
-      _coinsEarned = calculateCoinsEarned(maxMoves, size, selectedLevel, currentWorld);
-    //_coinsEarned = ((calculateDifficulty(maxMoves, size) * 100 + (selectedLevel * 0.3)) * 0.5).ceil();
+    if (worlds[currentWorld - 1].maxLevel <= selectedLevel) {
+      _coinsEarned =
+          calculateCoinsEarned(maxMoves, size, selectedLevel, currentWorld);
+      //_coinsEarned = ((calculateDifficulty(maxMoves, size) * 100 + (selectedLevel * 0.3)) * 0.5).ceil();
     } else {
-      _coinsEarned = 5;
+      //!Temp
+      _coinsEarned =
+          calculateCoinsEarned(maxMoves, size, selectedLevel, currentWorld);
+      //_coinsEarned = 5;
     }
     // Initialize the grid with the target color
     for (int i = 0; i < size; i++) {
@@ -407,7 +409,7 @@ void unlockWorld(int worldID) {
         _grid[i][j] = _targetColorNumber;
       }
     }
-    
+
     List<Click> positions = [];
 
     // Create random moves and store them in the clicks list
@@ -416,14 +418,14 @@ void unlockWorld(int worldID) {
       var y = _randomPositionNumber();
       int count = 0;
       bool works = false;
-      while(works == false) {
+      while (works == false) {
         count = 0;
-        for(int i = 0; i < positions.length; i++) {
-          if(positions[i].x == x && positions[i].y == y) {
-              count++;
+        for (int i = 0; i < positions.length; i++) {
+          if (positions[i].x == x && positions[i].y == y) {
+            count++;
           }
         }
-        if(count < 2) {
+        if (count < 2) {
           works = true;
         } else {
           x = _randomPositionNumber();
@@ -432,13 +434,15 @@ void unlockWorld(int worldID) {
       }
       positions.add(Click(x: x, y: y));
 
-
       clickTile(x, y, true, false);
       clicks[i] = [x, y];
-      savedClicks[i] = [x, y];  // Deep copy the individual list
-      if(tutorialActive && currentTutorialStep != TutorialStep.step3 && currentTutorialStep != TutorialStep.completed && currentTutorialStep != TutorialStep.none) {
-      setHint(x, y);
-    }
+      savedClicks[i] = [x, y]; // Deep copy the individual list
+      if (tutorialActive &&
+          currentTutorialStep != TutorialStep.step3 &&
+          currentTutorialStep != TutorialStep.completed &&
+          currentTutorialStep != TutorialStep.none) {
+        setHint(x, y);
+      }
     }
     //_maxMoves *= 2;
     // Save the current state of the grid
@@ -447,45 +451,40 @@ void unlockWorld(int worldID) {
         _savedGrid[i][j] = _grid[i][j];
       }
     }
-    
   }
-
 
   Future<bool> getHint() async {
     bool resetOccurred = false;
 
     if (moveWhereError != -1) {
       _moves = moveWhereError;
-      grid = _lastCorrectGrid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
+      grid = _lastCorrectGrid
+          .map((row) => List<int>.from(row))
+          .toList(); // Deep copy grid
       moveWhereError = -1;
       resetOccurred = true;
       undoStack.clear();
     } else {
       if (moves < maxMoves) {
-        
-        if(!gotHint) {
-          if(await HintsManager.loadHints() > 0) {
+        if (!gotHint) {
+          if (await HintsManager.loadHints() > 0) {
             gotHint = true;
             HintsManager.subtractHints(1);
-                      var hint = clicks[0];
-        setHint(hint[0], hint[1]); // Set hint coordinates
+            var hint = clicks[0];
+            setHint(hint[0], hint[1]); // Set hint coordinates
           } else {
-            if(await CoinManager.loadCoins() >= 50) {
-            gotHint = true;
-          subtractCoins(50);
-          
-          var hint = clicks[0];
-        setHint(hint[0], hint[1]); // Set hint coordinates
-        } 
+            if (await CoinManager.loadCoins() >= 50) {
+              gotHint = true;
+              subtractCoins(50);
+
+              var hint = clicks[0];
+              setHint(hint[0], hint[1]); // Set hint coordinates
+            }
           }
-          
         } else {
-          
-                    var hint = clicks[0];
-        setHint(hint[0], hint[1]); // Set hint coordinates
+          var hint = clicks[0];
+          setHint(hint[0], hint[1]); // Set hint coordinates
         }
-        
-        
       }
     }
 
@@ -500,7 +499,8 @@ void unlockWorld(int worldID) {
   Color? getHintColor(int x, int y) {
     if (clicks.isNotEmpty) {
       int currentColorNumber = _grid[x][y];
-      int newColorNumber = _numberMapping[currentColorNumber] ?? currentColorNumber;
+      int newColorNumber =
+          _numberMapping[currentColorNumber] ?? currentColorNumber;
       return _colorMapping[newColorNumber];
     }
     return null;
@@ -511,118 +511,112 @@ void unlockWorld(int worldID) {
     notifyListeners();
   }
 
-void clickTile(int x, int y, bool reversed, bool oneTile) {
-  if (x < 0 || y < 0 || x >= size || y >= size) return;
-  if (_moves >= _maxMoves && !oneTile) return;
+  void clickTile(int x, int y, bool reversed, bool oneTile) {
+    if (x < 0 || y < 0 || x >= size || y >= size) return;
+    if (_moves >= _maxMoves && !oneTile) return;
 
-  int currentColorNumber = _grid[x][y];
-  int newColorNumber = currentColorNumber;
-  if (reversed) {
-    newColorNumber = _numberMappingReversed[currentColorNumber] ?? currentColorNumber;
-  } else {
-    newColorNumber = _numberMapping[currentColorNumber] ?? currentColorNumber;
-  }
-
-  bool found = false;
-
-  if (!reversed && !oneTile) {
-    
-    
-    
-    // Save the removed hint for undo functionality
-    List<int>? removedHint;
-
-    // Remove the clicked tile from the clicks list
-    for (int i = 0; i < clicks.length; i++) {
-      if (clicks[i][0] == x && clicks[i][1] == y) {
-        found = true;
-        removedHint = clicks[i];
-        clicks.removeAt(i);
-        break; // Exit the loop after removing the first matching element
-      }
-    }
-
-    // Save the action to the undo stack with removed hint information
-    _undoStack.add([x, y, currentColorNumber, removedHint]);
-
-    if (!found && moveWhereError == -1) {
-      moveWhereError = moves;
-      _lastCorrectGrid = grid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
+    int currentColorNumber = _grid[x][y];
+    int newColorNumber = currentColorNumber;
+    if (reversed) {
+      newColorNumber =
+          _numberMappingReversed[currentColorNumber] ?? currentColorNumber;
     } else {
-      gotHint = false;
+      newColorNumber = _numberMapping[currentColorNumber] ?? currentColorNumber;
     }
-    
-    _moves++;
+
+    bool found = false;
+
+    if (!reversed && !oneTile) {
+      // Save the removed hint for undo functionality
+      List<int>? removedHint;
+
+      // Remove the clicked tile from the clicks list
+      for (int i = 0; i < clicks.length; i++) {
+        if (clicks[i][0] == x && clicks[i][1] == y) {
+          found = true;
+          removedHint = clicks[i];
+          clicks.removeAt(i);
+          break; // Exit the loop after removing the first matching element
+        }
+      }
+
+      // Save the action to the undo stack with removed hint information
+      _undoStack.add([x, y, currentColorNumber, removedHint]);
+
+      if (!found && moveWhereError == -1) {
+        moveWhereError = moves;
+        _lastCorrectGrid =
+            grid.map((row) => List<int>.from(row)).toList(); // Deep copy grid
+      } else {
+        gotHint = false;
+      }
+
+      _moves++;
+    }
+
+    _changeColor(x, y, newColorNumber, reversed, oneTile);
+    clearHint(); // Clear hint after clicking
+    notifyListeners();
   }
 
-  
-  _changeColor(x, y, newColorNumber, reversed, oneTile);
-  clearHint(); // Clear hint after clicking
-  notifyListeners();
-}
+  void undoMove() {
+    if (_undoStack.isEmpty) return;
 
+    // Extract the last action from the stack
+    List<dynamic> lastAction = _undoStack.removeLast();
+    int x = lastAction[0];
+    int y = lastAction[1];
+    //int oldColorNumber = lastAction[2];
+    List<int>? removedHint = lastAction.length > 3 ? lastAction[3] : null;
 
-    void undoMove() {
-  if (_undoStack.isEmpty) return;
+    // Reverse the move
+    _moves--;
+    clickTile(x, y, true, false);
 
-  // Extract the last action from the stack
-  List<dynamic> lastAction = _undoStack.removeLast();
-  int x = lastAction[0];
-  int y = lastAction[1];
-  //int oldColorNumber = lastAction[2];
-  List<int>? removedHint = lastAction.length > 3 ? lastAction[3] : null;
+    // If there was a removed hint, reinsert it back to the clicks list
+    if (removedHint != null) {
+      clicks.insert(0, removedHint);
+    }
 
-  // Reverse the move
-  _moves--;
-  clickTile(x, y, true, false);
-  
-
-  // If there was a removed hint, reinsert it back to the clicks list
-  if (removedHint != null) {
-    clicks.insert(0, removedHint);
+    notifyListeners();
   }
 
-  notifyListeners();
-}
-
-
-  void _changeColor(int x, int y, int newColorNumber, bool reversed, bool oneTile) {
+  void _changeColor(
+      int x, int y, int newColorNumber, bool reversed, bool oneTile) {
     if (x < 0 || y < 0 || x >= size || y >= size) return;
 
     int currentColorNumber = _grid[x][y];
     if (currentColorNumber == newColorNumber) return;
-    if(currentWorld != 2) {
-        _grid[x][y] = newColorNumber;
+    if (currentWorld != 2) {
+      _grid[x][y] = newColorNumber;
     }
-  if (!oneTile) {
-    if (currentWorld == 1 || currentWorld == 2) {
-                _updateAdjacentTile(x - 1, y, reversed); // Up
-    _updateAdjacentTile(x + 1, y, reversed); // Down
-    _updateAdjacentTile(x, y - 1, reversed); // Left
-    _updateAdjacentTile(x, y + 1, reversed); // Right
-    }
-    else  if(currentWorld == 3) {
+    if (!oneTile) {
+      if (currentWorld == 1 || currentWorld == 2) {
+        _updateAdjacentTile(x - 1, y, reversed); // Up
+        _updateAdjacentTile(x + 1, y, reversed); // Down
+        _updateAdjacentTile(x, y - 1, reversed); // Left
+        _updateAdjacentTile(x, y + 1, reversed); // Right
+      } else if (currentWorld == 3) {
         _updateAdjacentTile(x - 1, y - 1, reversed); // Up
-    _updateAdjacentTile(x + 1, y + 1, reversed); // Down
-    _updateAdjacentTile(x + 1, y - 1, reversed); // Left
-    _updateAdjacentTile(x - 1, y + 1, reversed); // Right
-    } else if(currentWorld == 4) {
-      for(int i = -1; i< 2; i++) {
-        for(int j = -1; j< 2; j++) {
-          if(i == 0 && j == 0) {} else {
-            _updateAdjacentTile(x + i, y + j, reversed); // Up
+        _updateAdjacentTile(x + 1, y + 1, reversed); // Down
+        _updateAdjacentTile(x + 1, y - 1, reversed); // Left
+        _updateAdjacentTile(x - 1, y + 1, reversed); // Right
+      } else if (currentWorld == 4) {
+        for (int i = -1; i < 2; i++) {
+          for (int j = -1; j < 2; j++) {
+            if (i == 0 && j == 0) {
+            } else {
+              _updateAdjacentTile(x + i, y + j, reversed); // Up
+            }
           }
+        }
+      } else {
+        _updateAdjacentTile(x - 2, y, reversed); // Up
+        _updateAdjacentTile(x + 2, y, reversed); // Down
+        _updateAdjacentTile(x, y - 2, reversed); // Left
+        _updateAdjacentTile(x, y + 2, reversed); // Right
       }
-      }
-    } else {
-      _updateAdjacentTile(x - 2, y, reversed); // Up
-    _updateAdjacentTile(x + 2, y, reversed); // Down
-    _updateAdjacentTile(x , y - 2, reversed); // Left
-    _updateAdjacentTile(x, y + 2, reversed); // Right
     }
-        
-  }
-
   }
 
   void _updateAdjacentTile(int x, int y, bool reversed) {
@@ -631,7 +625,8 @@ void clickTile(int x, int y, bool reversed, bool oneTile) {
     int currentColorNumber = _grid[x][y];
     int newColorNumber;
     if (reversed) {
-      newColorNumber = _numberMappingReversed[currentColorNumber] ?? currentColorNumber;
+      newColorNumber =
+          _numberMappingReversed[currentColorNumber] ?? currentColorNumber;
     } else {
       newColorNumber = _numberMapping[currentColorNumber] ?? currentColorNumber;
     }
@@ -663,7 +658,7 @@ void clickTile(int x, int y, bool reversed, bool oneTile) {
     _moves = 0;
     _elapsedTime = 0;
     moveWhereError = -1;
-        _undoStack.clear(); // Clear undo stack
+    _undoStack.clear(); // Clear undo stack
     //_timer?.cancel();
     notifyListeners();
   }
@@ -681,27 +676,25 @@ void clickTile(int x, int y, bool reversed, bool oneTile) {
   }
 }
 
-
 class World {
   final int id;
   int maxLevel;
   List<Color> colors;
   bool unlocked;
 
-  World({
-    required this.id,
-    required this.maxLevel,
-    required this.colors,
-    required this.unlocked
-  });
+  World(
+      {required this.id,
+      required this.maxLevel,
+      required this.colors,
+      required this.unlocked});
 }
 
 class Click {
   final int x;
-final int y;
+  final int y;
 
-Click({
-  required this.x,
-  required this.y,
-});
+  Click({
+    required this.x,
+    required this.y,
+  });
 }

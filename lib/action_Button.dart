@@ -9,6 +9,7 @@ class CustomActionButton extends StatelessWidget {
   final Color iconColor;
 
   const CustomActionButton({
+    super.key,
     required this.icon,
     required this.onPressed,
     required this.count,
@@ -35,7 +36,7 @@ class CustomActionButton extends StatelessWidget {
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black26,
                       blurRadius: 4,
@@ -51,7 +52,10 @@ class CustomActionButton extends StatelessWidget {
                       color: iconColor,
                       size: 26,
                     ),
-                    (count == -1 || count == 0) ? Text("") : SizedBox(width: 10), // Space between icon and text
+                    (count == -1 || count == 0)
+                        ? const Text("")
+                        : const SizedBox(
+                            width: 10), // Space between icon and text
                     Text(
                       (count == -1 || count == 0) ? '' : count.toString(),
                       //count == -1 ? '\u221e' : count.toString(),
@@ -66,7 +70,8 @@ class CustomActionButton extends StatelessWidget {
               ),
               if (count == 0)
                 SizedBox(
-                  width: 90, height: 80,
+                  width: 90,
+                  height: 80,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
@@ -77,7 +82,8 @@ class CustomActionButton extends StatelessWidget {
                             children: [
                               Positioned(
                                 child: Container(
-                                  width: 25, height: 25,
+                                  width: 25,
+                                  height: 25,
                                   decoration: const BoxDecoration(
                                     color: Colors.green, // Badge color
                                     shape: BoxShape.circle,
@@ -110,4 +116,3 @@ class CustomActionButton extends StatelessWidget {
     );
   }
 }
-

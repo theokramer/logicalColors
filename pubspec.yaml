@@ -33,6 +33,7 @@ dependencies:
   provider: ^6.0.5
   confetti: ^0.7.0
   shared_preferences: ^2.0.18
+  flutter_svg: ^2.0.10+1
 
 
 
@@ -66,7 +67,10 @@ flutter:
     - images/coin.png
     - images/wood.png
     - images/wood2.png
+    - images/wood2.png
+    - images/neuro.svg
     - images/tutorial_animation.gif
+    
     
 
   # To add assets to your application, add an assets section, like this:

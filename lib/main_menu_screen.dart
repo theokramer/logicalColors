@@ -1,4 +1,5 @@
 import 'package:color_puzzle/level_selection.dart';
+import 'package:color_puzzle/wallpaper_selection.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'puzzle_model.dart';
@@ -15,6 +16,64 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
+  int selectedWallpaperIndex = 1; // Default wallpaper selection
+  List<List<Color>> colors = [
+    [
+      Colors.grey,
+      Colors.indigo,
+      Colors.grey,
+      Colors.indigo,
+      Colors.indigo,
+      Colors.indigo,
+      Colors.grey,
+      Colors.indigo,
+      Colors.grey
+    ],
+    [
+      Colors.grey,
+      Colors.indigo,
+      Colors.grey,
+      Colors.indigo,
+      Colors.grey,
+      Colors.indigo,
+      Colors.grey,
+      Colors.indigo,
+      Colors.grey
+    ],
+    [
+      Colors.indigo,
+      Colors.grey,
+      Colors.indigo,
+      Colors.grey,
+      Colors.indigo,
+      Colors.grey,
+      Colors.indigo,
+      Colors.grey,
+      Colors.indigo
+    ],
+    [
+      Colors.indigo,
+      Colors.indigo,
+      Colors.indigo,
+      Colors.indigo,
+      Colors.indigo,
+      Colors.indigo,
+      Colors.indigo,
+      Colors.indigo,
+      Colors.indigo
+    ],
+    [
+      Colors.grey,
+      Colors.grey,
+      Colors.grey,
+      Colors.grey,
+      Colors.indigo,
+      Colors.grey,
+      Colors.grey,
+      Colors.grey,
+      Colors.grey
+    ],
+  ];
   @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
@@ -23,26 +82,77 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
     return Scaffold(
       backgroundColor: Colors.blueGrey[50],
-      body: Stack(
-        children: [
-          Column(
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("images/w$selectedWallpaper.jpg"),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SafeArea(
+          child: Stack(
             children: [
-              const SizedBox(height: 60),
-              _buildTopRow(context, coinProvider, currentWorld,
-                  puzzle.getMaxLevelForWorld(currentWorld)),
-              const SizedBox(height: 20),
-              _buildTitleText(),
-              const Spacer(),
-              _buildActionButton(
-                  context, isWorldUnlocked, coinProvider, puzzle),
-              const SizedBox(height: 30),
-              _buildBottomRow(),
-              const SizedBox(height: 30),
+              Column(
+                children: [
+                  _buildTopRow(context, coinProvider, currentWorld,
+                      puzzle.getMaxLevelForWorld(currentWorld)),
+                  const SizedBox(height: 20),
+                  _buildTitleText(),
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height / 5,
+                  ),
+                  _buildGrid(),
+                  _buildActionButton(
+                      context, isWorldUnlocked, coinProvider, puzzle),
+                  const SizedBox(height: 20),
+                  //_buildBottomRow(),
+                  //const SizedBox(height: 30),
+                ],
+              ),
+              _buildSwipeGestureDetector(),
+              _buildNavigationArrows(),
             ],
           ),
-          _buildSwipeGestureDetector(),
-          _buildNavigationArrows(),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGrid() {
+    return Expanded(
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 8.0,
+          mainAxisSpacing: 8.0,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 100.0),
+        itemCount: 9,
+        itemBuilder: (context, index) {
+          int x = index ~/ 3;
+          int y = index % 3;
+          Color tileColor = colors[currentWorld - 1][index];
+
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 400),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [tileColor.withOpacity(0.8), tileColor],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: const Text(""),
+          );
+        },
       ),
     );
   }
@@ -88,6 +198,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   // Handle grid view navigation
                 },
               ),
+              const SizedBox(width: 16),
+              _buildIconButton(
+                icon: Icons.palette,
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) =>
+                        const WallpaperSelectionWidget(),
+                  );
+                },
+              ),
             ],
           ),
           Row(
@@ -105,13 +226,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   );
                 },
               ),
-              const SizedBox(width: 16),
-              _buildIconButton(
+              //const SizedBox(width: 16),
+              /*_buildIconButton(
                 icon: Icons.settings,
                 onPressed: () {
                   // Handle settings navigation
                 },
-              ),
+              ),*/
             ],
           ),
         ],
@@ -124,13 +245,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       'World $currentWorld',
       textAlign: TextAlign.center,
       style: TextStyle(
-        color: worlds[currentWorld - 1].colors[1],
+        color: Colors.white,
         fontSize: 42,
         fontWeight: FontWeight.bold,
         fontFamily: 'Quicksand',
         shadows: [
           Shadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.white.withOpacity(0.2),
             offset: const Offset(2, 2),
             blurRadius: 6,
           ),
@@ -219,38 +340,53 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   Widget _buildUnlockButton(BuildContext context, int currentWorldIndex,
       CoinProvider coinProvider, PuzzleModel puzzle) {
     //int unlockCost = (currentWorldIndex + 1) * (currentWorldIndex + 1) * 400;
-    return ElevatedButton(
-      onPressed: () async {
-        //if (coinProvider.coins >= unlockCost) {
-        //await coinProvider.subtractCoins(unlockCost);
-        puzzle.unlockWorld(currentWorldIndex);
-        puzzle.saveWorldUnlocked(currentWorldIndex, true);
-        puzzle.updateWorldLevel(currentWorldIndex, 1);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            content: Text('World ${worlds[currentWorldIndex].id} unlocked!'),
-          ),
-        );
-        // } else {
-        /*Navigator.of(context).push(
-            FadePageRoute(
-              page: const ShopScreen(),
-            ),
-          );
-        }*/
-      },
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 16),
-        backgroundColor: Colors.redAccent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color.fromARGB(255, 178, 9, 9),
+            Color.fromARGB(255, 210, 9, 9)
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.white,
+            offset: Offset(0, 6),
+            blurRadius: 12,
+          ),
+        ],
       ),
-      child: const Text(
-        'Unlock',
-        style: TextStyle(color: Colors.white, fontSize: 16),
+      child: ElevatedButton(
+        onPressed: () async {
+          _showUnlockOptionsDialog(
+              context, currentWorldIndex, coinProvider, puzzle);
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 16),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.lock_open, color: Colors.white, size: 36),
+            SizedBox(width: 8),
+            Text(
+              'Unlock',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -277,12 +413,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             icon: Icons.calendar_today,
             onPressed: () {
               // Handle calendar navigation
-            },
-          ),
-          _buildIconButton(
-            icon: Icons.palette,
-            onPressed: () {
-              // Handle palette navigation
             },
           ),
         ],
@@ -346,7 +476,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       child: Icon(
         icon,
         size: 36,
-        color: Colors.black87,
+        color: Colors.white,
       ),
     );
   }
@@ -357,8 +487,114 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }) {
     return IconButton(
       icon: Icon(icon, size: 28),
-      color: Colors.black87,
+      color: Colors.white,
       onPressed: onPressed,
     );
   }
+}
+
+void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
+    CoinProvider coinProvider, PuzzleModel puzzle) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 16,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                  color: Colors.indigo,
+                  borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(10),
+                      bottomRight: Radius.circular(10))),
+              padding: const EdgeInsets.all(16.0),
+              child: const Text(
+                'Unlock Options',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'Do you want to unlock this world for €0.99 or all worlds for €2.99?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _buildUnlockButton(
+              context,
+              'Unlock Single World (€0.99)',
+              Colors.teal,
+              () {
+                // Add unlock single world logic here
+                Navigator.of(context).pop();
+              },
+            ),
+            _buildUnlockButton(
+              context,
+              'Unlock All Worlds (€2.99)',
+              Colors.orangeAccent,
+              () {
+                // Add unlock all worlds logic here
+                Navigator.of(context).pop();
+              },
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildUnlockButton(
+    BuildContext context, String text, Color color, VoidCallback onPressed) {
+  return Container(
+    margin: const EdgeInsets.symmetric(vertical: 8.0),
+    child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        elevation: 8,
+      ),
+      onPressed: onPressed,
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+  );
 }

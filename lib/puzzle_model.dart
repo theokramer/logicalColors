@@ -10,6 +10,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 int currentWorld = 1;
 
+int selectedWallpaper = 0;
+
+List<int> boughtWallpapers = [0];
+
 List<World> worlds = [
   World(
       id: 1,
@@ -165,6 +169,26 @@ class PuzzleModel with ChangeNotifier {
     await prefs.setInt('world_$worldId', level);
   }
 
+  Future<void> saveSelectedWallpaper(int selectedWallpaper) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('wallpaper', selectedWallpaper);
+  }
+
+  Future<int> loadSelectedWallpaper() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('wallpaper') ?? 0;
+  }
+
+  Future<void> saveBoughtWallpaper(int selectedWallpaper) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('w$selectedWallpaper', true);
+  }
+
+  Future<bool> loadBoughtWallpaper(int selectedWallpaper) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('w$selectedWallpaper') ?? false;
+  }
+
   void updateWorldLevel(int worldId, int newLevel) {
     var world = worlds.firstWhere((w) => w.id == worldId);
     if (newLevel > world.maxLevel) {
@@ -178,13 +202,19 @@ class PuzzleModel with ChangeNotifier {
     for (var world in worlds) {
       world.maxLevel = await loadWorldProgress(world.id);
       world.unlocked = await loadWorldUnlocked(world.id);
+      selectedWallpaper = await loadSelectedWallpaper();
+      for (int i = 0; i < 30; i++) {
+        if (await loadBoughtWallpaper(i)) {
+          boughtWallpapers.add(i);
+        }
+      }
     }
 
     _initializeGrid();
   }
 
   bool isWorldUnlocked(int worldID) {
-    if (worldID == 0) {
+    if (worldID == 1) {
       return true;
     }
     try {
@@ -200,7 +230,7 @@ class PuzzleModel with ChangeNotifier {
 
   int getMaxLevelForWorld(int worldId) {
     // Use `orElse` to handle the case when no element matches the condition
-    return 100;
+    //return 100;
     var world = worlds.firstWhere((w) => w.id == worldId,
         orElse: () => World(id: -1, maxLevel: -1, colors: [], unlocked: false));
     return world.maxLevel;

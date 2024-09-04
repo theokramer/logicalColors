@@ -1,5 +1,4 @@
 import 'package:color_puzzle/hints_manager.dart';
-import 'package:color_puzzle/puzzle_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'custom_info_button.dart'; // Dein CustomInfoButton

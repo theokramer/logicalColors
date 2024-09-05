@@ -48,7 +48,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                 mainAxisSpacing: 12.0,
                 childAspectRatio: 0.65,
               ),
-              itemCount: 12,
+              itemCount: 14,
               itemBuilder: (context, index) {
                 bool isLocked = !boughtWallpapers.contains(index);
 

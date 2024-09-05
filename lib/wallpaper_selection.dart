@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'coin_manager.dart';
@@ -86,7 +88,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                     child: isLocked
                         ? Center(
                             child: Text(
-                              '${500 * index}\nCoins',
+                              '${(log(index * 10000) * index * 50).floor()}\nCoins',
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Colors.white,
@@ -135,7 +137,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                       onPressed: () {
                         _unlockWallpaper(context, index, coinProvider, puzzle);
                       },
-                      child: Text('Unlock for ${500 * index} coins'),
+                      child: Text('Unlock for ${exp(index).floor()} coins'),
                     )
                   : ElevatedButton(
                       onPressed: () {
@@ -158,7 +160,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
 
   void _unlockWallpaper(BuildContext context, int index,
       CoinProvider coinProvider, PuzzleModel puzzle) {
-    int wallpaperCost = 500 * index;
+    int wallpaperCost = (exp(index)).floor();
 
     if (coinProvider.coins >= wallpaperCost) {
       coinProvider.subtractCoins(wallpaperCost); // Deduct coins

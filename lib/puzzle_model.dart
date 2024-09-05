@@ -181,12 +181,12 @@ class PuzzleModel with ChangeNotifier {
 
   Future<void> saveBoughtWallpaper(int selectedWallpaper) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('wS$selectedWallpaper', true);
+    await prefs.setBool('w$selectedWallpaper', true);
   }
 
   Future<bool> loadBoughtWallpaper(int selectedWallpaper) async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('wS$selectedWallpaper') ?? false;
+    return prefs.getBool('w$selectedWallpaper') ?? false;
   }
 
   void updateWorldLevel(int worldId, int newLevel) {

@@ -135,10 +135,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 children: [
                   _buildTopRow(context, coinProvider, currentWorld,
                       puzzle.getMaxLevelForWorld(currentWorld), puzzle),
-                  const SizedBox(height: 20),
+
                   _buildTitleText(),
                   SizedBox(
-                    height: MediaQuery.of(context).size.height / 5,
+                    height: MediaQuery.of(context).size.height / 6.8,
                   ),
                   _buildGrid(),
                   _buildActionButton(
@@ -182,7 +182,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           crossAxisSpacing: 8.0,
           mainAxisSpacing: 8.0,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 100.0),
+        padding: const EdgeInsets.symmetric(horizontal: 95.0),
         itemCount: 9,
         itemBuilder: (context, index) {
           int x = index ~/ 3;
@@ -217,75 +217,95 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       int worldIndex, int maxLevel, PuzzleModel puzzle) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildIconButton(
-                icon: Icons.shopping_cart,
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const ShopScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(width: 16),
-              _buildIconButton(
-                icon: Icons.grid_view,
-                onPressed: () {
-                  if (puzzle.isWorldUnlocked(currentWorld)) {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => LevelSelectionScreen(
-                          worldIndex: worldIndex,
-                          currentLevel: maxLevel,
+              Row(
+                children: [
+                  _buildIconButton(
+                    icon: Icons.shopping_cart,
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const ShopScreen(),
                         ),
-                      ),
-                    );
-                  }
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 16),
+                  _buildIconButton(
+                    icon: Icons.grid_view,
+                    onPressed: () {
+                      if (puzzle.isWorldUnlocked(currentWorld)) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => LevelSelectionScreen(
+                              worldIndex: worldIndex,
+                              currentLevel: maxLevel,
+                            ),
+                          ),
+                        );
+                      }
 
-                  // Handle grid view navigation
-                },
+                      // Handle grid view navigation
+                    },
+                  ),
+                  const SizedBox(width: 16),
+                  _buildIconButton(
+                    icon: Icons.palette,
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) =>
+                            WallpaperSelectionWidget(
+                          onWallpaperSelected: _updateWallpaper,
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              _buildIconButton(
-                icon: Icons.palette,
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) => WallpaperSelectionWidget(
-                      onWallpaperSelected: _updateWallpaper,
-                    ),
-                  );
-                },
+              Row(
+                children: [
+                  Consumer<CoinProvider>(
+                    builder: (context, coinProvider, child) {
+                      return CustomInfoButton(
+                        value: '${coinProvider.coins}',
+                        targetColor: -1,
+                        movesLeft: -1,
+                        iconPath: 'images/coins.png',
+                        backgroundColor: Colors.black45,
+                        textColor: Colors.white,
+                        isLarge: 2,
+                      );
+                    },
+                  ),
+                  //const SizedBox(width: 16),
+                  /*_buildIconButton(
+                    icon: Icons.settings,
+                    onPressed: () {
+                      // Handle settings navigation
+                    },
+                  ),*/
+                ],
               ),
             ],
           ),
           Row(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Consumer<CoinProvider>(
-                builder: (context, coinProvider, child) {
-                  return CustomInfoButton(
-                    value: '${coinProvider.coins}',
-                    targetColor: -1,
-                    movesLeft: -1,
-                    iconPath: 'images/coins.png',
-                    backgroundColor: Colors.black45,
-                    textColor: Colors.white,
-                    isLarge: 2,
-                  );
-                },
+              Padding(
+                padding: const EdgeInsets.only(left: 5.0, top: 5),
+                child: GestureDetector(
+                  onTap: () {},
+                  child: Image.asset(
+                    "/Users/theokramer/Documents/color_puzzle/images/no_ads.png",
+                    height: 35,
+                  ),
+                ),
               ),
-              //const SizedBox(width: 16),
-              /*_buildIconButton(
-                icon: Icons.settings,
-                onPressed: () {
-                  // Handle settings navigation
-                },
-              ),*/
             ],
           ),
         ],

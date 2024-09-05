@@ -422,7 +422,7 @@ class _ShopScreenState extends State<ShopScreen> {
     return Column(
       children: [
         Image.asset(
-          "/Users/theokramer/Documents/color_puzzle/images/no_ads_black.png", // Ensure correct asset path
+          "images/no_ads_black.png", // Ensure correct asset path
           height: 65, // Slightly larger image
         ),
         const SizedBox(height: 16),
@@ -446,7 +446,7 @@ class _ShopScreenState extends State<ShopScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _buildItem(Icons.monetization_on, '5000', Colors.black,
-                "/Users/theokramer/Documents/color_puzzle/images/coins.png"),
+                "images/coins.png"),
             _buildItem(Icons.colorize, '8', Colors.red, ""),
           ],
         ),
@@ -851,7 +851,7 @@ class _ShopScreenState extends State<ShopScreen> {
             child: Row(
               children: [
                 Image.asset(
-                  "/Users/theokramer/Documents/color_puzzle/images/no_ads.png", // Ensure correct asset path
+                  "/images/no_ads.png", // Ensure correct asset path
                   height: 60, // Slightly larger image
                 ),
                 const SizedBox(

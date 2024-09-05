@@ -313,7 +313,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 child: GestureDetector(
                   onTap: () {},
                   child: Image.asset(
-                    "/Users/theokramer/Documents/color_puzzle/images/no_ads.png",
+                    "images/no_ads.png",
                     height: 35,
                   ),
                 ),

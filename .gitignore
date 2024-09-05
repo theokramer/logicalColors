@@ -1,3 +1,5 @@
+"ios/Runner 2024-09-05 03-59-22/color_puzzle.ipa"
+
 # Miscellaneous
 *.class
 *.log
@@ -15,7 +17,6 @@ migrate_working_dir/
 *.ipr
 *.iws
 .idea/
-*.ipa
 
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
@@ -25,6 +26,7 @@ migrate_working_dir/
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
+*.ipa
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies

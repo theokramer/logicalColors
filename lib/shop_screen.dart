@@ -1,5 +1,6 @@
 import 'package:color_puzzle/hints_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'custom_info_button.dart'; // Dein CustomInfoButton
 import 'coin_manager.dart'; // Dein CoinManager
@@ -12,6 +13,13 @@ class ShopScreen extends StatefulWidget {
 }
 
 class _ShopScreenState extends State<ShopScreen> {
+  @override
+  void initState() {
+    if (_rewardedAd == null) {
+      _loadRewardedAd();
+    }
+  }
+
   void addCoins(int amount) async {
     await context
         .read<CoinProvider>()
@@ -44,7 +52,15 @@ class _ShopScreenState extends State<ShopScreen> {
       costs = int.parse(item['price'] as String);
     }
 
-    if (type == 2) {
+    if (item['price'] == "Watch Ad") {
+      _rewardedAd?.show(
+        onUserEarnedReward: (_, reward) {
+          addCoins(value);
+        },
+      );
+      _loadRewardedAd();
+    }
+    if (type == 2 && item['price'] != "Watch Ad") {
       addCoins(value);
     }
     if (type == 0 && await CoinManager.loadCoins() > costs) {
@@ -55,6 +71,35 @@ class _ShopScreenState extends State<ShopScreen> {
       addRems(value);
       subtractCoins(costs);
     }
+  }
+
+  RewardedAd? _rewardedAd;
+
+  void _loadRewardedAd() {
+    RewardedAd.load(
+      adUnitId: "ca-app-pub-3940256099942544/1712485313",
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              setState(() {
+                ad.dispose();
+                _rewardedAd = null;
+              });
+              _loadRewardedAd();
+            },
+          );
+
+          setState(() {
+            _rewardedAd = ad;
+          });
+        },
+        onAdFailedToLoad: (err) {
+          print('Failed to load a rewarded ad: ${err.message}');
+        },
+      ),
+    );
   }
 
   Future<void> handleBuyHint() async {
@@ -119,6 +164,8 @@ class _ShopScreenState extends State<ShopScreen> {
           children: [
             _buildEnhancedBundleSection(),
             const SizedBox(height: 20),
+            _buildUnlockAllWorlds(),
+            const SizedBox(height: 20),
             _buildNoAdsBundleSection(),
             const SizedBox(height: 20),
             Expanded(child: _buildShopItemsGrid()),
@@ -130,7 +177,6 @@ class _ShopScreenState extends State<ShopScreen> {
 
   Widget _buildEnhancedBundleSection() {
     return Container(
-      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.blue[800],
         borderRadius: BorderRadius.circular(20.0),
@@ -145,32 +191,35 @@ class _ShopScreenState extends State<ShopScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
-            children: [
-              Icon(
-                Icons.ads_click,
-                color: Colors.white,
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Entfernt Vollbildwerbung. Werbungen für Belohnungen sind weiterhin verfügbar.',
-                      style: TextStyle(
-                        fontSize: 14.0,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+          const Padding(
+            padding: EdgeInsets.all(10.0),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.ads_click,
+                  color: Colors.white,
                 ),
-              ),
-            ],
+                SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Removes all ads and unlocks all worlds.',
+                        style: TextStyle(
+                          fontSize: 14.0,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               Column(
                 children: [
@@ -178,7 +227,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     "images/coins.png",
                     height: 35,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
                   const Text(
                     "10000",
                     style: TextStyle(
@@ -191,28 +240,10 @@ class _ShopScreenState extends State<ShopScreen> {
               ),
               const Column(
                 children: [
-                  Icon(
-                    Icons.lightbulb,
-                    size: 35,
-                    color: Colors.white,
-                  ),
-                  SizedBox(height: 20),
+                  Icon(Icons.lock_open, size: 35, color: Colors.white),
+                  SizedBox(height: 10),
                   Text(
-                    "20",
-                    style: TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-              const Column(
-                children: [
-                  Icon(Icons.colorize, size: 35, color: Colors.white),
-                  SizedBox(height: 20),
-                  Text(
-                    "20",
+                    "Worlds 2-5",
                     style: TextStyle(
                       fontSize: 20.0,
                       fontWeight: FontWeight.bold,
@@ -237,11 +268,11 @@ class _ShopScreenState extends State<ShopScreen> {
               ],
             ),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('"Keine Werbung"-Bundle'),
+                  const Text('Starter-Pack – 50% Sale'),
                   Align(
                     alignment: Alignment.center,
                     child: ElevatedButton(
@@ -255,7 +286,7 @@ class _ShopScreenState extends State<ShopScreen> {
                         ),
                       ),
                       child: const Text(
-                        'EUR 2.99',
+                        'EUR 4.99',
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -294,7 +325,7 @@ class _ShopScreenState extends State<ShopScreen> {
       //{'title': '1', 'price': 'Gratis!', 'type': 0},
       {'title': '3', 'price': '200', 'type': 0},
       {'title': '5', 'price': '200', 'type': 1},
-      {'title': '200', 'price': 'Werbung', 'type': 2},
+      {'title': '200', 'price': 'Watch Ad', 'type': 2},
       {'title': '2000', 'price': '0.99€', 'type': 2},
       {'title': '5000', 'price': '1.99€', 'type': 2},
       {'title': '10000', 'price': '2.99€', 'type': 2},
@@ -390,6 +421,69 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
+  Widget _buildUnlockAllWorlds() {
+    return Container(
+      padding: const EdgeInsets.all(10.0),
+      decoration: BoxDecoration(
+        color: Colors.teal[700],
+        borderRadius: BorderRadius.circular(20.0),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            offset: Offset(0, 4),
+            blurRadius: 4.0,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(left: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Unlock all Worlds',
+                  style: TextStyle(
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'Unlocks all worlds in the app.',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Spacer(),
+          ElevatedButton(
+            onPressed: () {
+              // Funktionalität zum Aktivieren des Bundles
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber[700],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+              ),
+            ),
+            child: const Text(
+              'EUR 3.99',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildNoAdsBundleSection() {
     return Container(
       padding: const EdgeInsets.all(10.0),
@@ -407,27 +501,30 @@ class _ShopScreenState extends State<ShopScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Keine Werbung',
-                style: TextStyle(
-                  fontSize: 20.0,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          const Padding(
+            padding: EdgeInsets.only(left: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'No ads',
+                  style: TextStyle(
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              SizedBox(height: 5),
-              Text(
-                'Entfernt Vollbildwerbung. Werbungen für\nBelohnungen sind weiterhin verfügbar.',
-                style: TextStyle(
-                  fontSize: 8.5,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white70,
+                SizedBox(height: 5),
+                Text(
+                  'Removes all ads.',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white70,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const Spacer(),
           ElevatedButton(
@@ -441,7 +538,7 @@ class _ShopScreenState extends State<ShopScreen> {
               ),
             ),
             child: const Text(
-              'EUR 0.99',
+              'EUR 1.99',
               style: TextStyle(color: Colors.white),
             ),
           ),

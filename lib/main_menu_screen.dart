@@ -1,6 +1,7 @@
 import 'package:color_puzzle/level_selection.dart';
 import 'package:color_puzzle/wallpaper_selection.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'puzzle_model.dart';
 import 'custom_info_button.dart';
@@ -17,6 +18,38 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
   int selectedWallpaperIndex = 1; // Default wallpaper selection
+  late BannerAd _bannerAd;
+  bool _isBannerAdReady = false;
+
+  @override
+  void initState() {
+    _bannerAd = BannerAd(
+      adUnitId:
+          "ca-app-pub-3940256099942544/2435281174", // correct one: 'ca-app-pub-3263827122305139/6797409538'
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          setState(() {
+            _isBannerAdReady = true;
+          });
+        },
+        onAdFailedToLoad: (ad, err) {
+          print('Failed to load a banner ad: ${err.message}');
+          //ad.dispose();
+        },
+      ),
+    );
+
+    _bannerAd.load();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _bannerAd.dispose();
+  }
+
   void _updateWallpaper(int newIndex) {
     setState(() {
       selectedWallpaperIndex = newIndex;
@@ -101,7 +134,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               Column(
                 children: [
                   _buildTopRow(context, coinProvider, currentWorld,
-                      puzzle.getMaxLevelForWorld(currentWorld)),
+                      puzzle.getMaxLevelForWorld(currentWorld), puzzle),
                   const SizedBox(height: 20),
                   _buildTitleText(),
                   SizedBox(
@@ -109,14 +142,31 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   ),
                   _buildGrid(),
                   _buildActionButton(
-                      context, isWorldUnlocked, coinProvider, puzzle),
-                  const SizedBox(height: 20),
+                      context, isWorldUnlocked, coinProvider, puzzle, () {
+                    setState(() {
+                      isWorldUnlocked = true;
+                    });
+                  }),
+                  const SizedBox(height: 80),
                   //_buildBottomRow(),
                   //const SizedBox(height: 30),
                 ],
               ),
               _buildSwipeGestureDetector(),
               _buildNavigationArrows(),
+              if (_isBannerAdReady)
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SizedBox(
+                        width: constraints.maxWidth,
+                        height: _bannerAd.size.height.toDouble(),
+                        child: AdWidget(ad: _bannerAd),
+                      );
+                    },
+                  ),
+                ),
             ],
           ),
         ),
@@ -163,12 +213,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     );
   }
 
-  Widget _buildTopRow(
-    BuildContext context,
-    CoinProvider coinProvider,
-    int worldIndex,
-    int maxLevel,
-  ) {
+  Widget _buildTopRow(BuildContext context, CoinProvider coinProvider,
+      int worldIndex, int maxLevel, PuzzleModel puzzle) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Row(
@@ -190,7 +236,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               _buildIconButton(
                 icon: Icons.grid_view,
                 onPressed: () {
-                  if (worlds[worldIndex].unlocked) {
+                  if (puzzle.isWorldUnlocked(currentWorld)) {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => LevelSelectionScreen(
@@ -268,12 +314,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Widget _buildActionButton(BuildContext context, bool isWorldUnlocked,
-      CoinProvider coinProvider, PuzzleModel puzzle) {
+      CoinProvider coinProvider, PuzzleModel puzzle, Function onUnlock) {
     return Center(
       child: isWorldUnlocked
           ? _buildPlayButton(context, currentWorld - 1)
           : _buildUnlockButton(
-              context, (currentWorld - 1), coinProvider, puzzle),
+              context, (currentWorld - 1), coinProvider, puzzle, onUnlock),
     );
   }
 
@@ -345,7 +391,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Widget _buildUnlockButton(BuildContext context, int currentWorldIndex,
-      CoinProvider coinProvider, PuzzleModel puzzle) {
+      CoinProvider coinProvider, PuzzleModel puzzle, Function onUnlock) {
     //int unlockCost = (currentWorldIndex + 1) * (currentWorldIndex + 1) * 400;
     return Container(
       decoration: BoxDecoration(
@@ -369,7 +415,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       child: ElevatedButton(
         onPressed: () async {
           _showUnlockOptionsDialog(
-              context, currentWorldIndex, coinProvider, puzzle);
+              context, currentWorldIndex, coinProvider, puzzle, onUnlock);
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
@@ -501,7 +547,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 }
 
 void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
-    CoinProvider coinProvider, PuzzleModel puzzle) {
+    CoinProvider coinProvider, PuzzleModel puzzle, Function onUnlock) {
   showDialog(
     context: context,
     builder: (context) {
@@ -546,6 +592,9 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
               'Unlock Single World (€0.99)',
               Colors.teal,
               () {
+                /*puzzle.saveWorldUnlocked(currentWorldIndex + 1, true);
+                puzzle.unlockWorld(currentWorldIndex + 1);
+                onUnlock();*/
                 // Add unlock single world logic here
                 Navigator.of(context).pop();
               },
@@ -555,7 +604,12 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
               'Unlock All Worlds (€2.99)',
               Colors.orangeAccent,
               () {
-                // Add unlock all worlds logic here
+                /*for (int i = 0; i < 5; i++) {
+                  puzzle.saveWorldUnlocked(i, true);
+                  puzzle.unlockWorld(i);
+                }
+                // Add unlock all worlds logic here#
+                onUnlock();*/
                 Navigator.of(context).pop();
               },
             ),

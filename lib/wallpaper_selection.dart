@@ -1,7 +1,7 @@
-import 'package:color_puzzle/puzzle_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'coin_manager.dart';
+import 'puzzle_model.dart';
 
 class WallpaperSelectionWidget extends StatefulWidget {
   final Function(int) onWallpaperSelected;
@@ -25,89 +25,82 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
         borderRadius: BorderRadius.circular(20),
       ),
       elevation: 16,
-      child: Container(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
               'Choose Wallpaper',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
-            // Wrapping GridView in a Container with fixed height and adding SingleChildScrollView
-            Expanded(
-              child: SingleChildScrollView(
-                child: GridView.builder(
-                  // Removing shrinkWrap to enable scrolling within the GridView
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 8.0,
-                      mainAxisSpacing: 8.0,
-                      childAspectRatio: 0.65),
-                  itemCount: 30,
-                  itemBuilder: (context, index) {
-                    bool isLocked = !boughtWallpapers.contains(index);
+          ),
+          Expanded(
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 8.0,
+                mainAxisSpacing: 8.0,
+                childAspectRatio: 0.65,
+              ),
+              itemCount: 12,
+              itemBuilder: (context, index) {
+                bool isLocked = !boughtWallpapers.contains(index);
 
-                    return GestureDetector(
-                      onTap: () {
-                        print(isLocked);
-                        if (isLocked) {
-                          _showWallpaperPreview(
-                              context, index, isLocked, coinProvider, puzzle);
-                        } else {
-                          setState(() {
-                            selectedWallpaper = index;
-                            puzzle.saveSelectedWallpaper(selectedWallpaper);
-                          });
-                          widget.onWallpaperSelected(index);
-                        }
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(
-                            color: selectedWallpaper == index
-                                ? Colors.green
-                                : Colors.transparent,
-                            width: 3,
-                          ),
-                          image: DecorationImage(
-                            image: AssetImage("images/w$index.jpg"),
-                            fit: BoxFit.cover,
-                            colorFilter: isLocked
-                                ? ColorFilter.mode(
-                                    Colors.black.withOpacity(0.5),
-                                    BlendMode.darken,
-                                  )
-                                : null,
-                          ),
-                        ),
-                        child: isLocked
-                            ? const Center(
-                                child: Text(
-                                  'Locked',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                return GestureDetector(
+                  onTap: () {
+                    if (isLocked) {
+                      _showWallpaperPreview(
+                          context, index, isLocked, coinProvider, puzzle);
+                    } else {
+                      setState(() {
+                        selectedWallpaper = index;
+                        puzzle.saveSelectedWallpaper(selectedWallpaper);
+                      });
+                      widget.onWallpaperSelected(index);
+                    }
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: selectedWallpaper == index
+                            ? Colors.green
+                            : Colors.transparent,
+                        width: 3,
+                      ),
+                      image: DecorationImage(
+                        image: AssetImage("images/w$index.jpg"),
+                        fit: BoxFit.cover,
+                        colorFilter: isLocked
+                            ? ColorFilter.mode(
+                                Colors.black.withOpacity(0.5),
+                                BlendMode.darken,
                               )
                             : null,
                       ),
-                    );
-                  },
-                  // Defining a height to make it scrollable
-                  shrinkWrap: true,
-                ),
-              ),
+                    ),
+                    child: isLocked
+                        ? Center(
+                            child: Text(
+                              '${500 * index}\nCoins',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -142,7 +135,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                       onPressed: () {
                         _unlockWallpaper(context, index, coinProvider, puzzle);
                       },
-                      child: const Text('Unlock for 100 coins'),
+                      child: Text('Unlock for ${500 * index} coins'),
                     )
                   : ElevatedButton(
                       onPressed: () {
@@ -165,7 +158,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
 
   void _unlockWallpaper(BuildContext context, int index,
       CoinProvider coinProvider, PuzzleModel puzzle) {
-    const int wallpaperCost = 100;
+    int wallpaperCost = 500 * index;
 
     if (coinProvider.coins >= wallpaperCost) {
       coinProvider.subtractCoins(wallpaperCost); // Deduct coins

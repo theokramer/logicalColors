@@ -170,6 +170,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => RemsProvider()),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Color Change Puzzle',
         theme: ThemeData(
           primarySwatch: Colors.blue,

@@ -28,13 +28,16 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  cached_network_image: ^3.4.1
   confetti: ^0.7.0
   cupertino_icons: ^1.0.6
   flutter:
     sdk: flutter
+  flutter_cache_manager: ^3.4.1
   google_mobile_ads: ^5.1.0
   provider: ^6.0.5
   shared_preferences: ^2.0.18
+  visibility_detector: ^0.4.0+2
 
 dev_dependencies:
 

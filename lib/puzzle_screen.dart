@@ -21,6 +21,8 @@ import 'dart:async';
 int selectedLevel = 1;
 bool tutorialActive = true;
 
+int levelsSinceAd = 0;
+
 enum TutorialStep { none, step1, step2, step3, completed }
 
 Timer? _timer; // Declare the timer at the class level
@@ -56,17 +58,85 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   late BannerAd _bannerAd;
   bool _isBannerAdReady = false;
 
+  InterstitialAd? _interstitialAd;
+
+  RewardedAd? _rewardedAd;
+
   Future<void> saveTutorial(bool tutorial) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('tutorialActive', tutorial);
   }
 
+  void _loadRewardedAd() {
+    RewardedAd.load(
+      adUnitId: "ca-app-pub-3940256099942544/1712485313",
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              setState(() {
+                ad.dispose();
+                _rewardedAd = null;
+              });
+              _loadRewardedAd();
+            },
+          );
+
+          setState(() {
+            _rewardedAd = ad;
+          });
+        },
+        onAdFailedToLoad: (err) {
+          print('Failed to load a rewarded ad: ${err.message}');
+        },
+      ),
+    );
+  }
+
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:
+          "ca-app-pub-3940256099942544/4411468910", // correct one: 'ca-app-pub-3263827122305139/6797409538'
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              //selectedLevel += 1;
+            },
+          );
+          print("HIER");
+          setState(() {
+            _interstitialAd = ad;
+          });
+        },
+        onAdFailedToLoad: (err) {
+          print('Failed to load an interstitial ad: ${err.message}');
+        },
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+
+    if (levelsSinceAd > 5 && worlds[0].maxLevel > 10) {
+      if (_interstitialAd == null) {
+        _loadInterstitialAd();
+      }
+
+      levelsSinceAd = 0;
+    }
+
+    if (_rewardedAd == null) {
+      _loadRewardedAd();
+    }
+
     _bannerAd = BannerAd(
       adUnitId:
-          'ca-app-pub-3263827122305139/7371150832', // Use a test ad unit ID
+          "ca-app-pub-3940256099942544/2435281174", // correct one: 'ca-app-pub-3263827122305139/6797409538'
       request: const AdRequest(),
       size: AdSize.banner,
       listener: BannerAdListener(
@@ -77,7 +147,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
         },
         onAdFailedToLoad: (ad, err) {
           print('Failed to load a banner ad: ${err.message}');
-          ad.dispose();
+          //ad.dispose();
         },
       ),
     );
@@ -205,13 +275,21 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   }
 
   void handleWatchAdForHints() {
-    // Implement your ad logic here
-    addHints(3);
+    _rewardedAd?.show(
+      onUserEarnedReward: (_, reward) {
+        addHints(3);
+      },
+    );
+    _loadRewardedAd();
   }
 
   void handleWatchAdForRems() {
-    // Implement your ad logic here
-    addRems(5);
+    _rewardedAd?.show(
+      onUserEarnedReward: (_, reward) {
+        addRems(5);
+      },
+    );
+    _loadRewardedAd();
   }
 
   @override
@@ -612,7 +690,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                           double.negativeInfinity;
                                       showGadgetPopup(
                                           context,
-                                          'Hinweise',
+                                          'Hints',
                                           handleBuyHintSale,
                                           handleWatchAdForHints,
                                           [Colors.amber, Colors.orange],
@@ -627,6 +705,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                 if (puzzle.isGridFilledWithTargetColor()) {
                                   puzzle.countClicks = 0;
                                   denyClick = true;
+                                  levelsSinceAd++;
 
                                   if (worlds[currentWorld - 1].maxLevel >
                                       selectedLevel) {
@@ -660,6 +739,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                           setState(() {
                                             showBanner = true;
                                           });
+                                          if (_interstitialAd != null) {
+                                            _interstitialAd?.show();
+                                          }
                                         });
                                       });
                                     });
@@ -743,7 +825,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                               } else {
                                 showGadgetPopup(
                                     context,
-                                    'Hinweise',
+                                    'Hints',
                                     handleBuyHint,
                                     handleWatchAdForHints,
                                     [Colors.amber, Colors.orange],
@@ -1427,8 +1509,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
               children: [
                 Text(
                   sale
-                      ? "Mehr $gadgetName mit 200 Coins Rabatt erhalten"
-                      : 'Mehr $gadgetName erhalten',
+                      ? "Get more $gadgetName with a 200 Coins discount"
+                      : 'Get more $gadgetName',
                   style: const TextStyle(
                     color: Colors.white, // Farbe angepasst
                     fontFamily: 'Quicksand',
@@ -1475,7 +1557,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                       },
                       icon: const Icon(Icons.play_circle_fill),
                       label: const Text(
-                        'Werbung',
+                        'Watch Ad',
                         style: TextStyle(
                           fontFamily: 'Quicksand',
                           fontSize: 16,

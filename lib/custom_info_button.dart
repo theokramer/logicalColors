@@ -205,15 +205,15 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(widget.targetColor != -1
-              ? 'Grid einfärben'
-              : "${widget.movesLeft == 1 ? 'Ein Schritt' : "${widget.movesLeft} Schritte"} übrig"),
+              ? 'Color the grid'
+              : "${widget.movesLeft == 1 ? 'One Step' : "${widget.movesLeft} Steps"} left"),
           content: Column(
             mainAxisSize: MainAxisSize.min, // To fit the content size
             children: [
               Text(
                 widget.targetColor != -1
-                    ? 'Fülle das gesamte Raster mit der angezeigten Farbe. Du hast noch ${widget.movesLeft == 1 ? 'einen Schritt' : "${widget.movesLeft} Schritte"}! Denke daran, dass auch benachbarte Felder sich verfärben'
-                    : 'Du hast noch ${widget.movesLeft == 1 ? 'einen Schritt' : "${widget.movesLeft} Schritte"}, um das Ziel zu erreichen.',
+                    ? 'Fill the entire grid with the displayed color. You have ${widget.movesLeft == 1 ? 'one Step' : "${widget.movesLeft} Steps"} left! Remember that adjacent cells also change color.'
+                    : 'You have ${widget.movesLeft == 1 ? 'one Step' : "${widget.movesLeft} Steps"} left to reach the goal.',
               ),
               const SizedBox(height: 30), // Space between text and GIF
               Image.asset(

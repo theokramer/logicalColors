@@ -151,7 +151,7 @@ class _ShopScreenState extends State<ShopScreen> {
                         targetColor: -1,
                         movesLeft: -1,
                         iconPath: 'images/coins.png',
-                        backgroundColor: Colors.blueGrey[400]!,
+                        backgroundColor: Colors.black45,
                         textColor: Colors.white,
                         isLarge: 2,
                         originShop: true,
@@ -175,6 +175,10 @@ class _ShopScreenState extends State<ShopScreen> {
             _buildPageViewSection(),
             const SizedBox(height: 15),
             Expanded(child: _buildShopItemsGrid()),
+            const Text(
+              "You get a free wallpaper for each purchase.",
+              style: TextStyle(color: Colors.white),
+            )
           ],
         ),
       ),
@@ -234,11 +238,129 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
+  void _showPurchaseDialog(
+      BuildContext context, String title, int amount, PuzzleModel puzzle) {
+    final Random random = Random();
+
+    int newWallpaper = random.nextInt(12);
+    print(boughtWallpapers);
+    if (boughtWallpapers.length < 11) {
+      while (boughtWallpapers.contains(newWallpaper)) {
+        newWallpaper = random.nextInt(12);
+      }
+      if (!boughtWallpapers.contains(newWallpaper)) {
+        boughtWallpapers.add(newWallpaper);
+        puzzle.saveBoughtWallpaper(newWallpaper);
+      }
+    } else {
+      newWallpaper = -1;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible:
+          false, // Damit das Dialogfenster nicht außerhalb geschlossen werden kann
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          content: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 30),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$title!',
+                  style: TextStyle(
+                    color: Colors.blueGrey[800],
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Quicksand',
+                  ),
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    amount == 3
+                        ? const Icon(
+                            Icons.lightbulb,
+                            size: 50,
+                            color: Colors.amber,
+                          )
+                        : amount == 5
+                            ? const Icon(Icons.colorize,
+                                size: 50, color: Colors.redAccent)
+                            : Image.asset(
+                                'images/coins.png',
+                                height: 50,
+                              ),
+                    const SizedBox(width: 20),
+                    Text(
+                      '+$amount',
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                if (newWallpaper != -1)
+                  Container(
+                    height:
+                        (MediaQuery.of(context).size.height > 700) ? 300 : 200,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage("images/w$newWallpaper.jpg"),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                const SizedBox(
+                  height: 20,
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15.0),
+                    ),
+                  ),
+                  child: const Text(
+                    'Great',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildEnhancedBundleSection() {
     return Container(
       padding: const EdgeInsets.all(6.0),
       decoration: BoxDecoration(
-        color: Colors.deepPurpleAccent, // Updated background color
+        color: Colors.purple, // Updated background color
         borderRadius: BorderRadius.circular(30.0), // More rounded corners
         boxShadow: [
           BoxShadow(
@@ -289,7 +411,7 @@ class _ShopScreenState extends State<ShopScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 8), // Adjusted spacing
+          const SizedBox(height: 4), // Adjusted spacing
           _buildBottomCard(),
         ],
       ),
@@ -301,7 +423,7 @@ class _ShopScreenState extends State<ShopScreen> {
       children: [
         Image.asset(
           "/Users/theokramer/Documents/color_puzzle/images/no_ads_black.png", // Ensure correct asset path
-          height: 60, // Slightly larger image
+          height: 65, // Slightly larger image
         ),
         const SizedBox(height: 16),
         const Text(
@@ -328,7 +450,7 @@ class _ShopScreenState extends State<ShopScreen> {
             _buildItem(Icons.colorize, '8', Colors.red, ""),
           ],
         ),
-        const SizedBox(height: 16), // Adjusted spacing
+        const SizedBox(height: 23), // Adjusted spacing
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -356,20 +478,20 @@ class _ShopScreenState extends State<ShopScreen> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(right: 12.0),
+          padding: const EdgeInsets.only(right: 8.0),
           child: ElevatedButton(
             onPressed: () {
               // Functionality to activate the bundle
             },
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
               backgroundColor: Colors.green[500], // Button background color
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0), // Rounded corners
               ),
             ),
             child: const Text(
-              'EUR 4.99',
+              'EUR 4,99',
               style: TextStyle(
                 fontSize: 16.0, // Larger font size
                 fontWeight: FontWeight.bold,
@@ -449,138 +571,26 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  void _showPurchaseDialog(
-      BuildContext context, String title, int amount, PuzzleModel puzzle) {
-    final Random random = Random();
-
-    int newWallpaper = random.nextInt(12);
-    if (boughtWallpapers.length < 11) {
-      while (boughtWallpapers.contains(newWallpaper)) {
-        newWallpaper = random.nextInt(12);
-      }
-      boughtWallpapers.add(newWallpaper);
-      puzzle.saveBoughtWallpaper(newWallpaper);
-    } else {
-      newWallpaper = -1;
-    }
-
-    showDialog(
-      context: context,
-      barrierDismissible:
-          false, // Damit das Dialogfenster nicht außerhalb geschlossen werden kann
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          content: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 30),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '$title!',
-                  style: TextStyle(
-                    color: Colors.blueGrey[800],
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Quicksand',
-                  ),
-                ),
-                const SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    amount == 3
-                        ? const Icon(
-                            Icons.lightbulb,
-                            size: 50,
-                            color: Colors.amber,
-                          )
-                        : amount == 5
-                            ? const Icon(Icons.colorize,
-                                size: 50, color: Colors.redAccent)
-                            : Image.asset(
-                                'images/coins.png',
-                                height: 50,
-                              ),
-                    const SizedBox(width: 20),
-                    Text(
-                      '+$amount',
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 30),
-                if (newWallpaper != -1)
-                  Container(
-                    height:
-                        (MediaQuery.of(context).size.height > 700) ? 300 : 200,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage("images/w$newWallpaper.jpg"),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15.0),
-                    ),
-                  ),
-                  child: const Text(
-                    'OK',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildShopItemsGrid() {
     final puzzle = Provider.of<PuzzleModel>(context);
     final items = [
       //{'title': '1', 'price': 'Gratis!', 'type': 0},
       //{'title': '3', 'price': '200', 'type': 0},
       //{'title': '5', 'price': '200', 'type': 1},
-      {'title': '200', 'price': 'Watch Ad', 'type': 2},
-      {'title': '700', 'price': 'EUR 0,99', 'type': 2},
-      {'title': '1800', 'price': 'EUR 1,99', 'type': 2},
-      {'title': '3000', 'price': 'EUR 2,99', 'type': 2},
-      {'title': '5000', 'price': 'EUR 3,99', 'type': 2},
-      {'title': '10000', 'price': 'EUR 4,99', 'type': 2},
+      {'title': '150', 'price': 'Watch Ad', 'type': 2},
+      {'title': '700', 'price': 'EUR 0,49', 'type': 2},
+      {'title': '1800', 'price': 'EUR 0,99', 'type': 2},
+      {'title': '4000', 'price': 'EUR 1,99', 'type': 2},
+      {'title': '7000', 'price': 'EUR 2,99', 'type': 2},
+      {'title': '15000', 'price': 'EUR 4,99', 'type': 2},
     ];
 
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        crossAxisSpacing: 16.0,
+        crossAxisSpacing: 10.0,
         mainAxisSpacing: 16.0,
-        childAspectRatio: 0.8,
+        childAspectRatio: 0.9,
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {
@@ -596,102 +606,150 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 
   Widget _buildShopItemCard(String title, String price, int type) {
-    return Container(
-      padding: const EdgeInsets.all(6.0),
-      decoration: BoxDecoration(
-        color: Colors.deepPurpleAccent, // Outer container color
-        borderRadius:
-            BorderRadius.circular(20.0), // Outer container rounded corners
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            offset: const Offset(0, 8),
-            blurRadius: 12.0,
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          FittedBox(
-            child: Container(
-              width: 98,
-              height: 98,
-              padding: const EdgeInsets.all(5.0),
-              decoration: BoxDecoration(
-                color: Colors.white, // Inner container color
-                borderRadius: BorderRadius.circular(
-                    20.0), // Inner container rounded corners
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    offset: const Offset(0, 4),
-                    blurRadius: 8.0,
-                  ),
-                ],
+    return Stack(
+      clipBehavior: Clip.none, // Allow overflow
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6.0),
+          decoration: BoxDecoration(
+            color: Colors.deepPurpleAccent, // Outer container color
+            borderRadius:
+                BorderRadius.circular(20.0), // Outer container rounded corners
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                offset: const Offset(0, 8),
+                blurRadius: 12.0,
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  type == 0
-                      ? const Icon(
-                          Icons.lightbulb,
-                          size: 40,
-                          color: Colors.amber,
-                        )
-                      : type == 1
-                          ? const Icon(
-                              Icons.colorize,
-                              size: 40,
-                              color: Colors.red,
-                            )
-                          : Image.asset("images/coins.png", height: 40),
-                  const SizedBox(height: 10.0),
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                price,
-                style: const TextStyle(
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              (type == 0 || type == 1) && price != 'Gratis!'
-                  ? const SizedBox(
-                      width: 8,
-                    )
-                  : const SizedBox(),
-              (type == 0 || type == 1) && price != 'Gratis!'
-                  ? Image.asset("images/coins.png", height: 15)
-                  : const SizedBox(),
             ],
           ),
-        ],
-      ),
+          child: Column(
+            children: [
+              FittedBox(
+                child: Container(
+                  width: 98,
+                  height: 82,
+                  padding: const EdgeInsets.all(5.0),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.9),
+                        Colors.white.withOpacity(0.5),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(25.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        offset: const Offset(0, 4),
+                        blurRadius: 8.0,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      /*type == 0
+                          ? const Icon(
+                              Icons.lightbulb,
+                              size: 40,
+                              color: Colors.amber,
+                            )
+                          : type == 1
+                              ? const Icon(
+                                  Icons.colorize,
+                                  size: 40,
+                                  color: Colors.red,
+                                )
+                              : Image.asset("images/coins.png", height: 40),*/
+                      const SizedBox(height: 45.0),
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    price,
+                    style: const TextStyle(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  (type == 0 || type == 1) && price != 'Gratis!'
+                      ? const SizedBox(
+                          width: 8,
+                        )
+                      : const SizedBox(),
+                  (type == 0 || type == 1) && price != 'Gratis!'
+                      ? Image.asset(
+                          title == '150' || title == '700'
+                              ? "images/coins_less.png"
+                              : "images/coins.png",
+                          height: 15)
+                      : const SizedBox(),
+                ],
+              ),
+            ],
+          ),
+        ),
+        // Overflowing coin image
+        if (type == 2)
+          SizedBox(
+            width: 150,
+            height: 150,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Stack(
+                        children: [
+                          Positioned(
+                            child: SizedBox(
+                                width: 50,
+                                height:
+                                    title == '150' || title == '700' ? 80 : 50,
+                                child: Image.asset(
+                                    title == '150' || title == '700'
+                                        ? "images/coins_less.png"
+                                        : "images/coins.png",
+                                    height: 100)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+      ],
     );
   }
 
   Widget _buildUnlockAllWorlds() {
     return Container(
-      padding: const EdgeInsets.all(10.0),
       decoration: BoxDecoration(
-        color: Colors.deepPurpleAccent,
+        color: Colors.purple,
         borderRadius: BorderRadius.circular(20.0),
         boxShadow: const [
           BoxShadow(
@@ -742,19 +800,28 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
           ),
           const Spacer(),
-          ElevatedButton(
-            onPressed: () {
-              // Funktionalität zum Aktivieren des Bundles
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber[700],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.0),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: ElevatedButton(
+              onPressed: () {
+                // Functionality to activate the bundle
+              },
+              style: ElevatedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+                backgroundColor: Colors.green[500], // Button background color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0), // Rounded corners
+                ),
               ),
-            ),
-            child: const Text(
-              'EUR 2.99',
-              style: TextStyle(color: Colors.white),
+              child: const Text(
+                'EUR 2,99',
+                style: TextStyle(
+                  fontSize: 16.0, // Larger font size
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white, // Text color matching button border
+                ),
+              ),
             ),
           ),
         ],
@@ -764,9 +831,9 @@ class _ShopScreenState extends State<ShopScreen> {
 
   Widget _buildNoAdsBundleSection() {
     return Container(
-      padding: const EdgeInsets.all(10.0),
+      padding: const EdgeInsets.only(left: 10.0, top: 10, bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.deepPurpleAccent,
+        color: Colors.purple,
         borderRadius: BorderRadius.circular(20.0),
         boxShadow: const [
           BoxShadow(
@@ -779,44 +846,64 @@ class _ShopScreenState extends State<ShopScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: Row(
               children: [
-                Text(
-                  'No ads',
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                Image.asset(
+                  "/Users/theokramer/Documents/color_puzzle/images/no_ads.png", // Ensure correct asset path
+                  height: 60, // Slightly larger image
                 ),
-                Text(
-                  'Removes all ads.',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white70,
-                  ),
+                const SizedBox(
+                  width: 12,
+                ),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'No ads',
+                      style: TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      'Removes all ads.',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
           const Spacer(),
-          ElevatedButton(
-            onPressed: () {
-              // Funktionalität zum Aktivieren des Bundles
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber[700],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.0),
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: ElevatedButton(
+              onPressed: () {
+                // Functionality to activate the bundle
+              },
+              style: ElevatedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+                backgroundColor: Colors.green[500], // Button background color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0), // Rounded corners
+                ),
               ),
-            ),
-            child: const Text(
-              'EUR 1.99',
-              style: TextStyle(color: Colors.white),
+              child: const Text(
+                'EUR 1,99',
+                style: TextStyle(
+                  fontSize: 16.0, // Larger font size
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white, // Text color matching button border
+                ),
+              ),
             ),
           ),
         ],

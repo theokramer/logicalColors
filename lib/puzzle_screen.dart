@@ -152,7 +152,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       ),
     );
 
-    _bannerAd.load();
+    if (worlds[0].maxLevel > 10) {
+      _bannerAd.load();
+    }
 
     _confettiController =
         ConfettiController(duration: const Duration(milliseconds: 500));
@@ -380,7 +382,15 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                               puzzle.refreshGrid(
                                                   puzzle.maxMoves, puzzle.size);
                                             } else {
-                                              //_showSnackbar(context, "Not enough coins to use Refresh.");
+                                              Navigator.of(context).push(
+                                                FadePageRoute(
+                                                  page: ChangeNotifierProvider
+                                                      .value(
+                                                    value: puzzle,
+                                                    child: const ShopScreen(),
+                                                  ),
+                                                ),
+                                              );
                                               return;
                                             }
                                             break;
@@ -471,6 +481,16 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                     child: selectedLevel < 100
                                                         ? const PuzzleScreen()
                                                         : const MainMenuScreen(),
+                                                  ),
+                                                ),
+                                              );
+                                            } else {
+                                              Navigator.of(context).push(
+                                                FadePageRoute(
+                                                  page: ChangeNotifierProvider
+                                                      .value(
+                                                    value: puzzle,
+                                                    child: const ShopScreen(),
                                                   ),
                                                 ),
                                               );

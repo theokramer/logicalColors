@@ -60,6 +60,15 @@ List<World> worlds = [
         Color(0xffE93D2F),
       ],
       unlocked: false),
+  World(
+      id: 6,
+      maxLevel: 0,
+      colors: const [
+        Color(0xffFFBB5C),
+        Color(0xffd25E3E),
+        Color(0xffE93D2F),
+      ],
+      unlocked: false),
   // Weitere Welten hier hinzufügen...
 ];
 
@@ -194,7 +203,6 @@ class PuzzleModel with ChangeNotifier {
     if (newLevel > world.maxLevel) {
       world.maxLevel = newLevel;
       saveWorldProgress(worldId, newLevel); // Speichere den neuen Fortschritt
-      notifyListeners();
     }
   }
 
@@ -205,7 +213,9 @@ class PuzzleModel with ChangeNotifier {
       selectedWallpaper = await loadSelectedWallpaper();
       for (int i = 0; i < 30; i++) {
         if (await loadBoughtWallpaper(i)) {
-          boughtWallpapers.add(i);
+          if (!boughtWallpapers.contains(i)) {
+            boughtWallpapers.add(i);
+          }
         }
       }
     }
@@ -242,7 +252,7 @@ class PuzzleModel with ChangeNotifier {
 
   Map<String, int> getSizeAndMaxMoves(int level) {
     getMaxLevelForWorld(currentWorld);
-    int s = currentWorld == 1 ? 1 : 2; // Grid-Size
+    int s = currentWorld == 1 ? 1 : 3; // Grid-Size
     int m = 1; // MaxMoves
     int startLevel = 1; // Startlevel für die aktuelle Grid-Size
 
@@ -293,7 +303,20 @@ class PuzzleModel with ChangeNotifier {
     }
 
     while (level < 50) {
-      if (currentWorld < 10) {
+      if (currentWorld == 1) {
+        int levelsForCurrentSize = ((s) * (s)).floor();
+        int endLevel = startLevel + levelsForCurrentSize - 1;
+
+        if (level <= endLevel) {
+          m = (1 + (log((level - startLevel) + 1) / log(1.9))).ceil();
+          int maxMovesForCurrentSize = (s * 1.8).floor();
+          m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
+          break;
+        }
+
+        s++;
+        startLevel = endLevel + 1;
+      } else {
         int levelsForCurrentSize = ((s) * (s)).floor();
         int endLevel = startLevel + levelsForCurrentSize - 1;
 
@@ -307,20 +330,6 @@ class PuzzleModel with ChangeNotifier {
         s++;
         startLevel = endLevel + 1;
       }
-      /*else {
-        int levelsForCurrentSize = ((s + 0.6) * (s + 0.6)).floor();
-        int endLevel = startLevel + levelsForCurrentSize - 1;
-
-        if (level <= endLevel) {
-          m = (1 + (log(level - startLevel + 1) / log(2.07))).floor();
-          int maxMovesForCurrentSize = (s * 5).floor();
-          m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
-          break;
-        }
-
-        s++;
-        startLevel = endLevel + 1;
-      }*/
     }
 
     if (level >= 50) {
@@ -416,7 +425,8 @@ class PuzzleModel with ChangeNotifier {
         log(selectedLevel); // sorgt für geringeren Einfluss bei kleinen Levels
 
     // Endberechnung der Coins mit minimalen und maximalen Grenzen
-    int coinsEarned = ((baseCoins + levelFactor) * log(1 + (worldID)))
+    int coinsEarned = (((baseCoins + levelFactor)) +
+            ((baseCoins + levelFactor) * 0.3 * worldID))
         .clamp(1, 1000)
         .ceil(); // z.B. Mindestwert 1, Maximalwert 1000
 
@@ -621,7 +631,7 @@ class PuzzleModel with ChangeNotifier {
 
     int currentColorNumber = _grid[x][y];
     if (currentColorNumber == newColorNumber) return;
-    if (currentWorld != 2) {
+    if (currentWorld != 2 && currentWorld != 4) {
       _grid[x][y] = newColorNumber;
     }
     if (!oneTile) {
@@ -630,12 +640,12 @@ class PuzzleModel with ChangeNotifier {
         _updateAdjacentTile(x + 1, y, reversed); // Down
         _updateAdjacentTile(x, y - 1, reversed); // Left
         _updateAdjacentTile(x, y + 1, reversed); // Right
-      } else if (currentWorld == 3) {
+      } else if (currentWorld == 3 || currentWorld == 4) {
         _updateAdjacentTile(x - 1, y - 1, reversed); // Up
         _updateAdjacentTile(x + 1, y + 1, reversed); // Down
         _updateAdjacentTile(x + 1, y - 1, reversed); // Left
         _updateAdjacentTile(x - 1, y + 1, reversed); // Right
-      } else if (currentWorld == 4) {
+      } else if (currentWorld == 5) {
         for (int i = -1; i < 2; i++) {
           for (int j = -1; j < 2; j++) {
             if (i == 0 && j == 0) {

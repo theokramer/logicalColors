@@ -40,8 +40,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         },
       ),
     );
-
-    _bannerAd.load();
+    if (worlds[0].maxLevel > 10) {
+      _bannerAd.load();
+    }
   }
 
   @override
@@ -85,6 +86,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       Colors.indigo,
       Colors.grey,
       Colors.indigo,
+      Colors.grey,
+      Colors.indigo,
+      Colors.grey,
+      Colors.indigo
+    ],
+    [
+      Colors.indigo,
+      Colors.grey,
+      Colors.indigo,
+      Colors.grey,
+      Colors.grey,
       Colors.grey,
       Colors.indigo,
       Colors.grey,
@@ -424,13 +436,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(30),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.white,
-            offset: Offset(0, 6),
-            blurRadius: 12,
-          ),
-        ],
       ),
       child: ElevatedButton(
         onPressed: () async {
@@ -612,9 +617,12 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
               'Unlock Single World (€0.99)',
               Colors.teal,
               () {
-                /*puzzle.saveWorldUnlocked(currentWorldIndex + 1, true);
+                puzzle.saveWorldUnlocked(currentWorldIndex + 1, true);
                 puzzle.unlockWorld(currentWorldIndex + 1);
-                onUnlock();*/
+                puzzle.updateWorldLevel(currentWorldIndex + 1, 1);
+                puzzle.saveWorldProgress(currentWorldIndex + 1, 1);
+                onUnlock();
+
                 // Add unlock single world logic here
                 Navigator.of(context).pop();
               },
@@ -624,12 +632,15 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
               'Unlock All Worlds (€2.99)',
               Colors.orangeAccent,
               () {
-                /*for (int i = 0; i < 5; i++) {
-                  puzzle.saveWorldUnlocked(i, true);
-                  puzzle.unlockWorld(i);
+                for (int i = 0; i < worlds.length; i++) {
+                  puzzle.saveWorldUnlocked(i + 1, true);
+                  puzzle.unlockWorld(i + 1);
+                  puzzle.updateWorldLevel(i + 1, 1);
+                  puzzle.saveWorldProgress(i + 1, 1);
+                  onUnlock();
+
+                  // Add unlock single world logic here
                 }
-                // Add unlock all worlds logic here#
-                onUnlock();*/
                 Navigator.of(context).pop();
               },
             ),

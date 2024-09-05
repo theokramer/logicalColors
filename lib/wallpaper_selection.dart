@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:color_puzzle/shop_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'coin_manager.dart';
@@ -43,9 +44,8 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
           Expanded(
             child: GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8.0,
-                mainAxisSpacing: 8.0,
+                crossAxisCount: 2,
+                mainAxisSpacing: 12.0,
                 childAspectRatio: 0.65,
               ),
               itemCount: 12,
@@ -65,38 +65,41 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                       widget.onWallpaperSelected(index);
                     }
                   },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(
-                        color: selectedWallpaper == index
-                            ? Colors.green
-                            : Colors.transparent,
-                        width: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(
+                          color: selectedWallpaper == index
+                              ? Colors.green
+                              : Colors.transparent,
+                          width: 3,
+                        ),
+                        image: DecorationImage(
+                          image: AssetImage("images/w$index.jpg"),
+                          fit: BoxFit.cover,
+                          colorFilter: isLocked
+                              ? ColorFilter.mode(
+                                  Colors.black.withOpacity(0.5),
+                                  BlendMode.darken,
+                                )
+                              : null,
+                        ),
                       ),
-                      image: DecorationImage(
-                        image: AssetImage("images/w$index.jpg"),
-                        fit: BoxFit.cover,
-                        colorFilter: isLocked
-                            ? ColorFilter.mode(
-                                Colors.black.withOpacity(0.5),
-                                BlendMode.darken,
-                              )
-                            : null,
-                      ),
-                    ),
-                    child: isLocked
-                        ? Center(
-                            child: Text(
-                              '${(log(index * 10000) * index * 50).floor()}\nCoins',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                      child: isLocked
+                          ? Center(
+                              child: Text(
+                                '${(log(index * 10000) * index * 50).floor()}\nCoins',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          )
-                        : null,
+                            )
+                          : null,
+                    ),
                   ),
                 );
               },
@@ -137,7 +140,8 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                       onPressed: () {
                         _unlockWallpaper(context, index, coinProvider, puzzle);
                       },
-                      child: Text('Unlock for ${exp(index).floor()} coins'),
+                      child: Text(
+                          'Unlock for ${(log(index * 10000) * index * 50).floor()} coins'),
                     )
                   : ElevatedButton(
                       onPressed: () {
@@ -151,6 +155,9 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                       },
                       child: const Text('Select Wallpaper'),
                     ),
+              const SizedBox(
+                height: 16,
+              )
             ],
           ),
         );
@@ -160,7 +167,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
 
   void _unlockWallpaper(BuildContext context, int index,
       CoinProvider coinProvider, PuzzleModel puzzle) {
-    int wallpaperCost = (exp(index)).floor();
+    int wallpaperCost = (log(index * 10000) * index * 50).floor();
 
     if (coinProvider.coins >= wallpaperCost) {
       coinProvider.subtractCoins(wallpaperCost); // Deduct coins
@@ -170,13 +177,15 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
       });
       puzzle.saveBoughtWallpaper(selectedWallpaper);
       puzzle.saveSelectedWallpaper(selectedWallpaper); // Save the selection
-      boughtWallpapers.add(index);
+      if (!boughtWallpapers.contains(selectedWallpaper)) {
+        boughtWallpapers.add(selectedWallpaper);
+      }
       Navigator.pop(context); // Close the purchase dialog
       //Navigator.pop(context); // Close the preview dialog
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Not enough coins!'),
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const ShopScreen(),
         ),
       );
     }

@@ -9,6 +9,7 @@ import 'package:color_puzzle/hints_manager.dart';
 import 'package:color_puzzle/main_menu_screen.dart';
 import 'package:color_puzzle/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'puzzle_model.dart';
@@ -16,7 +17,6 @@ import 'shop_screen.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
-import 'package:flutter_svg/flutter_svg.dart';
 
 int selectedLevel = 1;
 bool tutorialActive = true;
@@ -53,6 +53,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   int getsLightBulb = 0;
   final GlobalKey<PopupMenuButtonState> popUpKey = GlobalKey();
 
+  late BannerAd _bannerAd;
+  bool _isBannerAdReady = false;
+
   Future<void> saveTutorial(bool tutorial) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('tutorialActive', tutorial);
@@ -61,6 +64,26 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   @override
   void initState() {
     super.initState();
+    _bannerAd = BannerAd(
+      adUnitId:
+          'ca-app-pub-3263827122305139/7371150832', // Use a test ad unit ID
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          setState(() {
+            _isBannerAdReady = true;
+          });
+        },
+        onAdFailedToLoad: (ad, err) {
+          print('Failed to load a banner ad: ${err.message}');
+          ad.dispose();
+        },
+      ),
+    );
+
+    _bannerAd.load();
+
     _confettiController =
         ConfettiController(duration: const Duration(milliseconds: 500));
     _animationController = AnimationController(
@@ -196,6 +219,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     _timer?.cancel(); // Cancel the timer
     _confettiController.dispose();
     _animationController.dispose();
+    _bannerAd.dispose();
 
     super.dispose();
   }
@@ -239,7 +263,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                       offset: const Offset(-10, 50),
                                       enabled: !denyClick,
                                       icon: const Icon(Icons.settings,
-                                          color: Colors.grey),
+                                          color: Colors.white),
                                       onSelected: (String value) {
                                         switch (value) {
                                           case 'home':
@@ -469,6 +493,10 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         fontFamily: 'Quicksand',
                       ),
                     ),*/
+
+                  const SizedBox(
+                    height: 20,
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24.0, vertical: 5.0),
@@ -484,7 +512,10 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           colors: worlds[currentWorld - 1].colors),
                     ),
                   ),
-                  //SizedBox(height: 10,),
+                  if (MediaQuery.of(context).size.height > 700)
+                    const SizedBox(
+                      height: 15,
+                    ),
                   SizedBox(
                     height: 90,
                     child: Stack(
@@ -526,7 +557,10 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                       ],
                     ),
                   ),
-                  //SizedBox(height: 20,),
+                  if (MediaQuery.of(context).size.height > 700)
+                    const SizedBox(
+                      height: 15,
+                    ),
                   Expanded(
                     child: GridView.builder(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -534,7 +568,10 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         crossAxisSpacing: 8.0,
                         mainAxisSpacing: 8.0,
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 35.0),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: (MediaQuery.of(context).size.height > 700)
+                              ? 35.0
+                              : 50),
                       itemCount: puzzle.size * puzzle.size,
                       itemBuilder: (context, index) {
                         int x = index ~/ puzzle.size;
@@ -733,7 +770,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                 } else {
                                   showGadgetPopup(
                                       context,
-                                      'Solver',
+                                      'Colorizer',
                                       handleBuyRem,
                                       handleWatchAdForRems,
                                       [
@@ -793,8 +830,25 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                       ],
                     ),
                   ),
+                  const SizedBox(
+                    height: 50,
+                  )
                 ],
               ),
+
+              if (_isBannerAdReady)
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SizedBox(
+                        width: constraints.maxWidth,
+                        height: _bannerAd.size.height.toDouble(),
+                        child: AdWidget(ad: _bannerAd),
+                      );
+                    },
+                  ),
+                ),
 
               tutorialActive && currentTutorialStep != TutorialStep.none
                   ? Column(
@@ -1153,9 +1207,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                     gridSize: puzzle.size,
                                     maxMoves: puzzle.maxMoves,
                                     colors: worlds[currentWorld - 1].colors),
-                                const SizedBox(
-                                  height: 20,
-                                ),
                                 Wrap(
                                   children: [
                                     Row(

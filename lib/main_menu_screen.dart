@@ -17,6 +17,12 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
   int selectedWallpaperIndex = 1; // Default wallpaper selection
+  void _updateWallpaper(int newIndex) {
+    setState(() {
+      selectedWallpaperIndex = newIndex;
+    });
+  }
+
   List<List<Color>> colors = [
     [
       Colors.grey,
@@ -204,8 +210,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 onPressed: () {
                   showDialog(
                     context: context,
-                    builder: (BuildContext context) =>
-                        const WallpaperSelectionWidget(),
+                    builder: (BuildContext context) => WallpaperSelectionWidget(
+                      onWallpaperSelected: _updateWallpaper,
+                    ),
                   );
                 },
               ),

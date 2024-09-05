@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:color_puzzle/coin_manager.dart';
@@ -5,6 +6,7 @@ import 'package:color_puzzle/hints_manager.dart';
 import 'package:color_puzzle/main_menu_screen.dart';
 import 'package:color_puzzle/shop_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'puzzle_model.dart'; // Import your PuzzleModel
@@ -12,6 +14,7 @@ import 'puzzle_screen.dart'; // Import your screen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await MobileAds.instance.initialize();
   int maxLevel = await loadWorldProgress(
       currentWorld); // Load progress for the current world
   tutorialActive = await loadTutorial();
@@ -171,7 +174,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        initialRoute: '/menu',
+        initialRoute: tutorialActive ? '/' : '/menu',
         routes: {
           '/': (context) => const PuzzleScreen(),
           '/roadmap': (context) => const MainMenuScreen(),

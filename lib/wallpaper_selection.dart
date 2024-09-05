@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 import 'coin_manager.dart';
 
 class WallpaperSelectionWidget extends StatefulWidget {
-  const WallpaperSelectionWidget({super.key});
+  final Function(int) onWallpaperSelected;
+
+  const WallpaperSelectionWidget(
+      {super.key, required this.onWallpaperSelected});
 
   @override
   _WallpaperSelectionWidgetState createState() =>
@@ -61,6 +64,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                             selectedWallpaper = index;
                             puzzle.saveSelectedWallpaper(selectedWallpaper);
                           });
+                          widget.onWallpaperSelected(index);
                         }
                       },
                       child: Container(

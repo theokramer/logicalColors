@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 
-  double calculateDifficulty(int maxMoves, int gridSize) {
-    double difficulty = ((maxMoves * 3) / ((gridSize * gridSize) + 10)) * 0.8; // Adjusting the multiplier to keep within 0 to 1 range
-    return difficulty.clamp(0.0, 1.0);
-  }
+double calculateDifficulty(int maxMoves, int gridSize) {
+  double difficulty = ((maxMoves * 3) / ((gridSize * gridSize) + 10)) *
+      0.8; // Adjusting the multiplier to keep within 0 to 1 range
+  return difficulty.clamp(0.0, 1.0);
+}
 
 class HorizontalDifficultyBar extends StatelessWidget {
   final int gridSize;
   final int maxMoves;
   final List<Color> colors;
 
-  HorizontalDifficultyBar({
+  const HorizontalDifficultyBar({
+    super.key,
     required this.gridSize,
     required this.maxMoves,
     required this.colors,
@@ -18,15 +20,16 @@ class HorizontalDifficultyBar extends StatelessWidget {
 
   // Calculate the difficulty as a value between 0.0 and 1.0
 
-
   // Generate segments based on difficulty
   List<Widget> buildSegments(double difficulty) {
     int totalSegments = 10;
     int filledSegments = (difficulty * totalSegments).round();
 
     // Determine the thresholds for green, yellow, and red segments
-    int greenThreshold = (totalSegments * 0.3).ceil();  // 30% of the bar is green
-    int yellowThreshold = (totalSegments * 0.6).ceil(); // 60% of the bar is yellow
+    int greenThreshold =
+        (totalSegments * 0.3).ceil(); // 30% of the bar is green
+    int yellowThreshold =
+        (totalSegments * 0.6).ceil(); // 60% of the bar is yellow
 
     return List.generate(totalSegments, (index) {
       bool isFilled = index < filledSegments;
@@ -67,14 +70,14 @@ class HorizontalDifficultyBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 30),
         Row(
           children: segments,
         ),
-        SizedBox(height: 8),
-        Text(
+        const SizedBox(height: 8),
+        const Text(
           'Difficulty',
           style: TextStyle(
+            color: Colors.white,
             fontSize: 14,
           ),
         ),

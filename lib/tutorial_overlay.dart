@@ -6,8 +6,11 @@ class AnimatedCustomOverlay extends StatefulWidget {
   final VoidCallback onClose;
   final bool blink;
 
-  const AnimatedCustomOverlay({Key? key, required this.message, required this.onClose, required this.blink})
-      : super(key: key);
+  const AnimatedCustomOverlay(
+      {super.key,
+      required this.message,
+      required this.onClose,
+      required this.blink});
 
   @override
   _AnimatedCustomOverlayState createState() => _AnimatedCustomOverlayState();
@@ -31,8 +34,8 @@ class _AnimatedCustomOverlayState extends State<AnimatedCustomOverlay>
 
     // Define the animation to transition from red to indigo
     _colorAnimation = ColorTween(
-      begin: Colors.indigo.withOpacity(0.5), 
-      end: Colors.red, // End color
+      begin: Colors.indigo.withOpacity(0.8),
+      end: Colors.teal, // End color
     ).animate(CurvedAnimation(
       parent: _controller,
       curve: Curves.easeInOut, // Smooth transition
@@ -40,11 +43,11 @@ class _AnimatedCustomOverlayState extends State<AnimatedCustomOverlay>
 
     // Add a listener to control the blinking behavior
     _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed && _blinkCount < 3) {
+      if (status == AnimationStatus.completed && _blinkCount < 2) {
         // When the animation completes, reverse it to create the blink effect
         _controller.reverse();
         _blinkCount++;
-      } else if (status == AnimationStatus.dismissed && _blinkCount < 3) {
+      } else if (status == AnimationStatus.dismissed && _blinkCount < 2) {
         // When the reverse completes, start the forward animation again
         _controller.forward();
       }
@@ -64,7 +67,7 @@ class _AnimatedCustomOverlayState extends State<AnimatedCustomOverlay>
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 80),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20), // Rounded corners
           child: BackdropFilter(
@@ -74,16 +77,20 @@ class _AnimatedCustomOverlayState extends State<AnimatedCustomOverlay>
               builder: (context, child) {
                 return Container(
                   decoration: BoxDecoration(
-                    color: widget.blink ? _colorAnimation.value : Colors.indigo.withOpacity(0.5), // Use the animated color
+                    color: widget.blink
+                        ? _colorAnimation.value
+                        : Colors.indigo
+                            .withOpacity(0.8), // Use the animated color
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.5), // Soft shadow
                         blurRadius: 10,
-                        offset: Offset(0, 5),
+                        offset: const Offset(0, 5),
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.all(16), // Padding inside the overlay
+                  padding:
+                      const EdgeInsets.all(16), // Padding inside the overlay
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [

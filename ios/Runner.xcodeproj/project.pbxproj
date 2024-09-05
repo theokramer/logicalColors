@@ -97,7 +97,6 @@
 				ACCB05E87A198A6572F98855 /* Pods-RunnerTests.release.xcconfig */,
 				B373002A2544DCE84AF035A7 /* Pods-RunnerTests.profile.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -199,6 +198,7 @@
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				0D88F9C14601617F93A6D2B9 /* [CP] Embed Pods Frameworks */,
+				A368DB0FF8B95CE68079894D /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -340,6 +340,23 @@
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
 		};
+		A368DB0FF8B95CE68079894D /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		F40FFBA0CB9E666FE1FD5C35 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -470,7 +487,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 67AYJ24F97;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -478,7 +495,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.colorPuzzle;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.colorPuzzle2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -653,7 +670,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 67AYJ24F97;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -661,7 +678,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.colorPuzzle;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.colorPuzzle2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -676,7 +693,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 67AYJ24F97;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -684,7 +701,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.colorPuzzle;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.colorPuzzle2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;

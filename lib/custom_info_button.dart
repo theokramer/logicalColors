@@ -15,33 +15,31 @@ class CustomInfoButton extends StatefulWidget {
   final bool blink;
   final bool originShop;
 
-  CustomInfoButton({
-    required this.value,
-    required this.targetColor,
-    required this.movesLeft,
-    required this.iconPath,
-    required this.backgroundColor,
-    required this.textColor,
-    this.blink = false,
-    this.isLarge = 0, // Default to false
-    this.originShop = false
-  });
+  const CustomInfoButton(
+      {super.key,
+      required this.value,
+      required this.targetColor,
+      required this.movesLeft,
+      required this.iconPath,
+      required this.backgroundColor,
+      required this.textColor,
+      this.blink = false,
+      this.isLarge = 0, // Default to false
+      this.originShop = false});
 
   @override
   State<CustomInfoButton> createState() => _CustomInfoButtonState();
 }
 
-class _CustomInfoButtonState extends State<CustomInfoButton> with SingleTickerProviderStateMixin {
-
-    late AnimationController _controller;
+class _CustomInfoButtonState extends State<CustomInfoButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
   late Animation<Color?> _colorAnimation;
   int _blinkCount = 0; // To keep track of the number of blinks
 
-    @override
-    void initState() {
+  @override
+  void initState() {
     super.initState();
-
-    print(widget.blink);
 
     // Initialize the AnimationController
     _controller = AnimationController(
@@ -51,7 +49,7 @@ class _CustomInfoButtonState extends State<CustomInfoButton> with SingleTickerPr
 
     // Define the animation to transition from red to indigo
     _colorAnimation = ColorTween(
-      begin: Colors.amber, 
+      begin: Colors.amber,
       end: Colors.orange, // End color
     ).animate(CurvedAnimation(
       parent: _controller,
@@ -74,99 +72,129 @@ class _CustomInfoButtonState extends State<CustomInfoButton> with SingleTickerPr
     _controller.forward();
   }
 
-
-
   @override
   void dispose() {
-    _controller.dispose(); // Dispose the controller when the widget is removed
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
-    double fontSize = widget.isLarge == 0 ? 20 : widget.isLarge == 1 ? 16 : 16;
-    double iconSize = widget.isLarge == 0 ? 34 : widget.isLarge == 1 ? 20 : 16;
-    double padding = widget.isLarge == 0 ? 18 : widget.isLarge == 1 ? 14 : 6;
+    double fontSize = widget.isLarge == 0
+        ? 20
+        : widget.isLarge == 1
+            ? 16
+            : 16;
+    double iconSize = widget.isLarge == 0
+        ? 34
+        : widget.isLarge == 1
+            ? 20
+            : 16;
+    double padding = widget.isLarge == 0
+        ? 18
+        : widget.isLarge == 1
+            ? 14
+            : 6;
 
     return GestureDetector(
-      
-      onTap: tutorialActive ? null : () => widget.isLarge != 1 && widget.isLarge != 2 ? _showInfoDialog(context) : widget.isLarge == 2 && !widget.originShop ? 
-      (Navigator.of(context).push(
-                                  FadePageRoute(
-                                    page: ChangeNotifierProvider.value(
-                                      value: puzzle,
-                                      child: ShopScreen(),
-                                    ),
-                                  ),
-                                )) : null, // Show info dialog on tap
+      onTap: tutorialActive
+          ? null
+          : () => widget.isLarge != 1 && widget.isLarge != 2
+              ? _showInfoDialog(context)
+              : widget.isLarge == 2 && !widget.originShop
+                  ? Navigator.of(context).push(
+                      FadePageRoute(
+                        page:
+                            const ShopScreen(), // Verwende hier das existierende PuzzleModel
+                      ),
+                    )
+                  : null, // Show info dialog on tap
       child: AnimatedBuilder(
-        animation: _colorAnimation,
-        builder: (context, child) {
-          return Container(
-            
-            padding: EdgeInsets.symmetric(vertical: padding, horizontal: padding),
-            decoration: !widget.blink ? BoxDecoration(
-              color: widget.backgroundColor,
-              borderRadius: BorderRadius.circular(widget.isLarge == 0 ? 15 : 10),
-            ) : BoxDecoration(
-              borderRadius: BorderRadius.circular(widget.isLarge == 0 ? 15 : 10,),
-                    border: Border.all(color: _colorAnimation.value ?? Colors.amber, width: 4),
-                  ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Coin Icon
-                widget.iconPath != ""
-                    ? Image.asset(
-                        widget.iconPath,
-                        height: iconSize,
-                        width: iconSize,
-                      )
-                    : const SizedBox(),
-                widget.iconPath != "" ? const SizedBox(width: 8) : const SizedBox(),
-                // Coin Value
-                Text(
-                  widget.value,
-                  style: TextStyle(
-                    color: widget.textColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: fontSize,
-                  ),
-                ),
-                if (widget.targetColor != -1) ...[
-                  // Target Color
-                  Text(
-                    'Fill',
-                    style: TextStyle(
-                        color: widget.textColor.withOpacity(0.8),
-                        fontSize: fontSize,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(width: 10),
-                  Container(
-                    width: iconSize * 0.8,
-                    height: iconSize * 0.8,
-                    decoration: BoxDecoration(
-                      color: puzzle.getColor(widget.targetColor), // Function to get color from name
-                      shape: BoxShape.circle,
+          animation: _colorAnimation,
+          builder: (context, child) {
+            return Container(
+              padding:
+                  EdgeInsets.symmetric(vertical: padding, horizontal: padding),
+              decoration: !widget.blink
+                  ? BoxDecoration(
+                      color: widget.backgroundColor,
+                      borderRadius:
+                          BorderRadius.circular(widget.isLarge == 0 ? 15 : 10),
+                    )
+                  : BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                        widget.isLarge == 0 ? 15 : 10,
+                      ),
+                      border: Border.all(
+                          color: _colorAnimation.value ?? Colors.amber,
+                          width: 4),
                     ),
-                    child: Center(child: Text("${widget.targetColor}", style: TextStyle(fontSize: widget.isLarge == 0 ? 15 : 10, color: Colors.white, fontWeight: FontWeight.bold),)),
-                  ),
-                ],
-                if (widget.movesLeft > -1 && widget.targetColor == -1) ...[
-                  // Moves Left
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Coin Icon
+                  widget.iconPath != ""
+                      ? Image.asset(
+                          widget.iconPath,
+                          height: iconSize,
+                          width: iconSize,
+                        )
+                      : const SizedBox(),
+                  widget.iconPath != ""
+                      ? const SizedBox(width: 8)
+                      : const SizedBox(),
+                  // Coin Value
                   Text(
-                    '${widget.movesLeft} Moves',
+                    widget.value,
                     style: TextStyle(
-                        color: widget.textColor, fontSize: fontSize, fontWeight: FontWeight.bold),
+                      color: widget.textColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: fontSize,
+                    ),
                   ),
+                  if (widget.targetColor != -1) ...[
+                    // Target Color
+                    Text(
+                      'Fill',
+                      style: TextStyle(
+                          color: widget.textColor.withOpacity(0.8),
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      width: iconSize * 0.8,
+                      height: iconSize * 0.8,
+                      decoration: BoxDecoration(
+                        color: puzzle.getColor(widget
+                            .targetColor), // Function to get color from name
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                          child: Text(
+                        "${widget.targetColor}",
+                        style: TextStyle(
+                            fontSize: widget.isLarge == 0 ? 15 : 10,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold),
+                      )),
+                    ),
+                  ],
+                  if (widget.movesLeft > -1 && widget.targetColor == -1) ...[
+                    // Moves Left
+                    Text(
+                      '${widget.movesLeft} Moves',
+                      style: TextStyle(
+                          color: widget.textColor,
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ],
-              ],
-            ),
-          );
-        }
-      ),
+              ),
+            );
+          }),
     );
   }
 
@@ -176,24 +204,26 @@ class _CustomInfoButtonState extends State<CustomInfoButton> with SingleTickerPr
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(widget.targetColor != - 1 ? 'Grid einfärben' : "${widget.movesLeft == 1 ? 'Ein Schritt' : "${widget.movesLeft} Schritte"} übrig"),
+          title: Text(widget.targetColor != -1
+              ? 'Color the grid'
+              : "${widget.movesLeft == 1 ? 'One Step' : "${widget.movesLeft} Steps"} left"),
           content: Column(
             mainAxisSize: MainAxisSize.min, // To fit the content size
             children: [
               Text(
                 widget.targetColor != -1
-                    ? 'Fülle das gesamte Raster mit der angezeigten Farbe. Du hast noch ${widget.movesLeft == 1 ? 'einen Schritt' : "${widget.movesLeft} Schritte"}! Denke daran, dass auch benachbarte Felder sich verfärben'
-                    : 'Du hast noch ${widget.movesLeft == 1 ? 'einen Schritt' : "${widget.movesLeft} Schritte"}, um das Ziel zu erreichen.',
+                    ? 'Fill the entire grid with the displayed color. You have ${widget.movesLeft == 1 ? 'one Step' : "${widget.movesLeft} Steps"} left! Remember that adjacent cells also change color.'
+                    : 'You have ${widget.movesLeft == 1 ? 'one Step' : "${widget.movesLeft} Steps"} left to reach the goal.',
               ),
               const SizedBox(height: 30), // Space between text and GIF
-            Image.asset(
-              'images/tutorial_animation.gif', // Replace with your local path to the GIF
-              height: 250, // Adjust the height as needed
-              fit: BoxFit.cover, // Adjust to cover or contain based on the look you want
-            ),
+              Image.asset(
+                'images/tutorial_animation.gif', // Replace with your local path to the GIF
+                height: 250, // Adjust the height as needed
+                fit: BoxFit
+                    .cover, // Adjust to cover or contain based on the look you want
+              ),
             ],
           ),
-          
           actions: [
             TextButton(
               onPressed: () {
@@ -225,4 +255,3 @@ class _CustomInfoButtonState extends State<CustomInfoButton> with SingleTickerPr
     }
   }
 }
-

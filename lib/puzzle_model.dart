@@ -12,6 +12,8 @@ int currentWorld = 1;
 
 int selectedWallpaper = 0;
 
+bool noAds = false;
+
 List<int> boughtWallpapers = [0];
 
 List<World> worlds = [
@@ -198,6 +200,16 @@ class PuzzleModel with ChangeNotifier {
     return prefs.getBool('w$selectedWallpaper') ?? false;
   }
 
+  Future<void> saveNoAds(bool noAds) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('noAds', noAds);
+  }
+
+  Future<bool> loadNoAds() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('noAds') ?? false;
+  }
+
   void updateWorldLevel(int worldId, int newLevel) {
     var world = worlds.firstWhere((w) => w.id == worldId);
     if (newLevel > world.maxLevel) {
@@ -211,6 +223,7 @@ class PuzzleModel with ChangeNotifier {
       world.maxLevel = await loadWorldProgress(world.id);
       world.unlocked = await loadWorldUnlocked(world.id);
       selectedWallpaper = await loadSelectedWallpaper();
+      noAds = await loadNoAds();
       for (int i = 0; i < 30; i++) {
         if (await loadBoughtWallpaper(i)) {
           if (!boughtWallpapers.contains(i)) {
@@ -250,9 +263,14 @@ class PuzzleModel with ChangeNotifier {
     return world.maxLevel;
   }
 
+  void addMoves(int amount) {
+    _moves -= 3;
+    notifyListeners();
+  }
+
   Map<String, int> getSizeAndMaxMoves(int level) {
     getMaxLevelForWorld(currentWorld);
-    int s = currentWorld == 1 ? 1 : 3; // Grid-Size
+    int s = currentWorld == 1 ? 1 : 2; // Grid-Size
     int m = 1; // MaxMoves
     int startLevel = 1; // Startlevel für die aktuelle Grid-Size
 
@@ -417,7 +435,7 @@ class PuzzleModel with ChangeNotifier {
     double difficulty = calculateDifficulty(maxMoves, size) * 6;
 
     // Skaliere die Schwierigkeit stärker für höhere Belohnungen
-    num difficultyWeight = difficulty > 1 ? pow(difficulty, 2.2) : difficulty;
+    num difficultyWeight = difficulty > 1 ? pow(difficulty, 2) : difficulty;
 
     // Dynamische Anpassung der Coins-Belohnung basierend auf Level und Schwierigkeit
     double baseCoins = difficultyWeight * 2; // Grundwert pro Schwierigkeit
@@ -425,10 +443,10 @@ class PuzzleModel with ChangeNotifier {
         log(selectedLevel); // sorgt für geringeren Einfluss bei kleinen Levels
 
     // Endberechnung der Coins mit minimalen und maximalen Grenzen
-    int coinsEarned = (((baseCoins + levelFactor)) +
-            ((baseCoins + levelFactor) * 0.3 * worldID))
-        .clamp(1, 1000)
-        .ceil(); // z.B. Mindestwert 1, Maximalwert 1000
+    int coinsEarned =
+        (((baseCoins + levelFactor)) + ((baseCoins + levelFactor) * 0.2))
+            .clamp(1, 1000)
+            .ceil(); // z.B. Mindestwert 1, Maximalwert 1000
 
     return coinsEarned;
   }
@@ -482,7 +500,8 @@ class PuzzleModel with ChangeNotifier {
       clicks[i] = [x, y];
       savedClicks[i] = [x, y]; // Deep copy the individual list
       if (tutorialActive &&
-          currentTutorialStep != TutorialStep.step3 &&
+          currentTutorialStep != TutorialStep.step4 &&
+          currentTutorialStep != TutorialStep.step5 &&
           currentTutorialStep != TutorialStep.completed &&
           currentTutorialStep != TutorialStep.none) {
         setHint(x, y);

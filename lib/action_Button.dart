@@ -7,20 +7,23 @@ class CustomActionButton extends StatelessWidget {
   final int count;
   final List<Color> gradientColors;
   final Color iconColor;
+  final Color borderColor;
 
-  const CustomActionButton({
-    super.key,
-    required this.icon,
-    required this.onPressed,
-    required this.count,
-    required this.gradientColors,
-    required this.iconColor,
-  });
+  const CustomActionButton(
+      {super.key,
+      required this.icon,
+      required this.onPressed,
+      required this.count,
+      required this.gradientColors,
+      required this.iconColor,
+      this.borderColor = Colors.transparent});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: tutorialActive && count != -1 ? null : onPressed,
+      onTap: tutorialActive && count != -1 && borderColor == Colors.transparent
+          ? null
+          : onPressed,
       child: Column(
         children: [
           Stack(
@@ -35,6 +38,7 @@ class CustomActionButton extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
+                  border: Border.all(color: borderColor, width: 3),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: const [
                     BoxShadow(

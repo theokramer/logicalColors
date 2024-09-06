@@ -123,6 +123,7 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
                           BorderRadius.circular(widget.isLarge == 0 ? 15 : 10),
                     )
                   : BoxDecoration(
+                      color: widget.backgroundColor,
                       borderRadius: BorderRadius.circular(
                         widget.isLarge == 0 ? 15 : 10,
                       ),

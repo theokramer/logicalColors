@@ -40,7 +40,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         },
       ),
     );
-    if (worlds[0].maxLevel > 10) {
+    if (worlds[0].maxLevel > 10 && !noAds) {
       _bannerAd.load();
     }
   }
@@ -150,7 +150,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
                   _buildTitleText(),
                   SizedBox(
-                    height: MediaQuery.of(context).size.height / 6.8,
+                    height: MediaQuery.of(context).size.height / 5.2,
                   ),
                   _buildGrid(),
                   _buildActionButton(
@@ -305,21 +305,30 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               ),
             ],
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 5.0, top: 5),
-                child: GestureDetector(
-                  onTap: () {},
-                  child: Image.asset(
-                    "images/no_ads.png",
-                    height: 35,
+          if (!noAds)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 5.0, top: 5),
+                  child: GestureDetector(
+                    onTap: () {
+                      puzzle.saveNoAds(true);
+                      noAds = true;
+                      Navigator.of(context).pushReplacement(
+                        FadePageRoute(
+                          page: const MainMenuScreen(),
+                        ),
+                      );
+                    },
+                    child: Image.asset(
+                      "images/no_ads.png",
+                      height: 35,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
     );

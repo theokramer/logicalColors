@@ -74,7 +74,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                           color: selectedWallpaper == index
                               ? Colors.green
                               : Colors.transparent,
-                          width: 3,
+                          width: 5,
                         ),
                         image: DecorationImage(
                           image: AssetImage("images/w$index.jpg"),
@@ -105,6 +105,21 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
               },
             ),
           ),
+          const SizedBox(
+            height: 16,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              onPressed: () {
+                _buyRandomWallpaper(context, coinProvider, puzzle);
+              },
+              child: const Text('Get random for 3000 Coins'),
+            ),
+          ),
+          const SizedBox(
+            height: 16,
+          ),
         ],
       ),
     );
@@ -120,49 +135,89 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
             borderRadius: BorderRadius.circular(20),
           ),
           elevation: 16,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Stack(
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  image: DecorationImage(
-                    image: AssetImage("images/w$index.jpg"),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                height: 500,
-                width: 300,
-              ),
-              const SizedBox(height: 16),
-              isLocked
-                  ? ElevatedButton(
-                      onPressed: () {
-                        _unlockWallpaper(context, index, coinProvider, puzzle);
-                      },
-                      child: Text(
-                          'Unlock for ${(log(index * 10000) * index * 50).floor()} coins'),
-                    )
-                  : ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          selectedWallpaper = index;
-                        });
-                        puzzle.saveSelectedWallpaper(selectedWallpaper);
-                        Navigator.pop(context); // Close the dialog
-                        Navigator.pop(
-                            context); // Close the wallpaper selection dialog
-                      },
-                      child: const Text('Select Wallpaper'),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      image: DecorationImage(
+                        image: AssetImage("images/w$index.jpg"),
+                        fit: BoxFit.cover,
+                      ),
                     ),
-              const SizedBox(
-                height: 16,
-              )
+                    height: 500,
+                    width: 300,
+                  ),
+                  const SizedBox(height: 16),
+                  isLocked
+                      ? ElevatedButton(
+                          onPressed: () {
+                            _unlockWallpaper(
+                                context, index, coinProvider, puzzle);
+                          },
+                          child: Text(
+                              'Unlock for ${(log(index * 10000) * index * 50).floor()} coins'),
+                        )
+                      : ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedWallpaper = index;
+                            });
+                            puzzle.saveSelectedWallpaper(selectedWallpaper);
+                            Navigator.pop(context); // Close the dialog
+                            Navigator.pop(
+                                context); // Close the wallpaper selection dialog
+                          },
+                          child: const Text('Select Wallpaper'),
+                        ),
+                  const SizedBox(
+                    height: 16,
+                  )
+                ],
+              ),
             ],
           ),
         );
       },
     );
+  }
+
+  void _buyRandomWallpaper(
+      BuildContext context, CoinProvider coinProvider, PuzzleModel puzzle) {
+    const int wallpaperCost = 3000;
+
+    if (coinProvider.coins >= wallpaperCost) {
+      coinProvider.subtractCoins(wallpaperCost); // Deduct coins
+
+      // Select a random wallpaper
+      int totalWallpapers = 14; // Assuming there are 14 wallpapers
+      int randomWallpaperIndex = Random().nextInt(totalWallpapers);
+
+      // Ensure the random wallpaper hasn't been bought already
+      while (boughtWallpapers.contains(randomWallpaperIndex)) {
+        randomWallpaperIndex = Random().nextInt(totalWallpapers);
+      }
+
+      setState(() {
+        // Mark the wallpaper as bought
+        boughtWallpapers.add(randomWallpaperIndex);
+      });
+
+      puzzle.saveBoughtWallpaper(randomWallpaperIndex); // Save as bought
+
+      _showWallpaperPreview(
+          context, randomWallpaperIndex, false, coinProvider, puzzle);
+    } else {
+      // Not enough coins, redirect to shop
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const ShopScreen(),
+        ),
+      );
+    }
   }
 
   void _unlockWallpaper(BuildContext context, int index,

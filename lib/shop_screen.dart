@@ -1,7 +1,11 @@
 import 'dart:math';
 
 import 'package:color_puzzle/hints_manager.dart';
+import 'package:color_puzzle/main_menu_screen.dart';
 import 'package:color_puzzle/puzzle_model.dart';
+import 'package:color_puzzle/puzzle_model.dart';
+import 'package:color_puzzle/puzzle_model.dart';
+import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
@@ -59,9 +63,8 @@ class _ShopScreenState extends State<ShopScreen> {
     if (item['price'] == "Watch Ad") {
       _rewardedAd?.show(
         onUserEarnedReward: (_, reward) {
-          addCoins(value);
           _showPurchaseDialog(
-              context, 'Coins earned', value, puzzle); // Zeige Pop-Up an
+              context, 'Coins earned', value, puzzle, true); // Zeige Pop-Up an
         },
       );
       _loadRewardedAd();
@@ -69,19 +72,19 @@ class _ShopScreenState extends State<ShopScreen> {
     if (type == 2 && item['price'] != "Watch Ad") {
       addCoins(value);
       _showPurchaseDialog(
-          context, 'Coins purchased', value, puzzle); // Zeige Pop-Up an
+          context, 'Coins purchased', value, puzzle, false); // Zeige Pop-Up an
     }
     if (type == 0 && await CoinManager.loadCoins() > costs) {
       addHints(value);
       subtractCoins(costs);
       _showPurchaseDialog(
-          context, 'Hints purchased', value, puzzle); // Zeige Pop-Up an
+          context, 'Hints purchased', value, puzzle, true); // Zeige Pop-Up an
     }
     if (type == 1 && await CoinManager.loadCoins() > costs) {
       addRems(value);
       subtractCoins(costs);
-      _showPurchaseDialog(
-          context, 'Colorizer purchased', value, puzzle); // Zeige Pop-Up an
+      _showPurchaseDialog(context, 'Colorizer purchased', value, puzzle,
+          true); // Zeige Pop-Up an
     }
   }
 
@@ -128,11 +131,17 @@ class _ShopScreenState extends State<ShopScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final puzzle = Provider.of<PuzzleModel>(context);
     Future.microtask(() => context.read<CoinProvider>().loadCoins());
 
     return Scaffold(
       backgroundColor: Colors.indigo[900],
       appBar: AppBar(
+        title: const Text(
+          "Shop",
+          style: TextStyle(
+              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30),
+        ),
         foregroundColor: Colors.white,
         actions: [
           SizedBox(
@@ -167,18 +176,25 @@ class _ShopScreenState extends State<ShopScreen> {
         centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(10.0),
+        padding: const EdgeInsets.symmetric(horizontal: 10.0),
         child: Column(
           children: [
-            _buildEnhancedBundleSection(),
             const SizedBox(height: 15),
-            _buildPageViewSection(),
+            if (!noAds) _buildEnhancedBundleSection(puzzle),
+            if (!noAds) const SizedBox(height: 15),
+            _buildPageViewSection(puzzle),
             const SizedBox(height: 15),
             Expanded(child: _buildShopItemsGrid()),
-            const Text(
-              "You get a free wallpaper for each purchase.",
-              style: TextStyle(color: Colors.white),
-            )
+            if (!worlds[1].unlocked)
+              SafeArea(
+                child: Text(
+                  textAlign: TextAlign.center,
+                  worlds[1].unlocked
+                      ? ""
+                      : "With the purchase of any item in the shop, you unlock all current and future Levels in the game.",
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
+                ),
+              )
           ],
         ),
       ),
@@ -187,13 +203,14 @@ class _ShopScreenState extends State<ShopScreen> {
 
   //int _currentPage = 0; // Current page indicator
 
-  Widget _buildPageViewSection() {
+  Widget _buildPageViewSection(PuzzleModel puzzle) {
     PageController pageController = PageController();
 
     return Column(
       children: [
         SizedBox(
-          height: 65, // Adjust as needed
+          height:
+              !puzzle.isWorldUnlocked(2) || !noAds ? 65 : 0, // Adjust as needed
           child: PageView(
             controller: pageController,
             onPageChanged: (index) {
@@ -202,19 +219,22 @@ class _ShopScreenState extends State<ShopScreen> {
               });
             },
             children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 6.0),
-                child: _buildUnlockAllWorlds(),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 6.0),
-                child: _buildNoAdsBundleSection(),
-              ),
+              /*if (!puzzle.isWorldUnlocked(2))
+                Padding(
+                  padding: const EdgeInsets.only(right: 6.0),
+                  child: _buildUnlockAllWorlds(puzzle),
+                ),*/
+              if (!noAds)
+                Padding(
+                  padding: const EdgeInsets.only(left: 6.0),
+                  child: _buildNoAdsBundleSection(puzzle),
+                ),
             ],
           ),
         ),
         const SizedBox(height: 10),
-        _buildPageIndicator(pageController),
+        //if (!puzzle.isWorldUnlocked(2) && !noAds)
+        //_buildPageIndicator(pageController),
       ],
     );
   }
@@ -238,8 +258,8 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  void _showPurchaseDialog(
-      BuildContext context, String title, int amount, PuzzleModel puzzle) {
+  void _showPurchaseDialog(BuildContext context, String title, int amount,
+      PuzzleModel puzzle, bool ad) {
     final Random random = Random();
 
     int newWallpaper = random.nextInt(12);
@@ -248,9 +268,11 @@ class _ShopScreenState extends State<ShopScreen> {
       while (boughtWallpapers.contains(newWallpaper)) {
         newWallpaper = random.nextInt(12);
       }
-      if (!boughtWallpapers.contains(newWallpaper)) {
+      if (!boughtWallpapers.contains(newWallpaper) && !ad) {
         boughtWallpapers.add(newWallpaper);
         puzzle.saveBoughtWallpaper(newWallpaper);
+      } else {
+        newWallpaper = -1;
       }
     } else {
       newWallpaper = -1;
@@ -335,6 +357,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () {
+                    addCoins(amount);
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
@@ -356,7 +379,7 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  Widget _buildEnhancedBundleSection() {
+  Widget _buildEnhancedBundleSection(PuzzleModel puzzle) {
     return Container(
       padding: const EdgeInsets.all(6.0),
       decoration: BoxDecoration(
@@ -374,7 +397,7 @@ class _ShopScreenState extends State<ShopScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding: const EdgeInsets.all(10.0),
+            padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -396,14 +419,22 @@ class _ShopScreenState extends State<ShopScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                /*const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    textAlign: TextAlign.center,
+                    "Special Offer",
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),*/
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _buildFeatureColumn(),
-                    const SizedBox(
-                      width: 5,
-                    ),
                     _buildItemsColumn(),
                   ],
                 ),
@@ -412,7 +443,7 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
           ),
           const SizedBox(height: 4), // Adjusted spacing
-          _buildBottomCard(),
+          _buildBottomCard(puzzle),
         ],
       ),
     );
@@ -427,10 +458,10 @@ class _ShopScreenState extends State<ShopScreen> {
         ),
         const SizedBox(height: 16),
         const Text(
-          "Remove all ads and\nunlock all worlds",
+          "Remove all ads\nand save up a ton",
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 10.0, // Larger font size
+            fontSize: 10.5, // Larger font size
             fontWeight: FontWeight.w600,
             color: Colors.black87, // Darker text color
           ),
@@ -443,33 +474,32 @@ class _ShopScreenState extends State<ShopScreen> {
     return Column(
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _buildItem(Icons.monetization_on, '5000', Colors.black,
                 "images/coins.png"),
-            _buildItem(Icons.colorize, '8', Colors.red, ""),
+            _buildItem(Icons.colorize, '10', Colors.red, ""),
           ],
         ),
         const SizedBox(height: 23), // Adjusted spacing
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildItem(Icons.lock_open, '1-5', Colors.green, ""),
-            _buildItem(Icons.lightbulb, '3', Colors.amber, ""),
+            _buildItem(Icons.image, '3', Colors.green, ""),
+            _buildItem(Icons.lightbulb, '20', Colors.amber, ""),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildBottomCard() {
+  Widget _buildBottomCard(PuzzleModel puzzle) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         const Padding(
           padding: EdgeInsets.only(left: 8.0),
           child: Text(
-            '"No-Ads"-Bundle',
+            'Starter Bundle',
             style: TextStyle(
               fontSize: 16.0, // Larger font size
               fontWeight: FontWeight.bold,
@@ -481,7 +511,13 @@ class _ShopScreenState extends State<ShopScreen> {
           padding: const EdgeInsets.only(right: 8.0),
           child: ElevatedButton(
             onPressed: () {
-              // Functionality to activate the bundle
+              puzzle.saveNoAds(true);
+              noAds = true;
+              Navigator.of(context).pushReplacement(
+                FadePageRoute(
+                  page: const MainMenuScreen(),
+                ),
+              );
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
@@ -506,8 +542,8 @@ class _ShopScreenState extends State<ShopScreen> {
 
   Widget _buildItem(IconData icon, String text, Color color, String imagePath) {
     return Container(
-      width: 95, // Slightly wider container
-      margin: const EdgeInsets.symmetric(horizontal: 5.0),
+      width: 100, // Slightly wider container
+      margin: const EdgeInsets.symmetric(horizontal: 3.0),
       padding: const EdgeInsets.all(6.0),
       decoration: BoxDecoration(
         color: const Color(0xffE0E7FF), // Updated background color
@@ -575,14 +611,15 @@ class _ShopScreenState extends State<ShopScreen> {
     final puzzle = Provider.of<PuzzleModel>(context);
     final items = [
       //{'title': '1', 'price': 'Gratis!', 'type': 0},
-      //{'title': '3', 'price': '200', 'type': 0},
-      //{'title': '5', 'price': '200', 'type': 1},
+      // {'title': '3', 'price': '200', 'type': 0},
+      // {'title': '10', 'price': '500', 'type': 0},
+      // {'title': '30', 'price': '1000', 'type': 0},
       {'title': '150', 'price': 'Watch Ad', 'type': 2},
-      {'title': '700', 'price': 'EUR 0,49', 'type': 2},
-      {'title': '1800', 'price': 'EUR 0,99', 'type': 2},
-      {'title': '4000', 'price': 'EUR 1,99', 'type': 2},
-      {'title': '7000', 'price': 'EUR 2,99', 'type': 2},
-      {'title': '15000', 'price': 'EUR 4,99', 'type': 2},
+      {'title': '700', 'price': 'EUR 0,99', 'type': 2},
+      {'title': '1800', 'price': 'EUR 1,99', 'type': 2},
+      {'title': '4000', 'price': 'EUR 3,99', 'type': 2},
+      {'title': '7000', 'price': 'EUR 4,99', 'type': 2},
+      {'title': '20000', 'price': 'EUR 9,99', 'type': 2},
     ];
 
     return GridView.builder(
@@ -651,11 +688,11 @@ class _ShopScreenState extends State<ShopScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      /*type == 0
+                      type == 0
                           ? const Icon(
                               Icons.lightbulb,
                               size: 40,
-                              color: Colors.amber,
+                              color: Colors.black,
                             )
                           : type == 1
                               ? const Icon(
@@ -663,8 +700,10 @@ class _ShopScreenState extends State<ShopScreen> {
                                   size: 40,
                                   color: Colors.red,
                                 )
-                              : Image.asset("images/coins.png", height: 40),*/
-                      const SizedBox(height: 45.0),
+                              : const SizedBox(
+                                  height: 0,
+                                ),
+                      if (type == 2) const SizedBox(height: 45.0),
                       Text(
                         title,
                         textAlign: TextAlign.center,
@@ -746,7 +785,7 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  Widget _buildUnlockAllWorlds() {
+  Widget _buildUnlockAllWorlds(PuzzleModel puzzle) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.purple,
@@ -804,7 +843,15 @@ class _ShopScreenState extends State<ShopScreen> {
             padding: const EdgeInsets.only(right: 8.0),
             child: ElevatedButton(
               onPressed: () {
-                // Functionality to activate the bundle
+                for (int i = 0; i < worlds.length; i++) {
+                  puzzle.saveWorldUnlocked(i + 1, true);
+                  puzzle.unlockWorld(i + 1);
+                  puzzle.updateWorldLevel(i + 1, 1);
+                  puzzle.saveWorldProgress(i + 1, 1);
+
+                  // Add unlock single world logic here
+                }
+                Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
                 padding:
@@ -815,7 +862,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 ),
               ),
               child: const Text(
-                'EUR 2,99',
+                'EUR 1,99',
                 style: TextStyle(
                   fontSize: 16.0, // Larger font size
                   fontWeight: FontWeight.bold,
@@ -829,7 +876,7 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  Widget _buildNoAdsBundleSection() {
+  Widget _buildNoAdsBundleSection(PuzzleModel puzzle) {
     return Container(
       padding: const EdgeInsets.only(left: 10.0, top: 10, bottom: 10),
       decoration: BoxDecoration(
@@ -851,7 +898,7 @@ class _ShopScreenState extends State<ShopScreen> {
             child: Row(
               children: [
                 Image.asset(
-                  "/images/no_ads.png", // Ensure correct asset path
+                  "images/no_ads.png", // Ensure correct asset path
                   height: 60, // Slightly larger image
                 ),
                 const SizedBox(
@@ -886,7 +933,13 @@ class _ShopScreenState extends State<ShopScreen> {
             padding: const EdgeInsets.only(right: 16.0),
             child: ElevatedButton(
               onPressed: () {
-                // Functionality to activate the bundle
+                puzzle.saveNoAds(true);
+                noAds = true;
+                Navigator.of(context).pushReplacement(
+                  FadePageRoute(
+                    page: const MainMenuScreen(),
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 padding:
@@ -897,7 +950,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 ),
               ),
               child: const Text(
-                'EUR 1,99',
+                'EUR 2,99',
                 style: TextStyle(
                   fontSize: 16.0, // Larger font size
                   fontWeight: FontWeight.bold,

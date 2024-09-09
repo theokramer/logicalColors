@@ -58,11 +58,11 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
 
     // Add a listener to control the blinking behavior
     _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed && _blinkCount < 3) {
+      if (status == AnimationStatus.completed) {
         // When the animation completes, reverse it to create the blink effect
         _controller.reverse();
         _blinkCount++;
-      } else if (status == AnimationStatus.dismissed && _blinkCount < 3) {
+      } else if (status == AnimationStatus.dismissed) {
         // When the reverse completes, start the forward animation again
         _controller.forward();
       }
@@ -123,6 +123,7 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
                           BorderRadius.circular(widget.isLarge == 0 ? 15 : 10),
                     )
                   : BoxDecoration(
+                      color: widget.backgroundColor,
                       borderRadius: BorderRadius.circular(
                         widget.isLarge == 0 ? 15 : 10,
                       ),
@@ -184,7 +185,7 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
                   if (widget.movesLeft > -1 && widget.targetColor == -1) ...[
                     // Moves Left
                     Text(
-                      '${widget.movesLeft} Moves',
+                      '${widget.movesLeft} ${widget.movesLeft == 1 ? "Move" : "Moves"}',
                       style: TextStyle(
                           color: widget.textColor,
                           fontSize: fontSize,

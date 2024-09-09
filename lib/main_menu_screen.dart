@@ -9,6 +9,7 @@ import 'custom_info_button.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:color_puzzle/shop_screen.dart';
 import 'package:color_puzzle/coin_manager.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -302,10 +303,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   Consumer<CoinProvider>(
                     builder: (context, coinProvider, child) {
                       return CustomInfoButton(
-                        value: '${coinProvider.coins}',
+                        value: '${coinProvider.Crystals}',
                         targetColor: -1,
                         movesLeft: -1,
-                        iconPath: 'images/coins.png',
+                        iconPath: 'images/Crystals.png',
                         backgroundColor: Colors.black45,
                         textColor: Colors.white,
                         isLarge: 2,
@@ -354,7 +355,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   Widget _buildTitleText(int maxLevel) {
     return Text(
-      'World $currentWorld ${maxLevel > 1 ? ("– Level $maxLevel") : ""}',
+      '${AppLocalizations.of(context)?.world ?? "World"} $currentWorld ${maxLevel > 1 ? ("– Level $maxLevel") : ""}',
       textAlign: TextAlign.center,
       style: TextStyle(
         color: Colors.white,
@@ -435,14 +436,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             );
           }
         },
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.play_arrow, color: Colors.white, size: 36),
-            SizedBox(width: 8),
+            const Icon(Icons.play_arrow, color: Colors.white, size: 36),
+            const SizedBox(width: 8),
             Text(
-              'PLAY',
-              style: TextStyle(
+              AppLocalizations.of(context)?.play ?? "Play",
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,

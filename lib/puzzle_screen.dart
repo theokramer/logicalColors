@@ -144,7 +144,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                             ? const Icon(Icons.colorize,
                                 size: 50, color: Colors.redAccent)
                             : Image.asset(
-                                'images/coins.png',
+                                'images/Crystals.png',
                                 height: 50,
                               ),
                     const SizedBox(width: 20),
@@ -327,7 +327,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       _buildPopupMenuItem('shop', 'Shop', Icons.shopping_cart, Colors.indigo),
       _buildPopupMenuItem(
           'refresh',
-          'New Level ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 10 Coins' : ""}',
+          'New Level ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 10 Crystals' : ""}',
           Icons.refresh,
           Colors.indigo),
       if (selectedLevel > 1)
@@ -335,7 +335,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             Icons.skip_previous, Colors.indigo),
       _buildPopupMenuItem(
           'next',
-          'Level ${selectedLevel + 1} ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 100 Coins' : ""}',
+          'Level ${selectedLevel + 1} ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 100 Crystals' : ""}',
           Icons.skip_next,
           Colors.indigo),
     ];
@@ -448,8 +448,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   }
 
   Future<void> handleBuyHint() async {
-    /*if (await CoinManager.loadCoins() >= 200) {
-      subtractCoins(200);
+    /*if (await CoinManager.loadCrystals() >= 200) {
+      subtractCrystals(200);
       
     } else {}*/
     addHints(3);
@@ -457,8 +457,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   }
 
   Future<void> handleBuyMoves() async {
-    if (await CoinManager.loadCoins() >= 150) {
-      subtractCoins(150);
+    if (await CoinManager.loadCrystals() >= 150) {
+      subtractCrystals(150);
       addMoves(3);
     } else {}
     Navigator.pop(context);
@@ -474,17 +474,17 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   }
 
   Future<void> handleBuyHintSale() async {
-    if (await CoinManager.loadCoins() >= 300) {
-      subtractCoins(300);
+    if (await CoinManager.loadCrystals() >= 300) {
+      subtractCrystals(300);
       addHints(3);
     } else {}
     Navigator.pop(context);
   }
 
-  void addCoins(int amount) async {
+  void addCrystals(int amount) async {
     await context
         .read<CoinProvider>()
-        .addCoins(amount); // Verwende den Provider
+        .addCrystals(amount); // Verwende den Provider
   }
 
   void addHints(int amount) async {
@@ -501,18 +501,18 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     await context.read<RemsProvider>().addRems(amount); // Verwende den Provider
   }
 
-  void subtractCoins(int amount) async {
+  void subtractCrystals(int amount) async {
     await context
         .read<CoinProvider>()
-        .subtractCoins(amount); // Verwende den Provider
+        .subtractCrystals(amount); // Verwende den Provider
   }
 
   Future<void> handleBuyRem() async {
-    /*if (await CoinManager.loadCoins() >= 200) {
-      subtractCoins(200);
+    /*if (await CoinManager.loadCrystals() >= 200) {
+      subtractCrystals(200);
       
     } else {
-      // Handle not enough coins
+      // Handle not enough Crystals
     }*/
     addRems(5);
     Navigator.pop(context);
@@ -549,7 +549,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
-    Future.microtask(() => context.read<CoinProvider>().loadCoins());
+    Future.microtask(() => context.read<CoinProvider>().loadCrystals());
     Future.microtask(() => context.read<HintsProvider>().loadHints());
     Future.microtask(() => context.read<RemsProvider>().loadRems());
 
@@ -618,7 +618,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                   false) {
                                                 showUnlockWorldsDialog();
                                               } else {
-                                                if (coinProvider.coins >= 10 ||
+                                                if (coinProvider.Crystals >=
+                                                        10 ||
                                                     worlds[currentWorld - 1]
                                                             .maxLevel >
                                                         selectedLevel) {
@@ -626,7 +627,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                           .maxLevel <=
                                                       selectedLevel) {
                                                     coinProvider
-                                                        .subtractCoins(10);
+                                                        .subtractCrystals(10);
                                                   }
                                                   puzzle.refreshGrid(
                                                       puzzle.maxMoves,
@@ -686,7 +687,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                   false) {
                                                 showUnlockWorldsDialog();
                                               } else {
-                                                if (coinProvider.coins >= 100 ||
+                                                if (coinProvider.Crystals >=
+                                                        100 ||
                                                     worlds[currentWorld - 1]
                                                             .maxLevel >
                                                         selectedLevel) {
@@ -694,7 +696,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                           .maxLevel <=
                                                       selectedLevel) {
                                                     coinProvider
-                                                        .subtractCoins(100);
+                                                        .subtractCrystals(100);
                                                   }
 
                                                   if (selectedLevel >= 10 &&
@@ -824,10 +826,10 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                             child: Consumer<CoinProvider>(
                               builder: (context, coinProvider, child) {
                                 return CustomInfoButton(
-                                  value: '${coinProvider.coins}',
+                                  value: '${coinProvider.Crystals}',
                                   targetColor: -1,
                                   movesLeft: -1,
-                                  iconPath: 'images/coins.png',
+                                  iconPath: 'images/Crystals.png',
                                   backgroundColor: Colors.black45,
                                   textColor: Colors.white,
                                   isLarge: 2,
@@ -985,7 +987,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                           handleBuyHintSale,
                                           handleWatchAdForHints,
                                           [Colors.amber, Colors.orange],
-                                          false //Change this Line to true, if you want sale for 200 coins
+                                          false //Change this Line to true, if you want sale for 200 Crystals
                                           );
                                     }*/
                                     }
@@ -1007,9 +1009,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                     (calculateDifficulty(
                                                             puzzle.maxMoves,
                                                             puzzle.size) *
-                                                        3))
+                                                        4.4))
                                                 .floor() -
-                                            7;
+                                            6;
                                       });
                                     }
 
@@ -1043,8 +1045,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                     HapticFeedback.selectionClick();
                                   }
                                 }
-                                if (puzzle.moves == puzzle.maxMoves &&
-                                    puzzle.maxMoves > 2) {
+                                if (puzzle.moves >= puzzle.maxMoves &&
+                                    puzzle.maxMoves > 2 &&
+                                    !puzzle.isGridFilledWithTargetColor()) {
                                   showGadgetPopup(
                                       context,
                                       'Moves',
@@ -1404,7 +1407,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                     // Delay navigation to ensure coin animation completes
                                     Future.delayed(
                                         const Duration(milliseconds: 800), () {
-                                      puzzle.addCoins(puzzle.coinsEarned);
+                                      puzzle.addCrystals(puzzle.CrystalsEarned);
                                       if (getsLightBulb == 1) {
                                         setState(() {
                                           puzzle.addHints(1);
@@ -1488,7 +1491,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                           animationStarted
                                               ? const SizedBox(height: 100)
                                               : _buildCoinDisplay(
-                                                  puzzle.coinsEarned),
+                                                  puzzle.CrystalsEarned),
                                           getsLightBulb >= 1
                                               ? Row(children: [
                                                   (Icon(
@@ -1612,8 +1615,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                               Future.delayed(
                                                   const Duration(
                                                       milliseconds: 800), () {
-                                                puzzle.addCoins(
-                                                    puzzle.coinsEarned);
+                                                puzzle.addCrystals(
+                                                    puzzle.CrystalsEarned);
 
                                                 if (getsLightBulb == 1) {
                                                   setState(() {
@@ -1707,7 +1710,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                   start: Offset(MediaQuery.of(context).size.width / 2,
                       MediaQuery.of(context).size.height / 2),
                   end: const Offset(50, 75),
-                  numberOfCoins: puzzle.coinsEarned,
+                  numberOfCrystals: puzzle.CrystalsEarned,
                 ),
 
               ConfettiWidget(
@@ -1991,7 +1994,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
               children: [
                 Text(
                   sale
-                      ? "Get more $gadgetName with a 200 Coins discount"
+                      ? "Get more $gadgetName with a 200 Crystals discount"
                       : 'Get more $gadgetName',
                   style: const TextStyle(
                     color: Colors.white,
@@ -2083,11 +2086,11 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         builder: (context, coinProvider, child) {
                       return ElevatedButton.icon(
                         onPressed: () {
-                          /*coinProvider.coins >= 200
+                          /*coinProvider.Crystals >= 200
                               ? onBuyPressed()
                               : Navigator.of(context).popAndPushNamed("/shop");*/
                           if (gadgetName == "Moves") {
-                            coinProvider.coins >= 150
+                            coinProvider.Crystals >= 150
                                 ? onBuyPressed()
                                 : Navigator.of(context)
                                     .popAndPushNamed("/shop");
@@ -2101,13 +2104,13 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           child: Text(
                             gadgetName == "Colorizer"
                                 ? (sale
-                                    ? '100 Coins for 10 Colorizers'
+                                    ? '100 Crystals for 10 Colorizers'
                                     : 'EUR 0.49 for\n10 Colorizer')
                                 : gadgetName == "Hints"
                                     ? (sale
-                                        ? '100 Coins for 15 Hints'
+                                        ? '100 Crystals for 15 Hints'
                                         : 'EUR 0.49 for\n15 Hints')
-                                    : "150 Coins",
+                                    : "150 Crystals",
                             style: const TextStyle(
                               fontFamily: 'Quicksand',
                               fontSize: 16,
@@ -2191,20 +2194,20 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     );
   }
 
-  Widget _buildCoinDisplay(int coinsEarned) {
+  Widget _buildCoinDisplay(int CrystalsEarned) {
     return SizedBox(
       height: 120,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Image.asset(
-            'images/coins.png',
+            'images/Crystals.png',
             width: 80,
             height: 80,
           ),
           const SizedBox(width: 30),
           Text(
-            '$coinsEarned',
+            '$CrystalsEarned',
             style: const TextStyle(
               color: Colors.black,
               fontSize: 32,
@@ -2399,13 +2402,13 @@ class FadePageRoute<T> extends PageRouteBuilder<T> {
 class CoinAnimation extends StatefulWidget {
   final Offset start;
   final Offset end;
-  final int numberOfCoins;
+  final int numberOfCrystals;
 
   const CoinAnimation({
     super.key,
     required this.start,
     required this.end,
-    required this.numberOfCoins,
+    required this.numberOfCrystals,
   });
 
   @override
@@ -2417,7 +2420,7 @@ class _CoinAnimationState extends State<CoinAnimation>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _positionAnimation;
-  late List<Widget> _coins;
+  late List<Widget> _Crystals;
 
   @override
   void initState() {
@@ -2436,8 +2439,8 @@ class _CoinAnimationState extends State<CoinAnimation>
       CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
 
-    _coins = List.generate(
-      widget.numberOfCoins,
+    _Crystals = List.generate(
+      widget.numberOfCrystals,
       (index) => AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
@@ -2454,7 +2457,7 @@ class _CoinAnimationState extends State<CoinAnimation>
             child: Transform.scale(
               scale: scale,
               child: Image.asset(
-                'images/coins.png',
+                'images/Crystals.png',
                 width: 24,
                 height: 24,
               ),
@@ -2469,7 +2472,7 @@ class _CoinAnimationState extends State<CoinAnimation>
   Widget build(BuildContext context) {
     return Positioned.fill(
       child: Stack(
-        children: _coins,
+        children: _Crystals,
       ),
     );
   }

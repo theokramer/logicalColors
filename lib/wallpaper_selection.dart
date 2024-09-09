@@ -90,7 +90,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                       child: isLocked
                           ? Center(
                               child: Text(
-                                '${(exp(index * 0.55) * 15 + index * 220 + log(index * 10000)).floor()}\nCoins',
+                                '${(exp(index * 0.55) * 15 + index * 220 + log(index * 10000)).floor()}\nCrystals',
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   color: Colors.white,
@@ -117,7 +117,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                     onPressed: () {
                       _buyRandomWallpaper(context, coinProvider, puzzle);
                     },
-                    child: const Text('Get random for 2000 Coins'),
+                    child: const Text('Get random for 2000 Crystals'),
                   ),
                 ),
                 const SizedBox(
@@ -171,7 +171,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                                     .floor());
                           },
                           child: Text(
-                              'Unlock for ${(exp(index * 0.5) * 10 + index * 200 + log(index * 10000)).floor()} coins'),
+                              'Unlock for ${(exp(index * 0.5) * 10 + index * 200 + log(index * 10000)).floor()} Crystals'),
                         )
                       : ElevatedButton(
                           onPressed: () {
@@ -221,8 +221,8 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
     PuzzleModel puzzle,
     int wallpaperCost,
   ) {
-    if (coinProvider.coins >= wallpaperCost) {
-      coinProvider.subtractCoins(wallpaperCost); // Deduct coins
+    if (coinProvider.Crystals >= wallpaperCost) {
+      coinProvider.subtractCrystals(wallpaperCost); // Deduct Crystals
       setState(() {
         // Unlock the wallpaper logic here
         selectedWallpaper = index;

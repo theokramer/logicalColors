@@ -28,10 +28,10 @@ class _ShopScreenState extends State<ShopScreen> {
     }
   }
 
-  void addCoins(int amount) async {
+  void addCrystals(int amount) async {
     await context
         .read<CoinProvider>()
-        .addCoins(amount); // Verwende den Provider
+        .addCrystals(amount); // Verwende den Provider
   }
 
   void addHints(int amount) async {
@@ -44,10 +44,10 @@ class _ShopScreenState extends State<ShopScreen> {
     await context.read<RemsProvider>().addRems(amount); // Verwende den Provider
   }
 
-  void subtractCoins(int amount) async {
+  void subtractCrystals(int amount) async {
     await context
         .read<CoinProvider>()
-        .subtractCoins(amount); // Verwende den Provider
+        .subtractCrystals(amount); // Verwende den Provider
   }
 
   void buy(Map<String, dynamic> item, PuzzleModel puzzle) async {
@@ -63,15 +63,15 @@ class _ShopScreenState extends State<ShopScreen> {
     if (item['price'] == "Watch Ad") {
       _rewardedAd?.show(
         onUserEarnedReward: (_, reward) {
-          _showPurchaseDialog(
-              context, 'Coins earned', value, puzzle, true); // Zeige Pop-Up an
+          _showPurchaseDialog(context, 'Crystals earned', value, puzzle,
+              true); // Zeige Pop-Up an
         },
       );
       _loadRewardedAd();
     }
     if (type == 2 && item['price'] != "Watch Ad") {
-      _showPurchaseDialog(
-          context, 'Coins purchased', value, puzzle, false); // Zeige Pop-Up an
+      _showPurchaseDialog(context, 'Crystals purchased', value, puzzle,
+          false); // Zeige Pop-Up an
     }
     if (type == 0) {
       addHints(value);
@@ -116,13 +116,13 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 
   Future<void> handleBuyHint() async {
-    if (context.read<CoinProvider>().coins >= 200) {
-      await context.read<CoinProvider>().subtractCoins(200);
+    if (context.read<CoinProvider>().Crystals >= 200) {
+      await context.read<CoinProvider>().subtractCrystals(200);
       setState(() {
         // Hier sollten eventuell weitere Änderungen am Zustand vorgenommen werden
       });
     } else {
-      // Nicht genügend Coins
+      // Nicht genügend Crystals
     }
     Navigator.pop(context);
   }
@@ -130,7 +130,7 @@ class _ShopScreenState extends State<ShopScreen> {
   @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
-    Future.microtask(() => context.read<CoinProvider>().loadCoins());
+    Future.microtask(() => context.read<CoinProvider>().loadCrystals());
 
     return Scaffold(
       backgroundColor: Colors.indigo[900],
@@ -154,10 +154,10 @@ class _ShopScreenState extends State<ShopScreen> {
                     builder: (context, coinProvider, child) {
                       return CustomInfoButton(
                         value:
-                            '${coinProvider.coins}', // Verwende die Coins aus dem Provider
+                            '${coinProvider.Crystals}', // Verwende die Crystals aus dem Provider
                         targetColor: -1,
                         movesLeft: -1,
-                        iconPath: 'images/coins.png',
+                        iconPath: 'images/Crystals.png',
                         backgroundColor: Colors.black45,
                         textColor: Colors.white,
                         isLarge: 2,
@@ -326,7 +326,7 @@ class _ShopScreenState extends State<ShopScreen> {
                             ? const Icon(Icons.colorize,
                                 size: 50, color: Colors.redAccent)
                             : Image.asset(
-                                'images/coins.png',
+                                'images/Crystals.png',
                                 height: 50,
                               ),
                     const SizedBox(width: 20),
@@ -357,7 +357,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    if (title == "Coins purchased") addCoins(amount);
+                    if (title == "Crystals purchased") addCrystals(amount);
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
@@ -479,7 +479,7 @@ class _ShopScreenState extends State<ShopScreen> {
         Row(
           children: [
             _buildItem(Icons.monetization_on, '7000', Colors.black,
-                "images/coins.png"),
+                "images/Crystals.png"),
             _buildItem(Icons.colorize, '20', Colors.red, ""),
           ],
         ),
@@ -741,8 +741,8 @@ class _ShopScreenState extends State<ShopScreen> {
                   /*(type == 0 || type == 1) && price != 'Gratis!'
                       ? Image.asset(
                           title == '150' || title == '700'
-                              ? "images/coins_less.png"
-                              : "images/coins.png",
+                              ? "images/Crystals_less.png"
+                              : "images/Crystals.png",
                           height: 15)
                       : const SizedBox(),*/
                 ],
@@ -772,8 +772,8 @@ class _ShopScreenState extends State<ShopScreen> {
                                     title == '150' || title == '700' ? 45 : 45,
                                 child: Image.asset(
                                     title == '150' || title == '700'
-                                        ? "images/coins.png"
-                                        : "images/coins.png",
+                                        ? "images/Crystals.png"
+                                        : "images/Crystals.png",
                                     height: 100)),
                           ),
                         ],

@@ -6,11 +6,13 @@ import 'package:color_puzzle/hints_manager.dart';
 import 'package:color_puzzle/main_menu_screen.dart';
 import 'package:color_puzzle/shop_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'puzzle_model.dart'; // Import your PuzzleModel
 import 'puzzle_screen.dart'; // Import your screen
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -177,7 +179,18 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Color Change Puzzle',
+        supportedLocales: const [
+          Locale('en', ''), // Englisch
+          Locale('de', ''), // Deutsch
+        ],
+        // Lokalisierungsdelegaten konfigurieren
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        title: "Logical Colors",
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),

@@ -419,7 +419,7 @@ class _ShopScreenState extends State<ShopScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Padding(
+                /*const Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Text(
                     textAlign: TextAlign.center,
@@ -429,7 +429,7 @@ class _ShopScreenState extends State<ShopScreen> {
                         fontSize: 30,
                         fontWeight: FontWeight.bold),
                   ),
-                ),
+                ),*/
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -499,7 +499,7 @@ class _ShopScreenState extends State<ShopScreen> {
         const Padding(
           padding: EdgeInsets.only(left: 8.0),
           child: Text(
-            'The whole package',
+            'Starter Bundle',
             style: TextStyle(
               fontSize: 16.0, // Larger font size
               fontWeight: FontWeight.bold,
@@ -527,7 +527,7 @@ class _ShopScreenState extends State<ShopScreen> {
               ),
             ),
             child: const Text(
-              'EUR 3,99',
+              'EUR 4,99',
               style: TextStyle(
                 fontSize: 16.0, // Larger font size
                 fontWeight: FontWeight.bold,
@@ -611,8 +611,9 @@ class _ShopScreenState extends State<ShopScreen> {
     final puzzle = Provider.of<PuzzleModel>(context);
     final items = [
       //{'title': '1', 'price': 'Gratis!', 'type': 0},
-      //{'title': '3', 'price': '200', 'type': 0},
-      //{'title': '5', 'price': '200', 'type': 1},
+      // {'title': '3', 'price': '200', 'type': 0},
+      // {'title': '10', 'price': '500', 'type': 0},
+      // {'title': '30', 'price': '1000', 'type': 0},
       {'title': '150', 'price': 'Watch Ad', 'type': 2},
       {'title': '700', 'price': 'EUR 0,99', 'type': 2},
       {'title': '1800', 'price': 'EUR 1,99', 'type': 2},
@@ -687,11 +688,11 @@ class _ShopScreenState extends State<ShopScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      /*type == 0
+                      type == 0
                           ? const Icon(
                               Icons.lightbulb,
                               size: 40,
-                              color: Colors.amber,
+                              color: Colors.black,
                             )
                           : type == 1
                               ? const Icon(
@@ -699,8 +700,10 @@ class _ShopScreenState extends State<ShopScreen> {
                                   size: 40,
                                   color: Colors.red,
                                 )
-                              : Image.asset("images/coins.png", height: 40),*/
-                      const SizedBox(height: 45.0),
+                              : const SizedBox(
+                                  height: 0,
+                                ),
+                      if (type == 2) const SizedBox(height: 45.0),
                       Text(
                         title,
                         textAlign: TextAlign.center,
@@ -947,7 +950,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 ),
               ),
               child: const Text(
-                'EUR 1,99',
+                'EUR 2,99',
                 style: TextStyle(
                   fontSize: 16.0, // Larger font size
                   fontWeight: FontWeight.bold,

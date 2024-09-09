@@ -74,7 +74,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                           color: selectedWallpaper == index
                               ? Colors.green
                               : Colors.transparent,
-                          width: 3,
+                          width: 5,
                         ),
                         image: DecorationImage(
                           image: AssetImage("images/w$index.jpg"),

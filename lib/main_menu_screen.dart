@@ -144,25 +144,33 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         child: SafeArea(
           child: Stack(
             children: [
-              Column(
+              Stack(
                 children: [
-                  _buildTopRow(context, coinProvider, currentWorld,
-                      puzzle.getMaxLevelForWorld(currentWorld), puzzle),
+                  Column(
+                    children: [
+                      _buildTopRow(context, coinProvider, currentWorld,
+                          puzzle.getMaxLevelForWorld(currentWorld), puzzle),
+                      const SizedBox(
+                        height: 20,
+                      ),
 
-                  _buildTitleText(),
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height / 5.2,
+                      _buildTitleText(puzzle.getMaxLevelForWorld(currentWorld)),
+                      const Spacer(),
+
+                      _buildActionButton(
+                          context, isWorldUnlocked, coinProvider, puzzle, () {
+                        setState(() {
+                          isWorldUnlocked = true;
+                        });
+                      }),
+                      const SizedBox(height: 80),
+                      //_buildBottomRow(),
+                      //const SizedBox(height: 30),
+                    ],
                   ),
-                  _buildGrid(),
-                  _buildActionButton(
-                      context, isWorldUnlocked, coinProvider, puzzle, () {
-                    setState(() {
-                      isWorldUnlocked = true;
-                    });
-                  }),
-                  const SizedBox(height: 80),
-                  //_buildBottomRow(),
-                  //const SizedBox(height: 30),
+                  Column(
+                    children: [const Spacer(), _buildGrid(), const Spacer()],
+                  ),
                 ],
               ),
               _buildSwipeGestureDetector(),
@@ -344,13 +352,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     );
   }
 
-  Widget _buildTitleText() {
+  Widget _buildTitleText(int maxLevel) {
     return Text(
-      'World $currentWorld',
+      'World $currentWorld ${maxLevel > 1 ? ("– Level $maxLevel") : ""}',
       textAlign: TextAlign.center,
       style: TextStyle(
         color: Colors.white,
-        fontSize: 42,
+        fontSize: 35,
         fontWeight: FontWeight.bold,
         fontFamily: 'Quicksand',
         shadows: [
@@ -404,24 +412,28 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         ),
         onPressed: () {
           int maxLevel = puzzle.getMaxLevelForWorld(thisWorld + 1);
-          selectedLevel = maxLevel;
+          if (!worlds.last.unlocked && maxLevel > 14) {
+            _showUnlockOptionsDialog(context, thisWorld, puzzle, () {});
+          } else {
+            selectedLevel = maxLevel;
 
-          Navigator.of(context).push(
-            FadePageRoute(
-              page: ChangeNotifierProvider(
-                create: (_) => PuzzleModel(
-                  size: puzzle.getSizeAndMaxMoves(maxLevel)["size"] ?? 2,
-                  level: puzzle.getSizeAndMaxMoves(maxLevel)["maxMoves"] ?? 2,
-                  colorMapping: {
-                    1: worlds[thisWorld].colors[0],
-                    2: worlds[thisWorld].colors[1],
-                    3: worlds[thisWorld].colors[2],
-                  },
+            Navigator.of(context).push(
+              FadePageRoute(
+                page: ChangeNotifierProvider(
+                  create: (_) => PuzzleModel(
+                    size: puzzle.getSizeAndMaxMoves(maxLevel)["size"] ?? 2,
+                    level: puzzle.getSizeAndMaxMoves(maxLevel)["maxMoves"] ?? 2,
+                    colorMapping: {
+                      1: worlds[thisWorld].colors[0],
+                      2: worlds[thisWorld].colors[1],
+                      3: worlds[thisWorld].colors[2],
+                    },
+                  ),
+                  child: const PuzzleScreen(),
                 ),
-                child: const PuzzleScreen(),
               ),
-            ),
-          );
+            );
+          }
         },
         child: const Row(
           mainAxisSize: MainAxisSize.min,
@@ -460,7 +472,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       child: ElevatedButton(
         onPressed: () async {
           _showUnlockOptionsDialog(
-              context, currentWorldIndex, coinProvider, puzzle, onUnlock);
+              context, currentWorldIndex, puzzle, onUnlock);
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
@@ -591,8 +603,34 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 }
 
+Widget _buildUnlockButton(
+    BuildContext context, String text, Color color, VoidCallback onPressed) {
+  return Container(
+    margin: const EdgeInsets.symmetric(vertical: 8.0),
+    child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        elevation: 4,
+      ),
+      onPressed: onPressed,
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+  );
+}
+
 void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
-    CoinProvider coinProvider, PuzzleModel puzzle, Function onUnlock) {
+    PuzzleModel puzzle, Function onUnlock) {
   showDialog(
     context: context,
     builder: (context) {
@@ -612,7 +650,7 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
                       bottomRight: Radius.circular(10))),
               padding: const EdgeInsets.all(16.0),
               child: const Text(
-                'Unlock Options',
+                'Unlocking all worlds',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -623,7 +661,7 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
             const Padding(
               padding: EdgeInsets.all(16.0),
               child: Text(
-                'Do you want to unlock this world for €0.99 or all worlds for €2.99?',
+                'You can unlock all worlds and levels in the game, by purchasing one item in the shop.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 18,
@@ -632,7 +670,14 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
               ),
             ),
             const SizedBox(height: 10),
-            _buildUnlockButton(
+            _buildUnlockButton(context, "Open Shop", Colors.teal, () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ShopScreen(),
+                ),
+              );
+            }),
+            /*_buildUnlockButton(
               context,
               'Unlock Single World (€0.99)',
               Colors.teal,
@@ -665,7 +710,7 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
                 }
                 Navigator.of(context).pop();
               },
-            ),
+            ),*/
             const SizedBox(height: 10),
             TextButton(
               onPressed: () {
@@ -684,31 +729,5 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
         ),
       );
     },
-  );
-}
-
-Widget _buildUnlockButton(
-    BuildContext context, String text, Color color, VoidCallback onPressed) {
-  return Container(
-    margin: const EdgeInsets.symmetric(vertical: 8.0),
-    child: ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
-        elevation: 8,
-      ),
-      onPressed: onPressed,
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    ),
   );
 }

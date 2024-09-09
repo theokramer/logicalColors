@@ -18,6 +18,32 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 
+Widget _buildUnlockButton(
+    BuildContext context, String text, Color color, VoidCallback onPressed) {
+  return Container(
+    margin: const EdgeInsets.symmetric(vertical: 8.0),
+    child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        elevation: 4,
+      ),
+      onPressed: onPressed,
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+  );
+}
+
 int selectedLevel = 1;
 bool tutorialActive = true;
 
@@ -272,9 +298,13 @@ class _PuzzleScreenState extends State<PuzzleScreen>
         denyClick = false;
       });
     }*/
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (currentTutorialStep == TutorialStep.step3) {
         _showInfoDialogStart(context);
+      }
+      if (!worlds.last.unlocked && selectedLevel > 14) {
+        showUnlockWorldsDialog();
       }
     });
     _confettiController =
@@ -288,6 +318,132 @@ class _PuzzleScreenState extends State<PuzzleScreen>
         parent: _animationController,
         curve: Curves.easeInOut,
       ),
+    );
+  }
+
+  List<PopupMenuEntry<String>> _showPopupMenu() {
+    return <PopupMenuEntry<String>>[
+      _buildPopupMenuItem('home', 'Home', Icons.home, Colors.indigo),
+      _buildPopupMenuItem('shop', 'Shop', Icons.shopping_cart, Colors.indigo),
+      _buildPopupMenuItem(
+          'refresh',
+          'New Level ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 10 Coins' : ""}',
+          Icons.refresh,
+          Colors.indigo),
+      if (selectedLevel > 1)
+        _buildPopupMenuItem('prev', 'Level ${selectedLevel - 1}',
+            Icons.skip_previous, Colors.indigo),
+      _buildPopupMenuItem(
+          'next',
+          'Level ${selectedLevel + 1} ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 100 Coins' : ""}',
+          Icons.skip_next,
+          Colors.indigo),
+    ];
+  }
+
+  void showUnlockWorldsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 16,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                decoration: const BoxDecoration(
+                    color: Colors.indigo,
+                    borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(10),
+                        bottomRight: Radius.circular(10))),
+                padding: const EdgeInsets.all(16.0),
+                child: const Text(
+                  'Unlocking all Worlds',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'You can unlock all worlds and levels in the game, by purchasing one item in the shop.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              _buildUnlockButton(context, "Open Shop", Colors.teal, () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const ShopScreen(),
+                  ),
+                );
+              }),
+              /*_buildUnlockButton(
+              context,
+              'Unlock Single World (€0.99)',
+              Colors.teal,
+              () {
+                puzzle.saveWorldUnlocked(currentWorldIndex + 1, true);
+                puzzle.unlockWorld(currentWorldIndex + 1);
+                puzzle.updateWorldLevel(currentWorldIndex + 1, 1);
+                puzzle.saveWorldProgress(currentWorldIndex + 1, 1);
+                onUnlock();
+
+                // Add unlock single world logic here
+                Navigator.of(context).pop();
+              },
+            ),
+            _buildUnlockButton(
+              context,
+              'Unlock All Worlds (€1.99)',
+              Colors.orangeAccent,
+              () {
+                for (int i = 0; i < worlds.length; i++) {
+                  if (!puzzle.isWorldUnlocked(i + 1)) {
+                    puzzle.saveWorldUnlocked(i + 1, true);
+                    puzzle.unlockWorld(i + 1);
+                    puzzle.updateWorldLevel(i + 1, 1);
+                    puzzle.saveWorldProgress(i + 1, 1);
+                    onUnlock();
+                  }
+
+                  // Add unlock single world logic here
+                }
+                Navigator.of(context).pop();
+              },
+            ),*/
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    FadePageRoute(
+                      page: const MainMenuScreen(),
+                    ),
+                  );
+                },
+                child: Text(
+                  'Back to Home',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -424,9 +580,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                     builder: (context, coinProvider, child) {
                                       return PopupMenuButton<String>(
                                         key: popUpKey,
-                                        offset: const Offset(-10, 50),
+                                        offset: const Offset(10, 50),
                                         enabled: !denyClick,
-                                        icon: const Icon(Icons.settings,
+                                        icon: const Icon(Icons.pause,
                                             color: Colors.white),
                                         onSelected: (String value) {
                                           switch (value) {
@@ -455,35 +611,43 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                               );
                                               break;
                                             case 'refresh':
-                                              if (coinProvider.coins >= 10 ||
-                                                  worlds[currentWorld - 1]
-                                                          .maxLevel >
-                                                      selectedLevel) {
-                                                if (worlds[currentWorld - 1]
-                                                        .maxLevel <=
-                                                    selectedLevel) {
-                                                  coinProvider
-                                                      .subtractCoins(10);
-                                                }
-                                                puzzle.refreshGrid(
-                                                    puzzle.maxMoves,
-                                                    puzzle.size);
+                                              if (!worlds.last.unlocked &&
+                                                  selectedLevel > 14) {
+                                                showUnlockWorldsDialog();
                                               } else {
-                                                Navigator.of(context).push(
-                                                  FadePageRoute(
-                                                    page: ChangeNotifierProvider
-                                                        .value(
-                                                      value: puzzle,
-                                                      child: const ShopScreen(),
+                                                if (coinProvider.coins >= 10 ||
+                                                    worlds[currentWorld - 1]
+                                                            .maxLevel >
+                                                        selectedLevel) {
+                                                  if (worlds[currentWorld - 1]
+                                                          .maxLevel <=
+                                                      selectedLevel) {
+                                                    coinProvider
+                                                        .subtractCoins(10);
+                                                  }
+                                                  puzzle.refreshGrid(
+                                                      puzzle.maxMoves,
+                                                      puzzle.size);
+                                                } else {
+                                                  Navigator.of(context).push(
+                                                    FadePageRoute(
+                                                      page:
+                                                          ChangeNotifierProvider
+                                                              .value(
+                                                        value: puzzle,
+                                                        child:
+                                                            const ShopScreen(),
+                                                      ),
                                                     ),
-                                                  ),
-                                                );
-                                                return;
+                                                  );
+                                                  return;
+                                                }
                                               }
                                               break;
                                             case "prev":
                                               selectedLevel -= 1;
                                               denyClick = false;
+
                                               Navigator.of(context)
                                                   .pushReplacement(
                                                 FadePageRoute(
@@ -514,77 +678,85 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                 ),
                                               );
                                             case 'next':
-                                              if (coinProvider.coins >= 100 ||
-                                                  worlds[currentWorld - 1]
-                                                          .maxLevel >
-                                                      selectedLevel) {
-                                                if (worlds[currentWorld - 1]
-                                                        .maxLevel <=
-                                                    selectedLevel) {
-                                                  coinProvider
-                                                      .subtractCoins(100);
-                                                }
-
-                                                if (selectedLevel >= 10 &&
-                                                    worlds[currentWorld + 1]
-                                                            .maxLevel ==
-                                                        0) {
-                                                  puzzle.updateWorldLevel(
-                                                      currentWorld + 1, 1);
-                                                }
-                                                if (selectedLevel < 100) {
-                                                  puzzle.updateWorldLevel(
-                                                      currentWorld,
-                                                      selectedLevel + 1);
-                                                  selectedLevel += 1;
-                                                  denyClick = false;
-                                                }
-                                                Navigator.of(context)
-                                                    .pushReplacement(
-                                                  FadePageRoute(
-                                                    page:
-                                                        ChangeNotifierProvider(
-                                                      create: (_) =>
-                                                          PuzzleModel(
-                                                        size: puzzle.getSizeAndMaxMoves(
-                                                                    selectedLevel)[
-                                                                "size"] ??
-                                                            2,
-                                                        level: puzzle.getSizeAndMaxMoves(
-                                                                    selectedLevel)[
-                                                                "maxMoves"] ??
-                                                            2,
-                                                        colorMapping: {
-                                                          1: worlds[
-                                                                  currentWorld -
-                                                                      1]
-                                                              .colors[0],
-                                                          2: worlds[
-                                                                  currentWorld -
-                                                                      1]
-                                                              .colors[1],
-                                                          3: worlds[
-                                                                  currentWorld -
-                                                                      1]
-                                                              .colors[2],
-                                                        },
-                                                      ),
-                                                      child: selectedLevel < 100
-                                                          ? const PuzzleScreen()
-                                                          : const MainMenuScreen(),
-                                                    ),
-                                                  ),
-                                                );
+                                              if (!worlds.last.unlocked &&
+                                                  selectedLevel > 14) {
+                                                showUnlockWorldsDialog();
                                               } else {
-                                                Navigator.of(context).push(
-                                                  FadePageRoute(
-                                                    page: ChangeNotifierProvider
-                                                        .value(
-                                                      value: puzzle,
-                                                      child: const ShopScreen(),
+                                                if (coinProvider.coins >= 100 ||
+                                                    worlds[currentWorld - 1]
+                                                            .maxLevel >
+                                                        selectedLevel) {
+                                                  if (worlds[currentWorld - 1]
+                                                          .maxLevel <=
+                                                      selectedLevel) {
+                                                    coinProvider
+                                                        .subtractCoins(100);
+                                                  }
+
+                                                  if (selectedLevel >= 10 &&
+                                                      worlds[currentWorld + 1]
+                                                              .maxLevel ==
+                                                          0) {
+                                                    puzzle.updateWorldLevel(
+                                                        currentWorld + 1, 1);
+                                                  }
+                                                  if (selectedLevel < 100) {
+                                                    puzzle.updateWorldLevel(
+                                                        currentWorld,
+                                                        selectedLevel + 1);
+                                                    selectedLevel += 1;
+                                                    denyClick = false;
+                                                  }
+                                                  Navigator.of(context)
+                                                      .pushReplacement(
+                                                    FadePageRoute(
+                                                      page:
+                                                          ChangeNotifierProvider(
+                                                        create: (_) =>
+                                                            PuzzleModel(
+                                                          size: puzzle.getSizeAndMaxMoves(
+                                                                      selectedLevel)[
+                                                                  "size"] ??
+                                                              2,
+                                                          level: puzzle.getSizeAndMaxMoves(
+                                                                      selectedLevel)[
+                                                                  "maxMoves"] ??
+                                                              2,
+                                                          colorMapping: {
+                                                            1: worlds[
+                                                                    currentWorld -
+                                                                        1]
+                                                                .colors[0],
+                                                            2: worlds[
+                                                                    currentWorld -
+                                                                        1]
+                                                                .colors[1],
+                                                            3: worlds[
+                                                                    currentWorld -
+                                                                        1]
+                                                                .colors[2],
+                                                          },
+                                                        ),
+                                                        child: selectedLevel <
+                                                                100
+                                                            ? const PuzzleScreen()
+                                                            : const MainMenuScreen(),
+                                                      ),
                                                     ),
-                                                  ),
-                                                );
+                                                  );
+                                                } else {
+                                                  Navigator.of(context).push(
+                                                    FadePageRoute(
+                                                      page:
+                                                          ChangeNotifierProvider
+                                                              .value(
+                                                        value: puzzle,
+                                                        child:
+                                                            const ShopScreen(),
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
                                               }
                                               break;
                                             case 'tutorial':
@@ -619,31 +791,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                           }
                                         },
                                         itemBuilder: (BuildContext context) =>
-                                            <PopupMenuEntry<String>>[
-                                          _buildPopupMenuItem('home', 'Home',
-                                              Icons.home, Colors.indigo),
-                                          _buildPopupMenuItem(
-                                              'shop',
-                                              'Shop',
-                                              Icons.shopping_cart,
-                                              Colors.indigo),
-                                          _buildPopupMenuItem(
-                                              'refresh',
-                                              'New Level ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 10 Coins' : ""}',
-                                              Icons.refresh,
-                                              Colors.indigo),
-                                          if (selectedLevel > 1)
-                                            _buildPopupMenuItem(
-                                                'prev',
-                                                'Level ${selectedLevel - 1}',
-                                                Icons.skip_previous,
-                                                Colors.indigo),
-                                          _buildPopupMenuItem(
-                                              'next',
-                                              'Level ${selectedLevel + 1} ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 100 Coins' : ""}',
-                                              Icons.skip_next,
-                                              Colors.indigo),
-                                        ],
+                                            _showPopupMenu(),
                                       );
                                     },
                                   ),
@@ -795,30 +943,33 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           scale: _animation,
                           child: GestureDetector(
                             onTap: () {
-                              if (!animationStarted &&
-                                  !showBanner &&
-                                  !denyClick &&
-                                  (puzzle.maxMoves > puzzle.moves ||
-                                      isRemoveTileMode)) {
-                                if (isRemoveTileMode) {
-                                  // Remove the tile
-                                  puzzle.clickTile(x, y, false, true);
-                                  puzzle.removeRems(1);
-                                  //_showSnackbar(context, "Tile removed.");
-                                  setState(() {
-                                    isRemoveTileMode =
-                                        false; // Exit remove mode after removing a tile
-                                  });
-                                } else {
-                                  puzzle.countClicks += 1;
-                                  if (puzzle.maxMoves < 3) {
-                                    if (puzzle.countClicks >
-                                        3 * puzzle.maxMoves) {
-                                      puzzle.getHint();
-                                      puzzle.countClicks = 0;
-                                    }
+                              if (!worlds.last.unlocked && selectedLevel > 14) {
+                                showUnlockWorldsDialog();
+                              } else {
+                                if (!animationStarted &&
+                                    !showBanner &&
+                                    !denyClick &&
+                                    (puzzle.maxMoves > puzzle.moves ||
+                                        isRemoveTileMode)) {
+                                  if (isRemoveTileMode) {
+                                    // Remove the tile
+                                    puzzle.clickTile(x, y, false, true);
+                                    puzzle.removeRems(1);
+                                    //_showSnackbar(context, "Tile removed.");
+                                    setState(() {
+                                      isRemoveTileMode =
+                                          false; // Exit remove mode after removing a tile
+                                    });
                                   } else {
-                                    /*if (puzzle.countClicks >
+                                    puzzle.countClicks += 1;
+                                    if (puzzle.maxMoves < 3) {
+                                      if (puzzle.countClicks >
+                                          3 * puzzle.maxMoves) {
+                                        puzzle.getHint();
+                                        puzzle.countClicks = 0;
+                                      }
+                                    } else {
+                                      /*if (puzzle.countClicks >
                                         5 * puzzle.maxMoves) {
                                       puzzle.countClicks =
                                           double.negativeInfinity;
@@ -831,69 +982,73 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                           false //Change this Line to true, if you want sale for 200 coins
                                           );
                                     }*/
+                                    }
+
+                                    puzzle.clickTile(x, y, false, false);
                                   }
 
-                                  puzzle.clickTile(x, y, false, false);
-                                }
+                                  if (puzzle.isGridFilledWithTargetColor()) {
+                                    puzzle.countClicks = 0;
+                                    denyClick = true;
+                                    levelsSinceAd++;
 
-                                if (puzzle.isGridFilledWithTargetColor()) {
-                                  puzzle.countClicks = 0;
-                                  denyClick = true;
-                                  levelsSinceAd++;
+                                    if (worlds[currentWorld - 1].maxLevel >
+                                        selectedLevel) {
+                                      getsLightBulb = -1;
+                                    } else {
+                                      setState(() {
+                                        getsLightBulb = ((_random.nextInt(8)) +
+                                                    (calculateDifficulty(
+                                                            puzzle.maxMoves,
+                                                            puzzle.size) *
+                                                        3))
+                                                .floor() -
+                                            7;
+                                      });
+                                    }
 
-                                  if (worlds[currentWorld - 1].maxLevel >
-                                      selectedLevel) {
-                                    getsLightBulb = -1;
-                                  } else {
-                                    setState(() {
-                                      getsLightBulb = ((_random.nextInt(8)) +
-                                                  (calculateDifficulty(
-                                                          puzzle.maxMoves,
-                                                          puzzle.size) *
-                                                      3))
-                                              .floor() -
-                                          7;
-                                    });
-                                  }
-
-                                  _confettiController.play();
-                                  HapticFeedback.heavyImpact();
-                                  _animationController.forward().then((_) {
-                                    Future.delayed(
-                                        Duration(
-                                            milliseconds: tutorialActive
-                                                ? 600
-                                                : 300), () {
-                                      _animationController.reverse().then((_) {
-                                        Future.delayed(
-                                            Duration(
-                                                milliseconds: tutorialActive
-                                                    ? 1000
-                                                    : 500), () {
-                                          setState(() {
-                                            showBanner = true;
+                                    _confettiController.play();
+                                    HapticFeedback.heavyImpact();
+                                    _animationController.forward().then((_) {
+                                      Future.delayed(
+                                          Duration(
+                                              milliseconds: tutorialActive
+                                                  ? 600
+                                                  : 300), () {
+                                        _animationController
+                                            .reverse()
+                                            .then((_) {
+                                          Future.delayed(
+                                              Duration(
+                                                  milliseconds: tutorialActive
+                                                      ? 1000
+                                                      : 500), () {
+                                            setState(() {
+                                              showBanner = true;
+                                            });
+                                            if (_interstitialAd != null) {
+                                              _interstitialAd?.show();
+                                            }
                                           });
-                                          if (_interstitialAd != null) {
-                                            _interstitialAd?.show();
-                                          }
                                         });
                                       });
                                     });
-                                  });
-                                } else {
-                                  HapticFeedback.selectionClick();
-                                  if (puzzle.moves == puzzle.maxMoves &&
-                                      puzzle.maxMoves > 2) {
-                                    showGadgetPopup(
-                                        context,
-                                        'Moves',
-                                        handleBuyMoves,
-                                        handleWatchAdForMoves,
-                                        [Colors.indigo, Colors.indigoAccent],
-                                        false);
-                                  } else if (puzzle.maxMoves == puzzle.moves &&
-                                      tutorialActive) {
-                                    showResetGadgetHint = true;
+                                  } else {
+                                    HapticFeedback.selectionClick();
+                                    if (puzzle.moves == puzzle.maxMoves &&
+                                        puzzle.maxMoves > 2) {
+                                      showGadgetPopup(
+                                          context,
+                                          'Moves',
+                                          handleBuyMoves,
+                                          handleWatchAdForMoves,
+                                          [Colors.indigo, Colors.indigoAccent],
+                                          false);
+                                    } else if (puzzle.maxMoves ==
+                                            puzzle.moves &&
+                                        tutorialActive) {
+                                      showResetGadgetHint = true;
+                                    }
                                   }
                                 }
                               }
@@ -958,26 +1113,30 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         return CustomActionButton(
                           icon: Icons.lightbulb,
                           onPressed: () async {
-                            if (currentTutorialStep == TutorialStep.step5) {
-                              changeTextStep5 = true;
-                            }
-                            if (hintsProvider.hints > 0) {
-                              bool hintUsed = await puzzle.getHint();
-                              if (hintUsed) {
-                                // Your hint used logic here
-                              } else {
-                                /*Future.delayed(Duration(milliseconds: 500), () {
+                            if (!worlds.last.unlocked && selectedLevel > 14) {
+                              showUnlockWorldsDialog();
+                            } else {
+                              if (currentTutorialStep == TutorialStep.step5) {
+                                changeTextStep5 = true;
+                              }
+                              if (hintsProvider.hints > 0) {
+                                bool hintUsed = await puzzle.getHint();
+                                if (hintUsed) {
+                                  // Your hint used logic here
+                                } else {
+                                  /*Future.delayed(Duration(milliseconds: 500), () {
                       puzzle.clearHint();
                     });*/
+                                }
+                              } else {
+                                showGadgetPopup(
+                                    context,
+                                    'Hints',
+                                    handleBuyHint,
+                                    handleWatchAdForHints,
+                                    [Colors.amber, Colors.orange],
+                                    false);
                               }
-                            } else {
-                              showGadgetPopup(
-                                  context,
-                                  'Hints',
-                                  handleBuyHint,
-                                  handleWatchAdForHints,
-                                  [Colors.amber, Colors.orange],
-                                  false);
                             }
                           },
                           count:
@@ -989,32 +1148,35 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           borderColor: Colors.transparent,
                         );
                       }),
-                      /*
                       Consumer<RemsProvider>(
                           builder: (context, remsProvider, child) {
                         return CustomActionButton(
                           icon: Icons.colorize,
                           onPressed: () {
-                            if (!denyClick) {
-                              if (remsProvider.rems > 0) {
-                                setState(() {
-                                  if (isRemoveTileMode) {
-                                    isRemoveTileMode = false;
-                                  } else {
-                                    isRemoveTileMode = true;
-                                  }
-                                });
-                              } else {
-                                showGadgetPopup(
-                                    context,
-                                    'Colorizer',
-                                    handleBuyRem,
-                                    handleWatchAdForRems,
-                                    [
-                                      const Color.fromARGB(255, 176, 2, 124),
-                                      const Color.fromARGB(255, 255, 0, 81)
-                                    ],
-                                    false);
+                            if (!worlds.last.unlocked && selectedLevel > 14) {
+                              showUnlockWorldsDialog();
+                            } else {
+                              if (!denyClick) {
+                                if (remsProvider.rems > 0) {
+                                  setState(() {
+                                    if (isRemoveTileMode) {
+                                      isRemoveTileMode = false;
+                                    } else {
+                                      isRemoveTileMode = true;
+                                    }
+                                  });
+                                } else {
+                                  showGadgetPopup(
+                                      context,
+                                      'Colorizer',
+                                      handleBuyRem,
+                                      handleWatchAdForRems,
+                                      [
+                                        const Color.fromARGB(255, 176, 2, 124),
+                                        const Color.fromARGB(255, 255, 0, 81)
+                                      ],
+                                      false);
+                                }
                               }
                             }
                           },
@@ -1033,7 +1195,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                               : Colors.transparent,
                         );
                       }),
-                       */
                       CustomActionButton(
                         icon: Icons.undo,
                         onPressed: () {
@@ -1105,32 +1266,36 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                   ),
                 ),
 
-              tutorialActive && currentTutorialStep != TutorialStep.none
+              tutorialActive && currentTutorialStep != TutorialStep.none ||
+                      isRemoveTileMode
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         AnimatedCustomOverlay(
                           blink: currentTutorialStep == TutorialStep.step2 &&
                               tutorialActive,
-                          message: showResetGadgetHint
-                              ? "You have no moves left. Use the reset or the undo gadget to try again."
-                              : currentTutorialStep == TutorialStep.step2 &&
-                                      tutorialActive
-                                  ? 'Click on the tile to change its color'
-                                  : currentTutorialStep == TutorialStep.step3 &&
+                          message: isRemoveTileMode
+                              ? "Click on a tile to increase its value by one. Tap again on the gadget to cancel."
+                              : showResetGadgetHint
+                                  ? "You have no moves left. Use the reset or the undo gadget to try again."
+                                  : currentTutorialStep == TutorialStep.step2 &&
                                           tutorialActive
-                                      ? 'Click on the tile to also change the color of its neighbours'
+                                      ? 'Click on the tile to change its color'
                                       : currentTutorialStep ==
-                                                  TutorialStep.step4 &&
+                                                  TutorialStep.step3 &&
                                               tutorialActive
-                                          ? "Fill the Grid with the color indicated. You have only one move!"
+                                          ? 'Click on the tile to also change the color of its neighbours'
                                           : currentTutorialStep ==
-                                                      TutorialStep.step5 &&
+                                                      TutorialStep.step4 &&
                                                   tutorialActive
-                                              ? (changeTextStep5
-                                                  ? "Finish the level by filling the whole grid with the color indicated."
-                                                  : "If you struggle with the puzzle, use a hint. In this level you have two moves.")
-                                              : "You can also use the Colorizer, it increases a single tile by one. Try it out!",
+                                              ? "Fill the Grid with the color indicated. You have only one move!"
+                                              : currentTutorialStep ==
+                                                          TutorialStep.step5 &&
+                                                      tutorialActive
+                                                  ? (changeTextStep5
+                                                      ? "Finish the level by filling the whole grid with the color indicated."
+                                                      : "If you struggle with the puzzle, use a hint. In this level you have two moves.")
+                                                  : "You can also use the Colorizer, it increases a single tile by one. Try it out!",
                           onClose: () {},
                         ),
                       ],

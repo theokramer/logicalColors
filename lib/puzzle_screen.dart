@@ -27,8 +27,6 @@ enum TutorialStep { none, step1, step2, step3, step4, step5, completed }
 
 Timer? _timer; // Declare the timer at the class level
 
-TutorialStep currentTutorialStep = TutorialStep.step1;
-
 class PuzzleScreen extends StatefulWidget {
   const PuzzleScreen({super.key});
 
@@ -47,11 +45,14 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   bool denyClick = true;
   double pi = 3.1415926535897932;
   bool isRemoveTileMode = false;
+  bool changeTextStep5 = false;
   final Random _random = Random();
+  bool showResetGadgetHint = false;
   bool showStartBanner = (currentTutorialStep != TutorialStep.step1 &&
           currentTutorialStep != TutorialStep.step2 &&
-          currentTutorialStep != TutorialStep.step3) ||
-      !tutorialActive;
+          currentTutorialStep != TutorialStep.step3 &&
+          false) ||
+      (!tutorialActive && false); // delete && false when wanted
   int getsLightBulb = 0;
   final GlobalKey<PopupMenuButtonState> popUpKey = GlobalKey();
 
@@ -251,7 +252,31 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     if (worlds[0].maxLevel > 10 && !noAds) {
       _bannerAd.load();
     }
-
+    setState(() {
+      showStartBanner = false;
+      denyClick = false;
+    });
+    //Zeit erhöhen in Production
+    /*if (currentTutorialStep == TutorialStep.none || tutorialActive == false) {
+      _timer = Timer(const Duration(milliseconds: 7000), () {
+        if (mounted) {
+          setState(() {
+            showStartBanner = false;
+            denyClick = false;
+          });
+        }
+      });
+    } else {
+      setState(() {
+        showStartBanner = false;
+        denyClick = false;
+      });
+    }*/
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (currentTutorialStep == TutorialStep.step3) {
+        _showInfoDialogStart(context);
+      }
+    });
     _confettiController =
         ConfettiController(duration: const Duration(milliseconds: 500));
     _animationController = AnimationController(
@@ -264,75 +289,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
         curve: Curves.easeInOut,
       ),
     );
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (tutorialActive == true) {
-        switch (currentTutorialStep) {
-          case TutorialStep.none:
-            setState(() {
-              tutorialActive = false;
-              saveTutorial(tutorialActive);
-            });
-            break;
-
-          case TutorialStep.step1:
-            setState(() {
-              currentTutorialStep = TutorialStep.step2;
-            });
-            break;
-
-          case TutorialStep.step2:
-            setState(() {
-              currentTutorialStep = TutorialStep.step3;
-              _showInfoDialogStart(context);
-            });
-            break;
-          case TutorialStep.step3:
-            setState(() {
-              currentTutorialStep = TutorialStep.step4;
-            });
-            break;
-          case TutorialStep.step4:
-            setState(() {
-              currentTutorialStep = TutorialStep.step5;
-            });
-            break;
-          case TutorialStep.step5:
-            setState(() {
-              currentTutorialStep = TutorialStep.completed;
-              isRemoveTileMode = true;
-            });
-            break;
-
-          case TutorialStep.completed:
-            setState(() {
-              tutorialActive = false;
-              currentTutorialStep = TutorialStep.none;
-              saveTutorial(tutorialActive);
-            });
-            break;
-        }
-      }
-
-      //Zeit erhöhen in Production
-      if (currentTutorialStep == TutorialStep.none || tutorialActive == false) {
-        _timer = Timer(const Duration(milliseconds: 7000), () {
-          if (mounted) {
-            setState(() {
-              showStartBanner = false;
-              denyClick = false;
-            });
-          }
-        });
-      } else {
-        setState(() {
-          showStartBanner = false;
-          denyClick = false;
-        });
-      }
-
-      //_showLevelStartInfo();
-    });
   }
 
   Future<void> handleBuyHint() async {
@@ -441,7 +397,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
     return Scaffold(
       backgroundColor: Colors.blue[50], // Playful background color
-
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -454,62 +409,41 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             children: [
               Column(
                 children: [
-                  Stack(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            //Remove option to leave Screen when tutorial is active
-                            tutorialActive
-                                ? const Text("")
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                    child: Row(
+                      children: [
+                        // Left side with PopupMenuButton
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: tutorialActive
+                                ? const SizedBox
+                                    .shrink() // Hide when tutorial is active
                                 : Consumer<CoinProvider>(
                                     builder: (context, coinProvider, child) {
-                                    return PopupMenuButton<String>(
-                                      key: popUpKey,
-                                      offset: const Offset(-10, 50),
-                                      enabled: !denyClick,
-                                      icon: const Icon(Icons.settings,
-                                          color: Colors.white),
-                                      onSelected: (String value) {
-                                        switch (value) {
-                                          case 'home':
-                                            Navigator.of(context)
-                                                .pushReplacement(
-                                              FadePageRoute(
-                                                page: ChangeNotifierProvider
-                                                    .value(
-                                                  value: puzzle,
-                                                  child: const MainMenuScreen(),
+                                      return PopupMenuButton<String>(
+                                        key: popUpKey,
+                                        offset: const Offset(-10, 50),
+                                        enabled: !denyClick,
+                                        icon: const Icon(Icons.settings,
+                                            color: Colors.white),
+                                        onSelected: (String value) {
+                                          switch (value) {
+                                            case 'home':
+                                              Navigator.of(context)
+                                                  .pushReplacement(
+                                                FadePageRoute(
+                                                  page: ChangeNotifierProvider
+                                                      .value(
+                                                    value: puzzle,
+                                                    child:
+                                                        const MainMenuScreen(),
+                                                  ),
                                                 ),
-                                              ),
-                                            );
-                                            break;
-                                          case 'shop':
-                                            Navigator.of(context).push(
-                                              FadePageRoute(
-                                                page: ChangeNotifierProvider
-                                                    .value(
-                                                  value: puzzle,
-                                                  child: const ShopScreen(),
-                                                ),
-                                              ),
-                                            );
-                                            break;
-                                          case 'refresh':
-                                            if (coinProvider.coins >= 10 ||
-                                                worlds[currentWorld - 1]
-                                                        .maxLevel >
-                                                    selectedLevel) {
-                                              if (worlds[currentWorld - 1]
-                                                      .maxLevel <=
-                                                  selectedLevel) {
-                                                coinProvider.subtractCoins(10);
-                                              }
-                                              puzzle.refreshGrid(
-                                                  puzzle.maxMoves, puzzle.size);
-                                            } else {
+                                              );
+                                              break;
+                                            case 'shop':
                                               Navigator.of(context).push(
                                                 FadePageRoute(
                                                   page: ChangeNotifierProvider
@@ -519,17 +453,42 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                   ),
                                                 ),
                                               );
-                                              return;
-                                            }
-                                            break;
-                                          case "prev":
-                                            selectedLevel -= 1;
-                                            denyClick = false;
-                                            Navigator.of(context)
-                                                .pushReplacement(
-                                              FadePageRoute(
-                                                page: ChangeNotifierProvider(
-                                                  create: (_) => PuzzleModel(
+                                              break;
+                                            case 'refresh':
+                                              if (coinProvider.coins >= 10 ||
+                                                  worlds[currentWorld - 1]
+                                                          .maxLevel >
+                                                      selectedLevel) {
+                                                if (worlds[currentWorld - 1]
+                                                        .maxLevel <=
+                                                    selectedLevel) {
+                                                  coinProvider
+                                                      .subtractCoins(10);
+                                                }
+                                                puzzle.refreshGrid(
+                                                    puzzle.maxMoves,
+                                                    puzzle.size);
+                                              } else {
+                                                Navigator.of(context).push(
+                                                  FadePageRoute(
+                                                    page: ChangeNotifierProvider
+                                                        .value(
+                                                      value: puzzle,
+                                                      child: const ShopScreen(),
+                                                    ),
+                                                  ),
+                                                );
+                                                return;
+                                              }
+                                              break;
+                                            case "prev":
+                                              selectedLevel -= 1;
+                                              denyClick = false;
+                                              Navigator.of(context)
+                                                  .pushReplacement(
+                                                FadePageRoute(
+                                                  page: ChangeNotifierProvider(
+                                                    create: (_) => PuzzleModel(
                                                       size: puzzle.getSizeAndMaxMoves(
                                                                   selectedLevel)[
                                                               "size"] ??
@@ -548,42 +507,45 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                         3: worlds[currentWorld -
                                                                 1]
                                                             .colors[2],
-                                                      }),
-                                                  child: const PuzzleScreen(),
+                                                      },
+                                                    ),
+                                                    child: const PuzzleScreen(),
+                                                  ),
                                                 ),
-                                              ),
-                                            );
-                                          case 'next':
-                                            if (coinProvider.coins >= 100 ||
-                                                worlds[currentWorld - 1]
-                                                        .maxLevel >
+                                              );
+                                            case 'next':
+                                              if (coinProvider.coins >= 100 ||
+                                                  worlds[currentWorld - 1]
+                                                          .maxLevel >
+                                                      selectedLevel) {
+                                                if (worlds[currentWorld - 1]
+                                                        .maxLevel <=
                                                     selectedLevel) {
-                                              if (worlds[currentWorld - 1]
-                                                      .maxLevel <=
-                                                  selectedLevel) {
-                                                coinProvider.subtractCoins(100);
-                                              }
-                                              //Watch Ad, when following level isn't unlocked
+                                                  coinProvider
+                                                      .subtractCoins(100);
+                                                }
 
-                                              if (selectedLevel >= 10 &&
-                                                  worlds[currentWorld + 1]
-                                                          .maxLevel ==
-                                                      0) {
-                                                puzzle.updateWorldLevel(
-                                                    currentWorld + 1, 1);
-                                              }
-                                              if (selectedLevel < 100) {
-                                                puzzle.updateWorldLevel(
-                                                    currentWorld,
-                                                    selectedLevel + 1);
-                                                selectedLevel += 1;
-                                                denyClick = false;
-                                              }
-                                              Navigator.of(context)
-                                                  .pushReplacement(
-                                                FadePageRoute(
-                                                  page: ChangeNotifierProvider(
-                                                    create: (_) => PuzzleModel(
+                                                if (selectedLevel >= 10 &&
+                                                    worlds[currentWorld + 1]
+                                                            .maxLevel ==
+                                                        0) {
+                                                  puzzle.updateWorldLevel(
+                                                      currentWorld + 1, 1);
+                                                }
+                                                if (selectedLevel < 100) {
+                                                  puzzle.updateWorldLevel(
+                                                      currentWorld,
+                                                      selectedLevel + 1);
+                                                  selectedLevel += 1;
+                                                  denyClick = false;
+                                                }
+                                                Navigator.of(context)
+                                                    .pushReplacement(
+                                                  FadePageRoute(
+                                                    page:
+                                                        ChangeNotifierProvider(
+                                                      create: (_) =>
+                                                          PuzzleModel(
                                                         size: puzzle.getSizeAndMaxMoves(
                                                                     selectedLevel)[
                                                                 "size"] ??
@@ -605,36 +567,37 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                                   currentWorld -
                                                                       1]
                                                               .colors[2],
-                                                        }),
-                                                    child: selectedLevel < 100
-                                                        ? const PuzzleScreen()
-                                                        : const MainMenuScreen(),
+                                                        },
+                                                      ),
+                                                      child: selectedLevel < 100
+                                                          ? const PuzzleScreen()
+                                                          : const MainMenuScreen(),
+                                                    ),
                                                   ),
-                                                ),
-                                              );
-                                            } else {
-                                              Navigator.of(context).push(
+                                                );
+                                              } else {
+                                                Navigator.of(context).push(
+                                                  FadePageRoute(
+                                                    page: ChangeNotifierProvider
+                                                        .value(
+                                                      value: puzzle,
+                                                      child: const ShopScreen(),
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                              break;
+                                            case 'tutorial':
+                                              tutorialActive = true;
+                                              currentTutorialStep =
+                                                  TutorialStep.step1;
+                                              selectedLevel = 1;
+                                              currentWorld = 1;
+                                              Navigator.of(context)
+                                                  .pushReplacement(
                                                 FadePageRoute(
-                                                  page: ChangeNotifierProvider
-                                                      .value(
-                                                    value: puzzle,
-                                                    child: const ShopScreen(),
-                                                  ),
-                                                ),
-                                              );
-                                            }
-                                            break;
-                                          case 'tutorial':
-                                            tutorialActive = true;
-                                            currentTutorialStep =
-                                                TutorialStep.step1;
-                                            selectedLevel = 1;
-                                            currentWorld = 1;
-                                            Navigator.of(context)
-                                                .pushReplacement(
-                                              FadePageRoute(
-                                                page: ChangeNotifierProvider(
-                                                  create: (_) => PuzzleModel(
+                                                  page: ChangeNotifierProvider(
+                                                    create: (_) => PuzzleModel(
                                                       size: 1,
                                                       level: 1,
                                                       colorMapping: {
@@ -647,65 +610,82 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                         3: worlds[currentWorld -
                                                                 1]
                                                             .colors[2],
-                                                      }),
-                                                  child: const PuzzleScreen(),
+                                                      },
+                                                    ),
+                                                    child: const PuzzleScreen(),
+                                                  ),
                                                 ),
-                                              ),
-                                            );
-                                        }
-                                      },
-                                      itemBuilder: (BuildContext context) =>
-                                          <PopupMenuEntry<String>>[
-                                        _buildPopupMenuItem('home', 'Home',
-                                            Icons.home, Colors.indigo),
-                                        _buildPopupMenuItem('shop', 'Shop',
-                                            Icons.shopping_cart, Colors.indigo),
-                                        _buildPopupMenuItem(
-                                            'refresh',
-                                            'New Level ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 10 Coins' : ""}',
-                                            Icons.refresh,
-                                            Colors.indigo),
-                                        if (selectedLevel > 1)
+                                              );
+                                          }
+                                        },
+                                        itemBuilder: (BuildContext context) =>
+                                            <PopupMenuEntry<String>>[
+                                          _buildPopupMenuItem('home', 'Home',
+                                              Icons.home, Colors.indigo),
                                           _buildPopupMenuItem(
-                                              'prev',
-                                              'Level ${selectedLevel - 1}',
-                                              Icons.skip_previous,
+                                              'shop',
+                                              'Shop',
+                                              Icons.shopping_cart,
                                               Colors.indigo),
-                                        _buildPopupMenuItem(
-                                            'next',
-                                            'Level ${selectedLevel + 1} ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 100 Coins' : ""}',
-                                            Icons.skip_next,
-                                            Colors.indigo),
-                                        /*_buildPopupMenuItem(
-                                        'tutorial',
-                                        'Watch the Tutorial',
-                                        Icons.cast_for_education,
-                                        Colors.indigo),*/
-                                      ],
-                                    );
-                                  }),
-                          ],
+                                          _buildPopupMenuItem(
+                                              'refresh',
+                                              'New Level ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 10 Coins' : ""}',
+                                              Icons.refresh,
+                                              Colors.indigo),
+                                          if (selectedLevel > 1)
+                                            _buildPopupMenuItem(
+                                                'prev',
+                                                'Level ${selectedLevel - 1}',
+                                                Icons.skip_previous,
+                                                Colors.indigo),
+                                          _buildPopupMenuItem(
+                                              'next',
+                                              'Level ${selectedLevel + 1} ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 100 Coins' : ""}',
+                                              Icons.skip_next,
+                                              Colors.indigo),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                          ),
                         ),
-                      ),
-                      //if (MediaQuery.of(context).size.height <= 700)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Level $selectedLevel',
+                        // Centered text
+                        Expanded(
+                          flex: 2,
+                          child: Center(
+                            child: Text(
+                              'World $currentWorld – Level $selectedLevel',
+                              textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Colors.white70,
-                                fontSize: 20,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Quicksand',
                               ),
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                        // Right side with CustomInfoButton
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Consumer<CoinProvider>(
+                              builder: (context, coinProvider, child) {
+                                return CustomInfoButton(
+                                  value: '${coinProvider.coins}',
+                                  targetColor: -1,
+                                  movesLeft: -1,
+                                  iconPath: 'images/coins.png',
+                                  backgroundColor: Colors.black45,
+                                  textColor: Colors.white,
+                                  isLarge: 2,
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
 
                   //SizedBox(height: 10),
@@ -792,6 +772,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                     ),
                   Expanded(
                     child: GridView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: puzzle.size,
                         crossAxisSpacing: 8.0,
@@ -816,7 +797,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                             onTap: () {
                               if (!animationStarted &&
                                   !showBanner &&
-                                  !denyClick) {
+                                  !denyClick &&
+                                  (puzzle.maxMoves > puzzle.moves ||
+                                      isRemoveTileMode)) {
                                 if (isRemoveTileMode) {
                                   // Remove the tile
                                   puzzle.clickTile(x, y, false, true);
@@ -835,7 +818,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                       puzzle.countClicks = 0;
                                     }
                                   } else {
-                                    if (puzzle.countClicks >
+                                    /*if (puzzle.countClicks >
                                         5 * puzzle.maxMoves) {
                                       puzzle.countClicks =
                                           double.negativeInfinity;
@@ -847,7 +830,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                           [Colors.amber, Colors.orange],
                                           false //Change this Line to true, if you want sale for 200 coins
                                           );
-                                    }
+                                    }*/
                                   }
 
                                   puzzle.clickTile(x, y, false, false);
@@ -900,7 +883,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                 } else {
                                   HapticFeedback.selectionClick();
                                   if (puzzle.moves == puzzle.maxMoves &&
-                                      puzzle.maxMoves > 3) {
+                                      puzzle.maxMoves > 2) {
                                     showGadgetPopup(
                                         context,
                                         'Moves',
@@ -908,6 +891,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                         handleWatchAdForMoves,
                                         [Colors.indigo, Colors.indigoAccent],
                                         false);
+                                  } else if (puzzle.maxMoves == puzzle.moves &&
+                                      tutorialActive) {
+                                    showResetGadgetHint = true;
                                   }
                                 }
                               }
@@ -972,6 +958,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         return CustomActionButton(
                           icon: Icons.lightbulb,
                           onPressed: () async {
+                            if (currentTutorialStep == TutorialStep.step5) {
+                              changeTextStep5 = true;
+                            }
                             if (hintsProvider.hints > 0) {
                               bool hintUsed = await puzzle.getHint();
                               if (hintUsed) {
@@ -995,13 +984,12 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                               hintsProvider.hints, // Number of hints available
                           gradientColors: const [Colors.amber, Colors.orange],
                           iconColor: Colors.white,
-                          borderColor:
-                              currentTutorialStep == TutorialStep.step5 &&
-                                      tutorialActive
-                                  ? Colors.red
-                                  : Colors.transparent,
+                          blink: currentTutorialStep == TutorialStep.step5 &&
+                              !changeTextStep5,
+                          borderColor: Colors.transparent,
                         );
                       }),
+                      /*
                       Consumer<RemsProvider>(
                           builder: (context, remsProvider, child) {
                         return CustomActionButton(
@@ -1037,16 +1025,23 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                             Color.fromARGB(255, 255, 0, 81)
                           ],
                           iconColor: Colors.white,
+                          blink:
+                              currentTutorialStep == TutorialStep.completed &&
+                                  !isRemoveTileMode,
                           borderColor: isRemoveTileMode
                               ? Colors.amber
                               : Colors.transparent,
                         );
                       }),
+                       */
                       CustomActionButton(
                         icon: Icons.undo,
                         onPressed: () {
                           if (!denyClick) {
                             puzzle.undoMove();
+                            setState(() {
+                              showResetGadgetHint = false;
+                            });
                           }
                         },
                         count: -1, // Infinite undo available
@@ -1056,6 +1051,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         ],
 
                         iconColor: Colors.white,
+                        blink: tutorialActive &&
+                            puzzle.maxMoves == puzzle.moves &&
+                            showResetGadgetHint,
                       ),
                       CustomActionButton(
                         icon: Icons.refresh,
@@ -1070,6 +1068,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                 .map((click) => List<int>.from(click))
                                 .toList();
                             puzzle.undoStack.clear();
+                            setState(() {
+                              showResetGadgetHint = false;
+                            });
                           }
                         },
                         count: -1, // Infinite refresh available
@@ -1078,6 +1079,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           Colors.deepPurpleAccent
                         ],
                         iconColor: Colors.white,
+                        blink: tutorialActive &&
+                            puzzle.maxMoves == puzzle.moves &&
+                            showResetGadgetHint,
                       ),
                     ],
                   ),
@@ -1103,29 +1107,30 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
               tutorialActive && currentTutorialStep != TutorialStep.none
                   ? Column(
-                      mainAxisAlignment:
-                          currentTutorialStep == TutorialStep.completed ||
-                                  currentTutorialStep == TutorialStep.step5
-                              ? MainAxisAlignment.start
-                              : MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         AnimatedCustomOverlay(
                           blink: currentTutorialStep == TutorialStep.step2 &&
                               tutorialActive,
-                          message: currentTutorialStep == TutorialStep.step2 &&
-                                  tutorialActive
-                              ? 'Click on the tile to change its color'
-                              : currentTutorialStep == TutorialStep.step3 &&
+                          message: showResetGadgetHint
+                              ? "You have no moves left. Use the reset or the undo gadget to try again."
+                              : currentTutorialStep == TutorialStep.step2 &&
                                       tutorialActive
-                                  ? 'Click on the tile to also change the color of its neighbours'
-                                  : currentTutorialStep == TutorialStep.step4 &&
+                                  ? 'Click on the tile to change its color'
+                                  : currentTutorialStep == TutorialStep.step3 &&
                                           tutorialActive
-                                      ? "Fill the Grid in ${puzzle.maxMoves} Step with the Color indicated! "
+                                      ? 'Click on the tile to also change the color of its neighbours'
                                       : currentTutorialStep ==
-                                                  TutorialStep.step5 &&
+                                                  TutorialStep.step4 &&
                                               tutorialActive
-                                          ? "If you struggle with the puzzle, use a hint."
-                                          : "You can also use the Colorizer, it increases a single tile by one. Try it out!",
+                                          ? "Fill the Grid with the color indicated. You have only one move!"
+                                          : currentTutorialStep ==
+                                                      TutorialStep.step5 &&
+                                                  tutorialActive
+                                              ? (changeTextStep5
+                                                  ? "Finish the level by filling the whole grid with the color indicated."
+                                                  : "If you struggle with the puzzle, use a hint. In this level you have two moves.")
+                                              : "You can also use the Colorizer, it increases a single tile by one. Try it out!",
                           onClose: () {},
                         ),
                       ],
@@ -1154,6 +1159,62 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                       if (selectedLevel < 100) {
                                         puzzle.updateWorldLevel(
                                             currentWorld, selectedLevel + 1);
+                                        if (tutorialActive == true) {
+                                          switch (currentTutorialStep) {
+                                            case TutorialStep.none:
+                                              setState(() {
+                                                tutorialActive = false;
+                                                saveTutorial(tutorialActive);
+                                              });
+                                              break;
+
+                                            case TutorialStep.step1:
+                                              setState(() {
+                                                currentTutorialStep =
+                                                    TutorialStep.step2;
+                                              });
+                                              break;
+
+                                            case TutorialStep.step2:
+                                              setState(() {
+                                                currentTutorialStep =
+                                                    TutorialStep.step3;
+                                              });
+                                              break;
+                                            case TutorialStep.step3:
+                                              setState(() {
+                                                currentTutorialStep =
+                                                    TutorialStep.step4;
+                                              });
+                                              break;
+                                            case TutorialStep.step4:
+                                              setState(() {
+                                                currentTutorialStep =
+                                                    TutorialStep.step5;
+                                              });
+                                              break;
+                                            case TutorialStep.step5:
+                                              setState(() {
+                                                currentTutorialStep =
+                                                    TutorialStep.completed;
+                                              });
+                                              break;
+
+                                            case TutorialStep.completed:
+                                              setState(() {
+                                                tutorialActive = false;
+                                                currentTutorialStep =
+                                                    TutorialStep.none;
+                                                saveTutorial(tutorialActive);
+                                              });
+                                              break;
+                                          }
+                                        }
+
+                                        //_showLevelStartInfo();
+                                        puzzle.saveTutorialStep(
+                                            currentTutorialStep);
+
                                         selectedLevel += 1;
                                         denyClick = false;
                                       }
@@ -1294,6 +1355,75 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                   puzzle.updateWorldLevel(
                                                       currentWorld,
                                                       selectedLevel + 1);
+                                                  if (tutorialActive == true) {
+                                                    switch (
+                                                        currentTutorialStep) {
+                                                      case TutorialStep.none:
+                                                        setState(() {
+                                                          tutorialActive =
+                                                              false;
+                                                          saveTutorial(
+                                                              tutorialActive);
+                                                        });
+                                                        break;
+
+                                                      case TutorialStep.step1:
+                                                        setState(() {
+                                                          currentTutorialStep =
+                                                              TutorialStep
+                                                                  .step2;
+                                                        });
+                                                        break;
+
+                                                      case TutorialStep.step2:
+                                                        setState(() {
+                                                          currentTutorialStep =
+                                                              TutorialStep
+                                                                  .step3;
+                                                          _showInfoDialogStart(
+                                                              context);
+                                                        });
+                                                        break;
+                                                      case TutorialStep.step3:
+                                                        setState(() {
+                                                          currentTutorialStep =
+                                                              TutorialStep
+                                                                  .step4;
+                                                        });
+                                                        break;
+                                                      case TutorialStep.step4:
+                                                        setState(() {
+                                                          currentTutorialStep =
+                                                              TutorialStep
+                                                                  .step5;
+                                                        });
+                                                        break;
+                                                      case TutorialStep.step5:
+                                                        setState(() {
+                                                          currentTutorialStep =
+                                                              TutorialStep
+                                                                  .completed;
+                                                        });
+                                                        break;
+
+                                                      case TutorialStep
+                                                            .completed:
+                                                        setState(() {
+                                                          tutorialActive =
+                                                              false;
+                                                          currentTutorialStep =
+                                                              TutorialStep.none;
+                                                          saveTutorial(
+                                                              tutorialActive);
+                                                        });
+                                                        break;
+                                                    }
+                                                  }
+                                                  print(currentTutorialStep);
+
+                                                  //_showLevelStartInfo();
+                                                  puzzle.saveTutorialStep(
+                                                      currentTutorialStep);
                                                   selectedLevel += 1;
                                                   denyClick = false;
                                                 }
@@ -1699,7 +1829,19 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
+                if (gadgetName == "Moves")
+                  const Text(
+                    "You ran out of moves. You can either get more or reset the grid by using the reset gadget.",
+                    style: TextStyle(
+                      color: Colors.white, // Farbe angepasst
+                      fontFamily: 'Quicksand',
+                      fontWeight: FontWeight.normal,
+                      fontSize: 15, // Größe angepasst
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                const SizedBox(height: 15),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

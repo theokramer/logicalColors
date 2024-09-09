@@ -1,4 +1,5 @@
 import 'package:color_puzzle/level_selection.dart';
+import 'package:color_puzzle/main.dart';
 import 'package:color_puzzle/wallpaper_selection.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -105,22 +106,22 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     [
       Colors.indigo,
       Colors.indigo,
+      Colors.grey,
       Colors.indigo,
       Colors.indigo,
-      Colors.indigo,
-      Colors.indigo,
-      Colors.indigo,
-      Colors.indigo,
-      Colors.indigo
+      Colors.grey,
+      Colors.grey,
+      Colors.grey,
+      Colors.grey
     ],
     [
-      Colors.grey,
-      Colors.grey,
-      Colors.grey,
+      Colors.indigo,
       Colors.grey,
       Colors.indigo,
       Colors.grey,
       Colors.grey,
+      Colors.grey,
+      Colors.indigo,
       Colors.grey,
       Colors.grey
     ],
@@ -189,6 +190,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   Widget _buildGrid() {
     return Expanded(
       child: GridView.builder(
+        physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
           crossAxisSpacing: 8.0,
@@ -200,6 +202,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           int x = index ~/ 3;
           int y = index % 3;
           Color tileColor = colors[currentWorld - 1][index];
+          Color borderColor = currentWorld == 6 || currentWorld == 5
+              ? index == 0
+                  ? Colors.red
+                  : Colors.transparent
+              : index == 4
+                  ? Colors.red
+                  : Colors.transparent;
 
           return AnimatedContainer(
             duration: const Duration(milliseconds: 400),
@@ -209,6 +218,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
+              border: Border.all(color: borderColor, width: 4),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
@@ -395,6 +405,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         onPressed: () {
           int maxLevel = puzzle.getMaxLevelForWorld(thisWorld + 1);
           selectedLevel = maxLevel;
+
           Navigator.of(context).push(
             FadePageRoute(
               page: ChangeNotifierProvider(
@@ -638,15 +649,17 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
             ),
             _buildUnlockButton(
               context,
-              'Unlock All Worlds (€2.99)',
+              'Unlock All Worlds (€1.99)',
               Colors.orangeAccent,
               () {
                 for (int i = 0; i < worlds.length; i++) {
-                  puzzle.saveWorldUnlocked(i + 1, true);
-                  puzzle.unlockWorld(i + 1);
-                  puzzle.updateWorldLevel(i + 1, 1);
-                  puzzle.saveWorldProgress(i + 1, 1);
-                  onUnlock();
+                  if (!puzzle.isWorldUnlocked(i + 1)) {
+                    puzzle.saveWorldUnlocked(i + 1, true);
+                    puzzle.unlockWorld(i + 1);
+                    puzzle.updateWorldLevel(i + 1, 1);
+                    puzzle.saveWorldProgress(i + 1, 1);
+                    onUnlock();
+                  }
 
                   // Add unlock single world logic here
                 }

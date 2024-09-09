@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:color_puzzle/hints_manager.dart';
 import 'package:color_puzzle/main_menu_screen.dart';
 import 'package:color_puzzle/puzzle_model.dart';
+import 'package:color_puzzle/puzzle_model.dart';
+import 'package:color_puzzle/puzzle_model.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -183,12 +185,16 @@ class _ShopScreenState extends State<ShopScreen> {
             _buildPageViewSection(puzzle),
             const SizedBox(height: 15),
             Expanded(child: _buildShopItemsGrid()),
-            const SafeArea(
-              child: Text(
-                "You get a free wallpaper for each purchase.",
-                style: TextStyle(color: Colors.white),
-              ),
-            )
+            if (!worlds[1].unlocked)
+              SafeArea(
+                child: Text(
+                  textAlign: TextAlign.center,
+                  worlds[1].unlocked
+                      ? ""
+                      : "With the purchase of any item in the shop, you unlock all current and future Levels in the game.",
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
+                ),
+              )
           ],
         ),
       ),
@@ -213,11 +219,11 @@ class _ShopScreenState extends State<ShopScreen> {
               });
             },
             children: [
-              if (!puzzle.isWorldUnlocked(2))
+              /*if (!puzzle.isWorldUnlocked(2))
                 Padding(
                   padding: const EdgeInsets.only(right: 6.0),
                   child: _buildUnlockAllWorlds(puzzle),
-                ),
+                ),*/
               if (!noAds)
                 Padding(
                   padding: const EdgeInsets.only(left: 6.0),
@@ -227,8 +233,8 @@ class _ShopScreenState extends State<ShopScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        if (!puzzle.isWorldUnlocked(2) && !noAds)
-          _buildPageIndicator(pageController),
+        //if (!puzzle.isWorldUnlocked(2) && !noAds)
+        //_buildPageIndicator(pageController),
       ],
     );
   }
@@ -391,7 +397,7 @@ class _ShopScreenState extends State<ShopScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding: const EdgeInsets.all(10.0),
+            padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -413,14 +419,22 @@ class _ShopScreenState extends State<ShopScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    textAlign: TextAlign.center,
+                    "Special Offer",
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _buildFeatureColumn(),
-                    const SizedBox(
-                      width: 5,
-                    ),
                     _buildItemsColumn(),
                   ],
                 ),
@@ -444,10 +458,10 @@ class _ShopScreenState extends State<ShopScreen> {
         ),
         const SizedBox(height: 16),
         const Text(
-          "Remove all ads and\nunlock all worlds",
+          "Remove all ads\nand save up a ton",
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 10.0, // Larger font size
+            fontSize: 10.5, // Larger font size
             fontWeight: FontWeight.w600,
             color: Colors.black87, // Darker text color
           ),
@@ -460,19 +474,18 @@ class _ShopScreenState extends State<ShopScreen> {
     return Column(
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _buildItem(Icons.monetization_on, '5000', Colors.black,
                 "images/coins.png"),
-            _buildItem(Icons.colorize, '8', Colors.red, ""),
+            _buildItem(Icons.colorize, '10', Colors.red, ""),
           ],
         ),
         const SizedBox(height: 23), // Adjusted spacing
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildItem(Icons.lock_open, '1-5', Colors.green, ""),
-            _buildItem(Icons.lightbulb, '3', Colors.amber, ""),
+            _buildItem(Icons.image, '3', Colors.green, ""),
+            _buildItem(Icons.lightbulb, '20', Colors.amber, ""),
           ],
         ),
       ],
@@ -486,7 +499,7 @@ class _ShopScreenState extends State<ShopScreen> {
         const Padding(
           padding: EdgeInsets.only(left: 8.0),
           child: Text(
-            '"No-Ads"-Bundle',
+            'The whole package',
             style: TextStyle(
               fontSize: 16.0, // Larger font size
               fontWeight: FontWeight.bold,
@@ -514,7 +527,7 @@ class _ShopScreenState extends State<ShopScreen> {
               ),
             ),
             child: const Text(
-              'EUR 4,99',
+              'EUR 3,99',
               style: TextStyle(
                 fontSize: 16.0, // Larger font size
                 fontWeight: FontWeight.bold,
@@ -529,8 +542,8 @@ class _ShopScreenState extends State<ShopScreen> {
 
   Widget _buildItem(IconData icon, String text, Color color, String imagePath) {
     return Container(
-      width: 95, // Slightly wider container
-      margin: const EdgeInsets.symmetric(horizontal: 5.0),
+      width: 100, // Slightly wider container
+      margin: const EdgeInsets.symmetric(horizontal: 3.0),
       padding: const EdgeInsets.all(6.0),
       decoration: BoxDecoration(
         color: const Color(0xffE0E7FF), // Updated background color
@@ -601,11 +614,11 @@ class _ShopScreenState extends State<ShopScreen> {
       //{'title': '3', 'price': '200', 'type': 0},
       //{'title': '5', 'price': '200', 'type': 1},
       {'title': '150', 'price': 'Watch Ad', 'type': 2},
-      {'title': '700', 'price': 'EUR 0,49', 'type': 2},
-      {'title': '1800', 'price': 'EUR 0,99', 'type': 2},
-      {'title': '4000', 'price': 'EUR 1,99', 'type': 2},
-      {'title': '7000', 'price': 'EUR 2,99', 'type': 2},
-      {'title': '15000', 'price': 'EUR 4,99', 'type': 2},
+      {'title': '700', 'price': 'EUR 0,99', 'type': 2},
+      {'title': '1800', 'price': 'EUR 1,99', 'type': 2},
+      {'title': '4000', 'price': 'EUR 3,99', 'type': 2},
+      {'title': '7000', 'price': 'EUR 4,99', 'type': 2},
+      {'title': '20000', 'price': 'EUR 9,99', 'type': 2},
     ];
 
     return GridView.builder(
@@ -846,7 +859,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 ),
               ),
               child: const Text(
-                'EUR 2,99',
+                'EUR 1,99',
                 style: TextStyle(
                   fontSize: 16.0, // Larger font size
                   fontWeight: FontWeight.bold,

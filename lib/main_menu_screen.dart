@@ -412,7 +412,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         ),
         onPressed: () {
           int maxLevel = puzzle.getMaxLevelForWorld(thisWorld + 1);
-          if (!worlds.last.unlocked && maxLevel > 14) {
+          if ((!worlds.last.unlocked && selectedLevel > 14) && false) {
             _showUnlockOptionsDialog(context, thisWorld, puzzle, () {});
           } else {
             selectedLevel = maxLevel;

@@ -303,7 +303,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       if (currentTutorialStep == TutorialStep.step3) {
         _showInfoDialogStart(context);
       }
-      if (!worlds.last.unlocked && selectedLevel > 14) {
+      if ((!worlds.last.unlocked && selectedLevel > 14) && false) {
         showUnlockWorldsDialog();
       }
     });
@@ -611,8 +611,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                               );
                                               break;
                                             case 'refresh':
-                                              if (!worlds.last.unlocked &&
-                                                  selectedLevel > 14) {
+                                              if ((!worlds.last.unlocked &&
+                                                      selectedLevel > 14) &&
+                                                  false) {
                                                 showUnlockWorldsDialog();
                                               } else {
                                                 if (coinProvider.coins >= 10 ||
@@ -678,8 +679,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                 ),
                                               );
                                             case 'next':
-                                              if (!worlds.last.unlocked &&
-                                                  selectedLevel > 14) {
+                                              if ((!worlds.last.unlocked &&
+                                                      selectedLevel > 14) &&
+                                                  false) {
                                                 showUnlockWorldsDialog();
                                               } else {
                                                 if (coinProvider.coins >= 100 ||
@@ -943,7 +945,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           scale: _animation,
                           child: GestureDetector(
                             onTap: () {
-                              if (!worlds.last.unlocked && selectedLevel > 14) {
+                              if ((!worlds.last.unlocked &&
+                                      selectedLevel > 14) &&
+                                  false) {
                                 showUnlockWorldsDialog();
                               } else {
                                 if (!animationStarted &&
@@ -1113,7 +1117,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         return CustomActionButton(
                           icon: Icons.lightbulb,
                           onPressed: () async {
-                            if (!worlds.last.unlocked && selectedLevel > 14) {
+                            if ((!worlds.last.unlocked && selectedLevel > 14) &&
+                                false) {
                               showUnlockWorldsDialog();
                             } else {
                               if (currentTutorialStep == TutorialStep.step5) {
@@ -1153,7 +1158,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         return CustomActionButton(
                           icon: Icons.colorize,
                           onPressed: () {
-                            if (!worlds.last.unlocked && selectedLevel > 14) {
+                            if ((!worlds.last.unlocked && selectedLevel > 14) &&
+                                false) {
                               showUnlockWorldsDialog();
                             } else {
                               if (!denyClick) {

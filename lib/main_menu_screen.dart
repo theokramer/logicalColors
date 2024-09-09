@@ -483,14 +483,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 16),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.lock_open, color: Colors.white, size: 36),
-            SizedBox(width: 8),
+            const Icon(Icons.lock_open, color: Colors.white, size: 36),
+            const SizedBox(width: 8),
             Text(
-              'Unlock',
-              style: TextStyle(
+              AppLocalizations.of(context)?.unlock ?? "Unlock",
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -650,28 +650,31 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
                       bottomLeft: Radius.circular(10),
                       bottomRight: Radius.circular(10))),
               padding: const EdgeInsets.all(16.0),
-              child: const Text(
-                'Unlocking all worlds',
-                style: TextStyle(
+              child: Text(
+                AppLocalizations.of(context)?.unlockTitle ?? "",
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(16.0),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Text(
-                'You can unlock all worlds and levels in the game, by purchasing one item in the shop.',
+                AppLocalizations.of(context)?.unlockBody ?? "",
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 18,
                   color: Colors.black87,
                 ),
               ),
             ),
             const SizedBox(height: 10),
-            _buildUnlockButton(context, "Open Shop", Colors.teal, () {
+            _buildUnlockButton(
+                context,
+                AppLocalizations.of(context)?.openShop ?? "Open Shop",
+                Colors.teal, () {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const ShopScreen(),
@@ -718,7 +721,7 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
                 Navigator.of(context).pop(); // Close dialog
               },
               child: Text(
-                'Cancel',
+                AppLocalizations.of(context)?.cancel ?? "Cancel",
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 16,

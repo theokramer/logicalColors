@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'coin_manager.dart';
 import 'puzzle_model.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class WallpaperSelectionWidget extends StatefulWidget {
   final Function(int) onWallpaperSelected;
@@ -31,11 +32,12 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Padding(
-            padding: EdgeInsets.all(16.0),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Text(
-              'Choose Wallpaper',
-              style: TextStyle(
+              AppLocalizations.of(context)?.chooseWallpaper ??
+                  "Choose Wallpaper",
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
@@ -90,7 +92,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                       child: isLocked
                           ? Center(
                               child: Text(
-                                '${(exp(index * 0.55) * 15 + index * 220 + log(index * 10000)).floor()}\nCrystals',
+                                '${(exp(index * 0.55) * 15 + index * 220 + log(index * 10000)).floor()}\n${AppLocalizations.of(context)?.crystals ?? "Crystals"}',
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   color: Colors.white,
@@ -117,7 +119,8 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                     onPressed: () {
                       _buyRandomWallpaper(context, coinProvider, puzzle);
                     },
-                    child: const Text('Get random for 2000 Crystals'),
+                    child: Text(
+                        '${AppLocalizations.of(context)?.randomCTA ?? "Get random for"} 2000 ${AppLocalizations.of(context)?.crystals ?? "Crystals"}'),
                   ),
                 ),
                 const SizedBox(
@@ -171,7 +174,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                                     .floor());
                           },
                           child: Text(
-                              'Unlock for ${(exp(index * 0.5) * 10 + index * 200 + log(index * 10000)).floor()} Crystals'),
+                              '${AppLocalizations.of(context)?.unlock ?? "Unlock"} ${AppLocalizations.of(context)?.forName ?? "for"} ${(exp(index * 0.5) * 10 + index * 200 + log(index * 10000)).floor()} ${AppLocalizations.of(context)?.crystals ?? "Crystals"}'),
                         )
                       : ElevatedButton(
                           onPressed: () {
@@ -183,7 +186,9 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                                 selectedWallpaper); // Save the selection
                             Navigator.pop(context); // Close the purchase dialog
                           },
-                          child: const Text('Select Wallpaper'),
+                          child: Text(
+                              AppLocalizations.of(context)?.selectWallpaper ??
+                                  "Select Wallpaper"),
                         ),
                   const SizedBox(
                     height: 16,

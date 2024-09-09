@@ -29,7 +29,7 @@ class LevelSelectionScreen extends StatelessWidget {
       appBar: AppBar(
         foregroundColor: Colors.white,
         title: Text(
-          'World $worldIndex Levels',
+          'World $worldIndex',
           style: const TextStyle(color: Colors.white),
         ),
         backgroundColor: worlds[worldIndex - 1].colors[1],

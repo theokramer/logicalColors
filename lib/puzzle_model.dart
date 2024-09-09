@@ -14,6 +14,8 @@ int selectedWallpaper = 0;
 
 bool noAds = false;
 
+TutorialStep currentTutorialStep = TutorialStep.step1;
+
 List<int> boughtWallpapers = [0];
 
 List<World> worlds = [
@@ -81,7 +83,7 @@ class PuzzleModel with ChangeNotifier {
   int _elapsedTime;
   int _targetColorNumber;
   int moveWhereError = -1;
-  int _coinsEarned;
+  int _CrystalsEarned;
   double countClicks = 0;
 
   final List<List<dynamic>> _undoStack = []; // Stack für Undo-Funktion
@@ -113,7 +115,7 @@ class PuzzleModel with ChangeNotifier {
             List.generate(size, (_) => List.generate(size, (_) => 1)),
         clicks = List.generate(level, (_) => []),
         savedClicks = List.generate(level, (_) => []),
-        _coinsEarned = 10,
+        _CrystalsEarned = 10,
         _targetColorNumber = 1,
         _colorMapping = {
           1: worlds[currentWorld - 1].colors[0],
@@ -135,7 +137,7 @@ class PuzzleModel with ChangeNotifier {
       _colorMapping[_targetColorNumber] ?? Colors.transparent;
   int? get hintX => _hintX;
   int? get hintY => _hintY;
-  int get coinsEarned => _coinsEarned;
+  int get CrystalsEarned => _CrystalsEarned;
 
   // Setters
   set grid(List<List<int>> newGrid) {
@@ -190,6 +192,53 @@ class PuzzleModel with ChangeNotifier {
     return prefs.getInt('wallpaper') ?? 0;
   }
 
+  Future<void> saveTutorialStep(TutorialStep step) async {
+    int stepInt = -1;
+    print(step);
+    switch (step) {
+      case TutorialStep.none:
+        stepInt = 0;
+      case TutorialStep.step1:
+        stepInt = 1;
+      case TutorialStep.step2:
+        stepInt = 2;
+      case TutorialStep.step3:
+        stepInt = 3;
+      case TutorialStep.step4:
+        stepInt = 4;
+      case TutorialStep.step5:
+        stepInt = 5;
+      case TutorialStep.completed:
+        stepInt = 6;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('tutorialStep', stepInt);
+  }
+
+  Future<TutorialStep> loadTutorialStep() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    int stepInt = prefs.getInt('tutorialStep') ?? -1;
+    switch (stepInt) {
+      case 0:
+        return TutorialStep.none;
+      case 1:
+        return TutorialStep.step1;
+      case 2:
+        return TutorialStep.step2;
+      case 3:
+        return TutorialStep.step3;
+      case 4:
+        return TutorialStep.step4;
+      case 5:
+        return TutorialStep.step5;
+      case 6:
+        return TutorialStep.completed;
+    }
+    return TutorialStep.step2;
+  }
+
   Future<void> saveBoughtWallpaper(int selectedWallpaper) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('w$selectedWallpaper', true);
@@ -223,6 +272,7 @@ class PuzzleModel with ChangeNotifier {
       world.maxLevel = await loadWorldProgress(world.id);
       world.unlocked = await loadWorldUnlocked(world.id);
       selectedWallpaper = await loadSelectedWallpaper();
+      currentTutorialStep = await loadTutorialStep();
       noAds = await loadNoAds();
       for (int i = 0; i < 30; i++) {
         if (await loadBoughtWallpaper(i)) {
@@ -274,7 +324,7 @@ class PuzzleModel with ChangeNotifier {
     int m = 1; // MaxMoves
     int startLevel = 1; // Startlevel für die aktuelle Grid-Size
 
-    if (currentWorld == 1 && level < 13) {
+    if (currentWorld == 1 && level < 19) {
       switch (level) {
         case 1:
           s = 1;
@@ -312,6 +362,30 @@ class PuzzleModel with ChangeNotifier {
           s = 3;
           m = 4;
           break;
+        case 13:
+          s = 3;
+          m = 4;
+          break;
+        case 14:
+          s = 3;
+          m = 4;
+          break;
+        case 15:
+          s = 4;
+          m = 1;
+          break;
+        case 16:
+          s = 4;
+          m = 3;
+          break;
+        case 17:
+          s = 4;
+          m = 4;
+          break;
+        case 18:
+          s = 4;
+          m = 5;
+          break;
         default:
           s = 2;
           m = 3;
@@ -320,13 +394,13 @@ class PuzzleModel with ChangeNotifier {
       return {"size": s, "maxMoves": m};
     }
 
-    while (level < 50) {
+    while (level < 37) {
       if (currentWorld == 1) {
-        int levelsForCurrentSize = ((s) * (s)).floor();
+        int levelsForCurrentSize = ((s) * (s - 0.3)).floor();
         int endLevel = startLevel + levelsForCurrentSize - 1;
 
         if (level <= endLevel) {
-          m = (1 + (log((level - startLevel) + 1) / log(1.9))).ceil();
+          m = (1 + (log((level - startLevel) + 1) / log(1.6))).ceil();
           int maxMovesForCurrentSize = (s * 1.8).floor();
           m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
           break;
@@ -350,12 +424,12 @@ class PuzzleModel with ChangeNotifier {
       }
     }
 
-    if (level >= 50) {
+    if (level >= 37) {
       s = 5;
       m = currentWorld == 1 ? 7 : 6;
       int tempLvl = level - 1;
       int set = 0;
-      while (tempLvl > 50) {
+      while (tempLvl > 37) {
         if (set == 2 || tempLvl >= 65) {
           set = 0;
           if (s > m - 5 && s > 4) {
@@ -392,8 +466,8 @@ class PuzzleModel with ChangeNotifier {
     initializeProgress(); // Lade den Fortschritt
   }
 
-  Future<void> addCoins(int amount) async {
-    await CoinManager.addCoins(amount);
+  Future<void> addCrystals(int amount) async {
+    await CoinManager.addCrystals(amount);
     notifyListeners();
   }
 
@@ -412,9 +486,9 @@ class PuzzleModel with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> subtractCoins(int amount) async {
-    await CoinManager.subtractCoins(amount);
-    if (await CoinManager.loadCoins() < 0) await CoinManager.saveCoins(0);
+  Future<void> subtractCrystals(int amount) async {
+    await CoinManager.subtractCrystals(amount);
+    if (await CoinManager.loadCrystals() < 0) await CoinManager.saveCrystals(0);
     notifyListeners();
   }
 
@@ -430,25 +504,24 @@ class PuzzleModel with ChangeNotifier {
     notifyListeners();
   }
 
-  int calculateCoinsEarned(
+  int calculateCrystalsEarned(
       int maxMoves, int size, int selectedLevel, int worldID) {
-    double difficulty = calculateDifficulty(maxMoves, size) * 6;
+    double difficulty = calculateDifficulty(maxMoves, size) * 8;
 
     // Skaliere die Schwierigkeit stärker für höhere Belohnungen
     num difficultyWeight = difficulty > 1 ? pow(difficulty, 2) : difficulty;
 
-    // Dynamische Anpassung der Coins-Belohnung basierend auf Level und Schwierigkeit
-    double baseCoins = difficultyWeight * 2; // Grundwert pro Schwierigkeit
+    // Dynamische Anpassung der Crystals-Belohnung basierend auf Level und Schwierigkeit
+    double baseCrystals = difficultyWeight * 2; // Grundwert pro Schwierigkeit
     double levelFactor =
         log(selectedLevel); // sorgt für geringeren Einfluss bei kleinen Levels
 
-    // Endberechnung der Coins mit minimalen und maximalen Grenzen
-    int coinsEarned =
-        (((baseCoins + levelFactor)) + ((baseCoins + levelFactor) * 0.2))
-            .clamp(1, 1000)
-            .ceil(); // z.B. Mindestwert 1, Maximalwert 1000
+    // Endberechnung der Crystals mit minimalen und maximalen Grenzen
+    int CrystalsEarned = ((baseCrystals + levelFactor) * 0.5 + 15)
+        .clamp(1, 1000)
+        .ceil(); // z.B. Mindestwert 1, Maximalwert 1000
 
-    return coinsEarned;
+    return CrystalsEarned;
   }
 
   void _initializeGrid() {
@@ -456,14 +529,14 @@ class PuzzleModel with ChangeNotifier {
         _random.nextInt(3) + 1; // Target color number to achieve
     setTargetColor(_targetColorNumber);
     if (worlds[currentWorld - 1].maxLevel <= selectedLevel) {
-      _coinsEarned =
-          calculateCoinsEarned(maxMoves, size, selectedLevel, currentWorld);
-      //_coinsEarned = ((calculateDifficulty(maxMoves, size) * 100 + (selectedLevel * 0.3)) * 0.5).ceil();
+      _CrystalsEarned =
+          calculateCrystalsEarned(maxMoves, size, selectedLevel, currentWorld);
+      //_CrystalsEarned = ((calculateDifficulty(maxMoves, size) * 100 + (selectedLevel * 0.3)) * 0.5).ceil();
     } else {
-      //!Temp
-      _coinsEarned =
-          calculateCoinsEarned(maxMoves, size, selectedLevel, currentWorld);
-      //_coinsEarned = 5;
+      //? Auskommentieren, wenn mehr Crystals in abgeschlossenen Levels gewünscht
+      //_CrystalsEarned =
+      //calculateCrystalsEarned(maxMoves, size, selectedLevel, currentWorld);
+      _CrystalsEarned = 5;
     }
     // Initialize the grid with the target color
     for (int i = 0; i < size; i++) {
@@ -473,40 +546,49 @@ class PuzzleModel with ChangeNotifier {
     }
 
     List<Click> positions = [];
-
-    // Create random moves and store them in the clicks list
-    for (int i = 0; i < _maxMoves; i++) {
-      var x = _randomPositionNumber();
-      var y = _randomPositionNumber();
-      int count = 0;
-      bool works = false;
-      while (works == false) {
-        count = 0;
-        for (int i = 0; i < positions.length; i++) {
-          if (positions[i].x == x && positions[i].y == y) {
-            count++;
+    if (currentTutorialStep == TutorialStep.completed) {
+      if (targetColorNumber != 1) {
+        grid[0][0] = targetColorNumber - 1;
+      } else {
+        grid[0][0] = 3;
+      }
+      _maxMoves = 0;
+    } else {
+// Create random moves and store them in the clicks list
+      for (int i = 0; i < _maxMoves; i++) {
+        var x = _randomPositionNumber();
+        var y = _randomPositionNumber();
+        int count = 0;
+        bool works = false;
+        while (works == false) {
+          count = 0;
+          for (int i = 0; i < positions.length; i++) {
+            if (positions[i].x == x && positions[i].y == y) {
+              count++;
+            }
+          }
+          if (count < 2) {
+            works = true;
+          } else {
+            x = _randomPositionNumber();
+            y = _randomPositionNumber();
           }
         }
-        if (count < 2) {
-          works = true;
-        } else {
-          x = _randomPositionNumber();
-          y = _randomPositionNumber();
+        positions.add(Click(x: x, y: y));
+
+        clickTile(x, y, true, false);
+        clicks[i] = [x, y];
+        savedClicks[i] = [x, y]; // Deep copy the individual list
+        if (tutorialActive &&
+            currentTutorialStep != TutorialStep.step4 &&
+            currentTutorialStep != TutorialStep.step5 &&
+            currentTutorialStep != TutorialStep.completed &&
+            currentTutorialStep != TutorialStep.none) {
+          setHint(x, y);
         }
       }
-      positions.add(Click(x: x, y: y));
-
-      clickTile(x, y, true, false);
-      clicks[i] = [x, y];
-      savedClicks[i] = [x, y]; // Deep copy the individual list
-      if (tutorialActive &&
-          currentTutorialStep != TutorialStep.step4 &&
-          currentTutorialStep != TutorialStep.step5 &&
-          currentTutorialStep != TutorialStep.completed &&
-          currentTutorialStep != TutorialStep.none) {
-        setHint(x, y);
-      }
     }
+
     //_maxMoves *= 2;
     // Save the current state of the grid
     for (int i = 0; i < size; i++) {
@@ -536,9 +618,9 @@ class PuzzleModel with ChangeNotifier {
             var hint = clicks[0];
             setHint(hint[0], hint[1]); // Set hint coordinates
           } else {
-            if (await CoinManager.loadCoins() >= 50) {
+            if (await CoinManager.loadCrystals() >= 50) {
               gotHint = true;
-              subtractCoins(50);
+              subtractCrystals(50);
 
               var hint = clicks[0];
               setHint(hint[0], hint[1]); // Set hint coordinates
@@ -588,10 +670,9 @@ class PuzzleModel with ChangeNotifier {
     }
 
     bool found = false;
-
+    List<int>? removedHint;
     if (!reversed && !oneTile) {
       // Save the removed hint for undo functionality
-      List<int>? removedHint;
 
       // Remove the clicked tile from the clicks list
       for (int i = 0; i < clicks.length; i++) {
@@ -604,7 +685,7 @@ class PuzzleModel with ChangeNotifier {
       }
 
       // Save the action to the undo stack with removed hint information
-      _undoStack.add([x, y, currentColorNumber, removedHint]);
+      _undoStack.add([x, y, currentColorNumber, removedHint, false]);
 
       if (!found && moveWhereError == -1) {
         moveWhereError = moves;
@@ -615,6 +696,9 @@ class PuzzleModel with ChangeNotifier {
       }
 
       _moves++;
+    }
+    if (oneTile) {
+      _undoStack.add([x, y, currentColorNumber, removedHint, true]);
     }
 
     _changeColor(x, y, newColorNumber, reversed, oneTile);
@@ -629,12 +713,16 @@ class PuzzleModel with ChangeNotifier {
     List<dynamic> lastAction = _undoStack.removeLast();
     int x = lastAction[0];
     int y = lastAction[1];
+    bool oneTile = lastAction[4] ?? false;
     //int oldColorNumber = lastAction[2];
     List<int>? removedHint = lastAction.length > 3 ? lastAction[3] : null;
 
     // Reverse the move
-    _moves--;
-    clickTile(x, y, true, false);
+    if (!oneTile) {
+      _moves--;
+    }
+
+    clickTile(x, y, true, oneTile);
 
     // If there was a removed hint, reinsert it back to the clicks list
     if (removedHint != null) {

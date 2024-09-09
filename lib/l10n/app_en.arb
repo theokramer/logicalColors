@@ -1,0 +1,17 @@
+{
+  "world": "World",
+  "play": "Play",
+  "fill": "Fill",
+  "moves": "Moves",
+  "difficulty": "Difficulty",
+  "unlock": "Unlock",
+  "unlockTitle": "Unlocking all worlds",
+  "unlockBody": "You can unlock all worlds and levels in the game, by purchasing one item in the shop.",
+  "cancel": "Cancel",
+  "openShop": "Open Shop",
+  "chooseWallpaper": "Choose Wallpaper",
+  "crystals": "Crystals",
+  "randomCTA": "Get random for",
+  "forName": "for",
+  "selectWallpaper": "Select Wallpaper"
+}

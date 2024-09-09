@@ -1,3 +1,4 @@
+import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 
 double calculateDifficulty(int maxMoves, int gridSize) {

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'coin_manager.dart';
 import 'puzzle_model.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class WallpaperSelectionWidget extends StatefulWidget {
   final Function(int) onWallpaperSelected;
@@ -31,11 +32,12 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Padding(
-            padding: EdgeInsets.all(16.0),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Text(
-              'Choose Wallpaper',
-              style: TextStyle(
+              AppLocalizations.of(context)?.chooseWallpaper ??
+                  "Choose Wallpaper",
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
@@ -74,7 +76,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                           color: selectedWallpaper == index
                               ? Colors.green
                               : Colors.transparent,
-                          width: 3,
+                          width: 5,
                         ),
                         image: DecorationImage(
                           image: AssetImage("images/w$index.jpg"),
@@ -90,7 +92,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                       child: isLocked
                           ? Center(
                               child: Text(
-                                '${(log(index * 10000) * index * 50).floor()}\nCoins',
+                                '${(exp(index * 0.55) * 15 + index * 220 + log(index * 10000)).floor()}\n${AppLocalizations.of(context)?.crystals ?? "Crystals"}',
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   color: Colors.white,
@@ -105,6 +107,27 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
               },
             ),
           ),
+          if (boughtWallpapers.length < 14)
+            Column(
+              children: [
+                const SizedBox(
+                  height: 16,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _buyRandomWallpaper(context, coinProvider, puzzle);
+                    },
+                    child: Text(
+                        '${AppLocalizations.of(context)?.randomCTA ?? "Get random for"} 2000 ${AppLocalizations.of(context)?.crystals ?? "Crystals"}'),
+                  ),
+                ),
+                const SizedBox(
+                  height: 16,
+                ),
+              ],
+            )
         ],
       ),
     );
@@ -120,44 +143,58 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
             borderRadius: BorderRadius.circular(20),
           ),
           elevation: 16,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Stack(
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  image: DecorationImage(
-                    image: AssetImage("images/w$index.jpg"),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                height: 500,
-                width: 300,
-              ),
-              const SizedBox(height: 16),
-              isLocked
-                  ? ElevatedButton(
-                      onPressed: () {
-                        _unlockWallpaper(context, index, coinProvider, puzzle);
-                      },
-                      child: Text(
-                          'Unlock for ${(log(index * 10000) * index * 50).floor()} coins'),
-                    )
-                  : ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          selectedWallpaper = index;
-                        });
-                        puzzle.saveSelectedWallpaper(selectedWallpaper);
-                        Navigator.pop(context); // Close the dialog
-                        Navigator.pop(
-                            context); // Close the wallpaper selection dialog
-                      },
-                      child: const Text('Select Wallpaper'),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      image: DecorationImage(
+                        image: AssetImage("images/w$index.jpg"),
+                        fit: BoxFit.cover,
+                      ),
                     ),
-              const SizedBox(
-                height: 16,
-              )
+                    height: 500,
+                    width: 300,
+                  ),
+                  const SizedBox(height: 16),
+                  isLocked
+                      ? ElevatedButton(
+                          onPressed: () {
+                            unlockWallpaper(
+                                context,
+                                index,
+                                coinProvider,
+                                puzzle,
+                                (exp(index * 0.5) * 10 +
+                                        index * 200 +
+                                        log(index * 10000))
+                                    .floor());
+                          },
+                          child: Text(
+                              '${AppLocalizations.of(context)?.unlock ?? "Unlock"} ${AppLocalizations.of(context)?.forName ?? "for"} ${(exp(index * 0.5) * 10 + index * 200 + log(index * 10000)).floor()} ${AppLocalizations.of(context)?.crystals ?? "Crystals"}'),
+                        )
+                      : ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              // Unlock the wallpaper logic here
+                              selectedWallpaper = index;
+                            });
+                            puzzle.saveSelectedWallpaper(
+                                selectedWallpaper); // Save the selection
+                            Navigator.pop(context); // Close the purchase dialog
+                          },
+                          child: Text(
+                              AppLocalizations.of(context)?.selectWallpaper ??
+                                  "Select Wallpaper"),
+                        ),
+                  const SizedBox(
+                    height: 16,
+                  )
+                ],
+              ),
             ],
           ),
         );
@@ -165,12 +202,32 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
     );
   }
 
-  void _unlockWallpaper(BuildContext context, int index,
-      CoinProvider coinProvider, PuzzleModel puzzle) {
-    int wallpaperCost = (log(index * 10000) * index * 50).floor();
+  void _buyRandomWallpaper(
+      BuildContext context, CoinProvider coinProvider, PuzzleModel puzzle) {
+    const int wallpaperCost = 2000;
 
-    if (coinProvider.coins >= wallpaperCost) {
-      coinProvider.subtractCoins(wallpaperCost); // Deduct coins
+    // Select a random wallpaper
+    int totalWallpapers = 14; // Assuming there are 14 wallpapers
+    int randomWallpaperIndex = Random().nextInt(totalWallpapers);
+
+    // Ensure the random wallpaper hasn't been bought already
+    while (boughtWallpapers.contains(randomWallpaperIndex)) {
+      randomWallpaperIndex = Random().nextInt(totalWallpapers);
+    }
+
+    unlockWallpaper(
+        context, randomWallpaperIndex, coinProvider, puzzle, wallpaperCost);
+  }
+
+  void unlockWallpaper(
+    BuildContext context,
+    int index,
+    CoinProvider coinProvider,
+    PuzzleModel puzzle,
+    int wallpaperCost,
+  ) {
+    if (coinProvider.Crystals >= wallpaperCost) {
+      coinProvider.subtractCrystals(wallpaperCost); // Deduct Crystals
       setState(() {
         // Unlock the wallpaper logic here
         selectedWallpaper = index;

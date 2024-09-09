@@ -15,11 +15,17 @@ import 'puzzle_screen.dart'; // Import your screen
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MobileAds.instance.initialize();
+
   int maxLevel = await loadWorldProgress(
       currentWorld); // Load progress for the current world
   tutorialActive = await loadTutorial();
   selectedLevel = maxLevel;
   runApp(MyApp(maxLevel: maxLevel));
+}
+
+int maxWorld() {
+  for (int i = worlds.length; i > 0; i--) {}
+  return 0;
 }
 
 Future<bool> loadTutorial() async {

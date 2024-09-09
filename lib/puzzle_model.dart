@@ -506,7 +506,7 @@ class PuzzleModel with ChangeNotifier {
 
   int calculateCoinsEarned(
       int maxMoves, int size, int selectedLevel, int worldID) {
-    double difficulty = calculateDifficulty(maxMoves, size) * 6;
+    double difficulty = calculateDifficulty(maxMoves, size) * 9;
 
     // Skaliere die Schwierigkeit stärker für höhere Belohnungen
     num difficultyWeight = difficulty > 1 ? pow(difficulty, 2) : difficulty;
@@ -517,10 +517,9 @@ class PuzzleModel with ChangeNotifier {
         log(selectedLevel); // sorgt für geringeren Einfluss bei kleinen Levels
 
     // Endberechnung der Coins mit minimalen und maximalen Grenzen
-    int coinsEarned =
-        (((baseCoins + levelFactor)) + ((baseCoins + levelFactor) * 0.4))
-            .clamp(1, 1000)
-            .ceil(); // z.B. Mindestwert 1, Maximalwert 1000
+    int coinsEarned = ((baseCoins + levelFactor) * 0.6 + 15)
+        .clamp(1, 1000)
+        .ceil(); // z.B. Mindestwert 1, Maximalwert 1000
 
     return coinsEarned;
   }

@@ -54,7 +54,7 @@ class _ShopScreenState extends State<ShopScreen> {
     int type = item['type'] as int;
     int value = int.parse(item['title'] as String);
     int costs = 0;
-    if (item['price'] == "Gratis" || type == 2) {
+    if (item['price'] == "Gratis" || type == 2 || type == 0 || type == 1) {
       costs = 0;
     } else {
       costs = int.parse(item['price'] as String);
@@ -70,21 +70,19 @@ class _ShopScreenState extends State<ShopScreen> {
       _loadRewardedAd();
     }
     if (type == 2 && item['price'] != "Watch Ad") {
-      addCoins(value);
       _showPurchaseDialog(
           context, 'Coins purchased', value, puzzle, false); // Zeige Pop-Up an
     }
-    if (type == 0 && await CoinManager.loadCoins() > costs) {
+    if (type == 0) {
       addHints(value);
-      subtractCoins(costs);
+
       _showPurchaseDialog(
-          context, 'Hints purchased', value, puzzle, true); // Zeige Pop-Up an
+          context, 'Hints purchased', value, puzzle, false); // Zeige Pop-Up an
     }
-    if (type == 1 && await CoinManager.loadCoins() > costs) {
+    if (type == 1) {
       addRems(value);
-      subtractCoins(costs);
       _showPurchaseDialog(context, 'Colorizer purchased', value, puzzle,
-          true); // Zeige Pop-Up an
+          false); // Zeige Pop-Up an
     }
   }
 
@@ -189,9 +187,12 @@ class _ShopScreenState extends State<ShopScreen> {
               SafeArea(
                 child: Text(
                   textAlign: TextAlign.center,
-                  worlds[1].unlocked
-                      ? ""
-                      : "With the purchase of any item in the shop, you unlock all current and future Levels in the game.",
+                  //worlds[1].unlocked
+                  // ? ""
+                  // : "With the purchase of any item in the shop, you unlock all current and future Levels in the game.",
+                  (boughtWallpapers.length < 14)
+                      ? "You get a free wallpaper for each purchase."
+                      : "",
                   style: const TextStyle(color: Colors.white, fontSize: 15),
                 ),
               )
@@ -210,7 +211,7 @@ class _ShopScreenState extends State<ShopScreen> {
       children: [
         SizedBox(
           height:
-              !puzzle.isWorldUnlocked(2) || !noAds ? 65 : 0, // Adjust as needed
+              !puzzle.isWorldUnlocked(2) || !noAds ? 78 : 0, // Adjust as needed
           child: PageView(
             controller: pageController,
             onPageChanged: (index) {
@@ -262,11 +263,10 @@ class _ShopScreenState extends State<ShopScreen> {
       PuzzleModel puzzle, bool ad) {
     final Random random = Random();
 
-    int newWallpaper = random.nextInt(12);
-    print(boughtWallpapers);
-    if (boughtWallpapers.length < 11) {
+    int newWallpaper = random.nextInt(14);
+    if (boughtWallpapers.length < 14) {
       while (boughtWallpapers.contains(newWallpaper)) {
-        newWallpaper = random.nextInt(12);
+        newWallpaper = random.nextInt(14);
       }
       if (!boughtWallpapers.contains(newWallpaper) && !ad) {
         boughtWallpapers.add(newWallpaper);
@@ -316,13 +316,13 @@ class _ShopScreenState extends State<ShopScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    amount == 3
+                    title == "Hints purchased"
                         ? const Icon(
                             Icons.lightbulb,
                             size: 50,
                             color: Colors.amber,
                           )
-                        : amount == 5
+                        : title == "Colorizer purchased"
                             ? const Icon(Icons.colorize,
                                 size: 50, color: Colors.redAccent)
                             : Image.asset(
@@ -357,7 +357,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    addCoins(amount);
+                    if (title == "Coins purchased") addCoins(amount);
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
@@ -430,7 +430,7 @@ class _ShopScreenState extends State<ShopScreen> {
                         fontWeight: FontWeight.bold),
                   ),
                 ),*/
-                const SizedBox(height: 8),
+                const SizedBox(height: 3),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -438,7 +438,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     _buildItemsColumn(),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 3),
               ],
             ),
           ),
@@ -450,23 +450,26 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 
   Widget _buildFeatureColumn() {
-    return Column(
-      children: [
-        Image.asset(
-          "images/no_ads_black.png", // Ensure correct asset path
-          height: 65, // Slightly larger image
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          "Remove all ads\nand save up a ton",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 10.5, // Larger font size
-            fontWeight: FontWeight.w600,
-            color: Colors.black87, // Darker text color
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0),
+      child: Column(
+        children: [
+          Image.asset(
+            "images/no_ads_black.png", // Ensure correct asset path
+            height: 65, // Slightly larger image
           ),
-        ),
-      ],
+          const SizedBox(height: 5),
+          const Text(
+            "Removes all ads.\nYou can still watch\nads for rewards.",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 10, // Larger font size
+              fontWeight: FontWeight.w600,
+              color: Colors.black87, // Darker text color
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -475,9 +478,9 @@ class _ShopScreenState extends State<ShopScreen> {
       children: [
         Row(
           children: [
-            _buildItem(Icons.monetization_on, '5000', Colors.black,
+            _buildItem(Icons.monetization_on, '7000', Colors.black,
                 "images/coins.png"),
-            _buildItem(Icons.colorize, '10', Colors.red, ""),
+            _buildItem(Icons.colorize, '20', Colors.red, ""),
           ],
         ),
         const SizedBox(height: 23), // Adjusted spacing
@@ -485,7 +488,7 @@ class _ShopScreenState extends State<ShopScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _buildItem(Icons.image, '3', Colors.green, ""),
-            _buildItem(Icons.lightbulb, '20', Colors.amber, ""),
+            _buildItem(Icons.lightbulb, '30', Colors.amber, ""),
           ],
         ),
       ],
@@ -499,9 +502,9 @@ class _ShopScreenState extends State<ShopScreen> {
         const Padding(
           padding: EdgeInsets.only(left: 8.0),
           child: Text(
-            'Starter Bundle',
+            '"No ads"-Bundle',
             style: TextStyle(
-              fontSize: 16.0, // Larger font size
+              fontSize: 20.0, // Larger font size
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -542,7 +545,7 @@ class _ShopScreenState extends State<ShopScreen> {
 
   Widget _buildItem(IconData icon, String text, Color color, String imagePath) {
     return Container(
-      width: 100, // Slightly wider container
+      width: 95, // Slightly wider container
       margin: const EdgeInsets.symmetric(horizontal: 3.0),
       padding: const EdgeInsets.all(6.0),
       decoration: BoxDecoration(
@@ -562,7 +565,7 @@ class _ShopScreenState extends State<ShopScreen> {
           imagePath == ""
               ? Icon(
                   icon,
-                  size: 24, // Larger icon size
+                  size: 22, // Larger icon size
                   color: color, // Updated icon color
                 )
               : Image.asset(
@@ -575,7 +578,7 @@ class _ShopScreenState extends State<ShopScreen> {
           Text(
             text,
             style: const TextStyle(
-              fontSize: 16, // Larger font size
+              fontSize: 15, // Larger font size
               fontWeight: FontWeight.bold,
               color: Colors.black87, // Darker text color
               letterSpacing: 0.5,
@@ -611,15 +614,15 @@ class _ShopScreenState extends State<ShopScreen> {
     final puzzle = Provider.of<PuzzleModel>(context);
     final items = [
       //{'title': '1', 'price': 'Gratis!', 'type': 0},
-      // {'title': '3', 'price': '200', 'type': 0},
-      // {'title': '10', 'price': '500', 'type': 0},
-      // {'title': '30', 'price': '1000', 'type': 0},
+      {'title': '10', 'price': 'EUR 0,49', 'type': 1},
+      {'title': '15', 'price': 'EUR 0,49', 'type': 0},
+      {'title': '40', 'price': 'EUR 0,99', 'type': 0},
       {'title': '150', 'price': 'Watch Ad', 'type': 2},
-      {'title': '700', 'price': 'EUR 0,99', 'type': 2},
-      {'title': '1800', 'price': 'EUR 1,99', 'type': 2},
-      {'title': '4000', 'price': 'EUR 3,99', 'type': 2},
-      {'title': '7000', 'price': 'EUR 4,99', 'type': 2},
-      {'title': '20000', 'price': 'EUR 9,99', 'type': 2},
+      {'title': '700', 'price': 'EUR 0,49', 'type': 2},
+      {'title': '1800', 'price': 'EUR 0,99', 'type': 2},
+      {'title': '4000', 'price': 'EUR 1,99', 'type': 2},
+      {'title': '9000', 'price': 'EUR 3,99', 'type': 2},
+      {'title': '30000', 'price': 'EUR 7,99', 'type': 2},
     ];
 
     return GridView.builder(
@@ -692,7 +695,7 @@ class _ShopScreenState extends State<ShopScreen> {
                           ? const Icon(
                               Icons.lightbulb,
                               size: 40,
-                              color: Colors.black,
+                              color: Colors.amber,
                             )
                           : type == 1
                               ? const Icon(
@@ -735,13 +738,13 @@ class _ShopScreenState extends State<ShopScreen> {
                           width: 8,
                         )
                       : const SizedBox(),
-                  (type == 0 || type == 1) && price != 'Gratis!'
+                  /*(type == 0 || type == 1) && price != 'Gratis!'
                       ? Image.asset(
                           title == '150' || title == '700'
                               ? "images/coins_less.png"
                               : "images/coins.png",
                           height: 15)
-                      : const SizedBox(),
+                      : const SizedBox(),*/
                 ],
               ),
             ],
@@ -756,7 +759,7 @@ class _ShopScreenState extends State<ShopScreen> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
+                  padding: const EdgeInsets.only(top: 12.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -766,10 +769,10 @@ class _ShopScreenState extends State<ShopScreen> {
                             child: SizedBox(
                                 width: 50,
                                 height:
-                                    title == '150' || title == '700' ? 80 : 50,
+                                    title == '150' || title == '700' ? 45 : 45,
                                 child: Image.asset(
                                     title == '150' || title == '700'
-                                        ? "images/coins_less.png"
+                                        ? "images/coins.png"
                                         : "images/coins.png",
                                     height: 100)),
                           ),
@@ -878,7 +881,7 @@ class _ShopScreenState extends State<ShopScreen> {
 
   Widget _buildNoAdsBundleSection(PuzzleModel puzzle) {
     return Container(
-      padding: const EdgeInsets.only(left: 10.0, top: 10, bottom: 10),
+      padding: const EdgeInsets.only(left: 10.0),
       decoration: BoxDecoration(
         color: Colors.purple,
         borderRadius: BorderRadius.circular(20.0),
@@ -890,74 +893,81 @@ class _ShopScreenState extends State<ShopScreen> {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: Row(
-              children: [
-                Image.asset(
-                  "images/no_ads.png", // Ensure correct asset path
-                  height: 60, // Slightly larger image
-                ),
-                const SizedBox(
-                  width: 12,
-                ),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 2),
+                child: Row(
                   children: [
-                    Text(
-                      'No ads',
-                      style: TextStyle(
-                        fontSize: 20.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    Image.asset(
+                      "images/no_ads.png", // Ensure correct asset path
+                      height: 55, // Slightly larger image
                     ),
-                    Text(
-                      'Removes all ads.',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white70,
-                      ),
+                    const SizedBox(
+                      width: 15,
+                    ),
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'No ads',
+                          style: TextStyle(
+                            fontSize: 20.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          'Removes all ads. You can\nstill watch ads for rewards.',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                puzzle.saveNoAds(true);
-                noAds = true;
-                Navigator.of(context).pushReplacement(
-                  FadePageRoute(
-                    page: const MainMenuScreen(),
+              ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    puzzle.saveNoAds(true);
+                    noAds = true;
+                    Navigator.of(context).pushReplacement(
+                      FadePageRoute(
+                        page: const MainMenuScreen(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+                    backgroundColor:
+                        Colors.green[500], // Button background color
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(12.0), // Rounded corners
+                    ),
                   ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-                backgroundColor: Colors.green[500], // Button background color
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0), // Rounded corners
+                  child: const Text(
+                    'EUR 2,99',
+                    style: TextStyle(
+                      fontSize: 16.0, // Larger font size
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white, // Text color matching button border
+                    ),
+                  ),
                 ),
               ),
-              child: const Text(
-                'EUR 2,99',
-                style: TextStyle(
-                  fontSize: 16.0, // Larger font size
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white, // Text color matching button border
-                ),
-              ),
-            ),
+            ],
           ),
         ],
       ),

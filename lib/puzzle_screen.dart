@@ -448,16 +448,17 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   }
 
   Future<void> handleBuyHint() async {
-    if (await CoinManager.loadCoins() >= 200) {
+    /*if (await CoinManager.loadCoins() >= 200) {
       subtractCoins(200);
-      addHints(3);
-    } else {}
+      
+    } else {}*/
+    addHints(3);
     Navigator.pop(context);
   }
 
   Future<void> handleBuyMoves() async {
-    if (await CoinManager.loadCoins() >= 200) {
-      subtractCoins(200);
+    if (await CoinManager.loadCoins() >= 150) {
+      subtractCoins(150);
       addMoves(3);
     } else {}
     Navigator.pop(context);
@@ -507,12 +508,13 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   }
 
   Future<void> handleBuyRem() async {
-    if (await CoinManager.loadCoins() >= 200) {
+    /*if (await CoinManager.loadCoins() >= 200) {
       subtractCoins(200);
-      addRems(5);
+      
     } else {
       // Handle not enough coins
-    }
+    }*/
+    addRems(5);
     Navigator.pop(context);
   }
 
@@ -1039,21 +1041,20 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                     });
                                   } else {
                                     HapticFeedback.selectionClick();
-                                    if (puzzle.moves == puzzle.maxMoves &&
-                                        puzzle.maxMoves > 2) {
-                                      showGadgetPopup(
-                                          context,
-                                          'Moves',
-                                          handleBuyMoves,
-                                          handleWatchAdForMoves,
-                                          [Colors.indigo, Colors.indigoAccent],
-                                          false);
-                                    } else if (puzzle.maxMoves ==
-                                            puzzle.moves &&
-                                        tutorialActive) {
-                                      showResetGadgetHint = true;
-                                    }
                                   }
+                                }
+                                if (puzzle.moves == puzzle.maxMoves &&
+                                    puzzle.maxMoves > 2) {
+                                  showGadgetPopup(
+                                      context,
+                                      'Moves',
+                                      handleBuyMoves,
+                                      handleWatchAdForMoves,
+                                      [Colors.indigo, Colors.indigoAccent],
+                                      false);
+                                } else if (puzzle.maxMoves == puzzle.moves &&
+                                    tutorialActive) {
+                                  showResetGadgetHint = true;
                                 }
                               }
                             },
@@ -1253,7 +1254,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                     ],
                   ),
                   SizedBox(
-                    height: !noAds && _isBannerAdReady ? 80 : 0,
+                    height: !noAds && _isBannerAdReady ? 55 : 0,
                   )
                 ],
               ),
@@ -1983,8 +1984,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Container(
             padding: const EdgeInsets.all(25),
-            height: 400, // Höhe angepasst
-            width: MediaQuery.of(context).size.width * 0.75, // Breite angepasst
+            height: 450, // Adjust height
+            width: MediaQuery.of(context).size.width * 0.75,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -1993,25 +1994,28 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                       ? "Get more $gadgetName with a 200 Coins discount"
                       : 'Get more $gadgetName',
                   style: const TextStyle(
-                    color: Colors.white, // Farbe angepasst
+                    color: Colors.white,
                     fontFamily: 'Quicksand',
                     fontWeight: FontWeight.bold,
-                    fontSize: 22, // Größe angepasst
+                    fontSize: 22,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 10),
-                if (gadgetName == "Moves")
-                  const Text(
-                    "You ran out of moves. You can either get more or reset the grid by using the reset gadget.",
-                    style: TextStyle(
-                      color: Colors.white, // Farbe angepasst
-                      fontFamily: 'Quicksand',
-                      fontWeight: FontWeight.normal,
-                      fontSize: 15, // Größe angepasst
-                    ),
-                    textAlign: TextAlign.center,
+                Text(
+                  gadgetName == "Colorizer"
+                      ? "Choose how to get your Colorizer"
+                      : gadgetName == "Hints"
+                          ? "Choose how to get your Hints"
+                          : "Choose how to get your Moves",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'Quicksand',
+                    fontWeight: FontWeight.normal,
+                    fontSize: 15,
                   ),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 15),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -2019,19 +2023,17 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                     Icon(
                       gadgetName == "Colorizer"
                           ? Icons.colorize
-                          : gadgetName == "Moves"
-                              ? Icons.bolt
-                              : Icons.lightbulb,
-                      size: 60, // Größe des Icons
-                      color: gradientColors.first, // Farbe des Icons
+                          : gadgetName == "Hints"
+                              ? Icons.lightbulb
+                              : Icons.bolt,
+                      size: 60,
+                      color: gradientColors.first,
                     ),
                     const SizedBox(
                       width: 25,
                     ),
                     Text(
-                      gadgetName == "Colorizer"
-                          ? 'x5'
-                          : 'x3', // Anzahl der Aktionen
+                      gadgetName == "Moves" ? "x3" : gadgetName,
                       style: TextStyle(
                         color: gradientColors.first,
                         fontFamily: 'Quicksand',
@@ -2051,11 +2053,18 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         Navigator.of(context).pop();
                       },
                       icon: const Icon(Icons.play_circle_fill),
-                      label: const Text(
-                        'Watch Ad',
-                        style: TextStyle(
-                          fontFamily: 'Quicksand',
-                          fontSize: 16,
+                      label: Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Text(
+                          gadgetName == "Colorizer"
+                              ? 'Watch Ad for\n2 Colorizer'
+                              : gadgetName == "Hints"
+                                  ? 'Watch Ad for\n3 Hints'
+                                  : "Watch Ad",
+                          style: const TextStyle(
+                            fontFamily: 'Quicksand',
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -2063,8 +2072,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                             vertical: 10, horizontal: 20),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
-                        backgroundColor:
-                            gradientColors.first, // Farbe angepasst
+                        backgroundColor: gradientColors.first,
                         foregroundColor: Colors.white,
                       ),
                     ),
@@ -2075,16 +2083,35 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         builder: (context, coinProvider, child) {
                       return ElevatedButton.icon(
                         onPressed: () {
-                          coinProvider.coins >= 200
+                          /*coinProvider.coins >= 200
                               ? onBuyPressed()
-                              : Navigator.of(context).popAndPushNamed("/shop");
+                              : Navigator.of(context).popAndPushNamed("/shop");*/
+                          if (gadgetName == "Moves") {
+                            coinProvider.coins >= 150
+                                ? onBuyPressed()
+                                : Navigator.of(context)
+                                    .popAndPushNamed("/shop");
+                          } else {
+                            onBuyPressed();
+                          }
                         },
                         icon: const Icon(Icons.monetization_on),
-                        label: Text(
-                          sale ? '100 Coins' : '200 Coins',
-                          style: const TextStyle(
-                            fontFamily: 'Quicksand',
-                            fontSize: 16,
+                        label: Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Text(
+                            gadgetName == "Colorizer"
+                                ? (sale
+                                    ? '100 Coins for 10 Colorizers'
+                                    : 'EUR 0.49 for\n10 Colorizer')
+                                : gadgetName == "Hints"
+                                    ? (sale
+                                        ? '100 Coins for 15 Hints'
+                                        : 'EUR 0.49 for\n15 Hints')
+                                    : "150 Coins",
+                            style: const TextStyle(
+                              fontFamily: 'Quicksand',
+                              fontSize: 16,
+                            ),
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
@@ -2092,8 +2119,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                               vertical: 10, horizontal: 20),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
-                          backgroundColor:
-                              gradientColors.first, // Farbe angepasst
+                          backgroundColor: gradientColors.first,
                           foregroundColor: Colors.white,
                         ),
                       );

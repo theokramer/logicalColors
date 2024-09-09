@@ -8,7 +8,8 @@ class HintsManager {
   static Future<int> loadHints() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      return prefs.getInt(_hintsKey) ?? 1; // Standardwert 0, falls nicht gespeichert
+      return prefs.getInt(_hintsKey) ??
+          5; // Standardwert 0, falls nicht gespeichert
     } catch (e) {
       print('Error loading hints: $e');
       return 0; // Standardwert bei Fehler
@@ -36,7 +37,8 @@ class HintsManager {
   static Future<void> subtractHints(int amount) async {
     try {
       int currentHints = await loadHints();
-      await saveHints((currentHints - amount).clamp(0, double.infinity).toInt());
+      await saveHints(
+          (currentHints - amount).clamp(0, double.infinity).toInt());
     } catch (e) {
       print('Error subtracting hints: $e');
     }
@@ -50,7 +52,8 @@ class RemsManager {
   static Future<int> loadRems() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      return prefs.getInt(_remsKey) ?? 2; // Standardwert 0, falls nicht gespeichert
+      return prefs.getInt(_remsKey) ??
+          5; // Standardwert 0, falls nicht gespeichert
     } catch (e) {
       print('Error loading rems: $e');
       return 0; // Standardwert bei Fehler
@@ -85,12 +88,9 @@ class RemsManager {
   }
 }
 
-
-
-
 // Provider für Hints
 class HintsProvider extends ChangeNotifier {
-  int _hints = 2;
+  int _hints = 5;
 
   int get hints => _hints;
 
@@ -124,7 +124,7 @@ class HintsProvider extends ChangeNotifier {
 
 // Provider für Rems
 class RemsProvider extends ChangeNotifier {
-  int _rems = 3;
+  int _rems = 5;
 
   int get rems => _rems;
 

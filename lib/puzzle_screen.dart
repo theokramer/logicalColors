@@ -6,6 +6,7 @@ import 'package:color_puzzle/coin_manager.dart';
 import 'package:color_puzzle/custom_info_button.dart';
 import 'package:color_puzzle/difficulty_bar.dart';
 import 'package:color_puzzle/hints_manager.dart';
+import 'package:color_puzzle/main.dart';
 import 'package:color_puzzle/main_menu_screen.dart';
 import 'package:color_puzzle/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
@@ -2564,25 +2565,26 @@ class _CoinAnimationState extends State<CoinAnimation>
 }
 
 class SettingsScreen extends StatefulWidget {
-  PuzzleModel puzzle = PuzzleModel(size: 0, level: 0, colorMapping: {});
-  SettingsScreen({super.key, required PuzzleModel puzzle});
+  final PuzzleModel puzzle;
+  const SettingsScreen({super.key, required this.puzzle});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // Liste der verfügbaren Sprachen
-
   @override
   Widget build(BuildContext context) {
+    // Access the LanguageProvider to change the locale
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
     return Container(
       padding: const EdgeInsets.all(16.0),
       height: MediaQuery.of(context).size.height * 0.45 +
-          100, // Begrenzt die Höhe auf 50% des Bildschirms
+          100, // Limit height to 50% of the screen
       child: Column(
         children: [
-          // Eine kleine "Leiste" zum Schließen der modalen Ansicht
+          // A small "bar" to close the modal view
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -2594,33 +2596,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
               IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () {
-                  Navigator.of(context).pop(); // Schließt die Modal-Ansicht
+                  Navigator.of(context).pop(); // Closes the modal view
                 },
               ),
             ],
           ),
-          const Divider(), // Linie als Trenner
+          const Divider(), // Separator line
           Expanded(
             child: ListView(
               children: [
                 SwitchListTile(
                   title: const Text('Vibration'),
-                  value: true, // Beispielwert
+                  value: true, // Example value
                   onChanged: (bool value) {
-                    // Logik, um Vibration zu aktivieren/deaktivieren
+                    // Logic to enable/disable vibration
                   },
                 ),
-                const SizedBox(height: 20), // Abstandsregelung
+                const SizedBox(height: 20), // Spacing
                 SwitchListTile(
                   title: Text(
                     AppLocalizations.of(context)?.sounds ?? "Sounds",
                   ),
-                  value: false, // Beispielwert
+                  value: false, // Example value
                   onChanged: (bool value) {
-                    // Logik, um Töne zu aktivieren/deaktivieren
+                    // Logic to enable/disable sounds
                   },
                 ),
-                const SizedBox(height: 20), // Abstandsregelung
+                const SizedBox(height: 20), // Spacing
                 ListTile(
                   title: Text(
                     AppLocalizations.of(context)?.language ?? "Language",
@@ -2632,18 +2634,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         switch (newValue) {
                           case "English":
                             selectedLanguage = 0;
-                            widget.puzzle.saveSelectedLanguage(0);
-
+                            break;
                           case "Deutsch":
                             selectedLanguage = 1;
-                            widget.puzzle.saveSelectedLanguage(1);
+                            break;
                           case "Español":
                             selectedLanguage = 2;
-                            widget.puzzle.saveSelectedLanguage(2);
+                            break;
                           default:
                             selectedLanguage = 0;
-                            widget.puzzle.saveSelectedLanguage(0);
                         }
+                        // Update the selected language
+                        widget.puzzle.saveSelectedLanguage(selectedLanguage);
+
+                        // Change the locale in the provider
+                        languageProvider
+                            .setLocale(Locale(locales[selectedLanguage]));
                       });
                     },
                     items: languages
@@ -2656,17 +2662,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 ListTile(
-                    title: Center(
-                        child: Text(
-                  AppLocalizations.of(context)?.privacy ?? "Language",
-                  style: const TextStyle(color: Colors.indigo, fontSize: 15),
-                ))),
+                  title: Center(
+                    child: Text(
+                      AppLocalizations.of(context)?.privacy ?? "Privacy Policy",
+                      style:
+                          const TextStyle(color: Colors.indigo, fontSize: 15),
+                    ),
+                  ),
+                ),
                 ListTile(
-                    title: Center(
-                        child: Text(
-                  AppLocalizations.of(context)?.restorePurchases ?? "Language",
-                  style: const TextStyle(color: Colors.indigo, fontSize: 15),
-                ))),
+                  title: Center(
+                    child: Text(
+                      AppLocalizations.of(context)?.restorePurchases ??
+                          "Restore Purchases",
+                      style:
+                          const TextStyle(color: Colors.indigo, fontSize: 15),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

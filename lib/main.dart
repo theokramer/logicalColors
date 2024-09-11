@@ -27,7 +27,11 @@ void main() async {
   vibration = await loadVibration();
   sounds = await loadSounds();
   selectedLevel = maxLevel;
-  runApp(MyApp(maxLevel: maxLevel));
+  int savedLanguage = await loadSelectedLanguage();
+  runApp(MyApp(
+    maxLevel: maxLevel,
+    savedLanguage: savedLanguage,
+  ));
 }
 
 int maxWorld() {
@@ -70,6 +74,7 @@ Future<int> loadSelectedLanguage() async {
         return 0;
     }
   }
+
   return intLanguage;
 }
 
@@ -86,7 +91,9 @@ Future<bool> loadSounds() async {
 class MyApp extends StatelessWidget {
   final int maxLevel;
 
-  const MyApp({super.key, required this.maxLevel});
+  final int savedLanguage; // The saved language passed from main()
+
+  const MyApp({super.key, required this.maxLevel, required this.savedLanguage});
 
   Map<String, int> getSizeAndMaxMoves(int level) {
     int s = currentWorld == 1 ? 1 : 2;
@@ -218,51 +225,58 @@ class MyApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(create: (_) => CoinProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider(savedLanguage)),
         ChangeNotifierProvider(create: (_) => HintsProvider()),
         ChangeNotifierProvider(create: (_) => RemsProvider()),
-        ChangeNotifierProvider(
-          create: (_) => LanguageProvider(),
-        )
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        supportedLocales: const [
-          Locale('en', ''), // Englisch
-          Locale('de', ''), // Deutsch
-          Locale('es', ''), // Spanisch
-        ],
-        locale: currentLocale(),
-        // Lokalisierungsdelegaten konfigurieren
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        title: "Logical Colors",
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
-        initialRoute: tutorialActive ? '/' : '/menu',
-        routes: {
-          '/': (context) => const PuzzleScreen(),
-          '/roadmap': (context) => const MainMenuScreen(),
-          '/shop': (context) => const ShopScreen(),
-          '/menu': (context) => const MainMenuScreen(),
-        },
-      ),
+      child: Consumer<LanguageProvider>(
+          builder: (context, languageProvider, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          supportedLocales: const [
+            Locale('en', ''), // Englisch
+            Locale('de', ''), // Deutsch
+            Locale('es', ''), // Spanisch
+          ],
+          locale: languageProvider.locale,
+          // Lokalisierungsdelegaten konfigurieren
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          title: "Logical Colors",
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+          ),
+          initialRoute: tutorialActive ? '/' : '/menu',
+          routes: {
+            '/': (context) => const PuzzleScreen(),
+            '/roadmap': (context) => const MainMenuScreen(),
+            '/shop': (context) => const ShopScreen(),
+            '/menu': (context) => const MainMenuScreen(),
+          },
+        );
+      }),
     );
   }
 }
 
 class LanguageProvider with ChangeNotifier {
-  Locale _locale = const Locale('en');
+  Locale _locale;
+
+  // Constructor that sets the initial locale from the saved language
+  LanguageProvider(int savedLanguage)
+      : _locale = Locale(locales[savedLanguage]);
 
   Locale get locale => _locale;
 
+  // Update the locale and notify listeners
   void setLocale(Locale locale) {
+    if (_locale == locale) return;
     _locale = locale;
-    notifyListeners(); // Benachrichtige alle Widgets, dass sich die Sprache geändert hat
+    notifyListeners();
   }
 
   void clearLocale() {

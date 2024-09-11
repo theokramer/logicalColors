@@ -25,6 +25,7 @@ void main() async {
   tutorialActive = await loadTutorial();
   selectedLanguage = await loadSelectedLanguage();
   vibration = await loadVibration();
+  animations = await loadAnimations();
   sounds = await loadSounds();
   selectedLevel = maxLevel;
   int savedLanguage = await loadSelectedLanguage();
@@ -81,6 +82,11 @@ Future<int> loadSelectedLanguage() async {
 Future<bool> loadVibration() async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getBool('vibration') ?? true;
+}
+
+Future<bool> loadAnimations() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('animations') ?? true;
 }
 
 Future<bool> loadSounds() async {

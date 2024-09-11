@@ -1052,7 +1052,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                     }
 
                                     _confettiController.play();
-                                    HapticFeedback.heavyImpact();
+                                    if (vibration) {
+                                      HapticFeedback.heavyImpact();
+                                    }
                                     _animationController.forward().then((_) {
                                       Future.delayed(
                                           Duration(
@@ -1078,7 +1080,10 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                       });
                                     });
                                   } else {
-                                    HapticFeedback.selectionClick();
+                                    if (vibration) {
+                                      HapticFeedback.selectionClick();
+                                    }
+
                                     if (puzzle.maxMoves == puzzle.moves &&
                                         tutorialActive) {
                                       showResetGadgetHint = true;
@@ -2607,9 +2612,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 SwitchListTile(
                   title: const Text('Vibration'),
-                  value: true, // Example value
+                  value: vibration,
                   onChanged: (bool value) {
-                    // Logic to enable/disable vibration
+                    setState(() {
+                      vibration = value; // Update vibration state
+                    });
+                    widget.puzzle.saveVibration(value);
                   },
                 ),
                 const SizedBox(height: 20), // Spacing
@@ -2617,9 +2625,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: Text(
                     AppLocalizations.of(context)?.sounds ?? "Sounds",
                   ),
-                  value: false, // Example value
+                  value: sounds,
                   onChanged: (bool value) {
-                    // Logic to enable/disable sounds
+                    setState(() {
+                      sounds = value; // Update sounds state
+                    });
+                    widget.puzzle.saveSounds(value);
+                  },
+                ),
+                const SizedBox(height: 20), // Spacing
+                SwitchListTile(
+                  title: Text(
+                    AppLocalizations.of(context)?.animations ?? "Animations",
+                  ),
+                  value: animations,
+                  onChanged: (bool value) {
+                    setState(() {
+                      animations = value; // Update animations state
+                    });
+                    widget.puzzle.saveAnimations(value);
                   },
                 ),
                 const SizedBox(height: 20), // Spacing

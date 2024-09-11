@@ -21,6 +21,8 @@ int selectedLanguage = -1;
 
 bool vibration = false;
 
+bool animations = false;
+
 bool sounds = false;
 
 TutorialStep currentTutorialStep = TutorialStep.step1;
@@ -266,6 +268,11 @@ class PuzzleModel with ChangeNotifier {
   Future<void> saveVibration(bool vibration) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('vibration', vibration);
+  }
+
+  Future<void> saveAnimations(bool animations) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('animations', animations);
   }
 
   Future<void> saveSelectedLanguage(int language) async {

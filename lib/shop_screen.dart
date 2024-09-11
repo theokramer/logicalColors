@@ -281,7 +281,8 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 
   void _showPurchaseDialog(BuildContext context, String title, int amount,
-      PuzzleModel puzzle, bool ad) {
+      PuzzleModel puzzle, bool ad,
+      {bool isEnhancedBundle = false}) {
     final Random random = Random();
 
     int newWallpaper = random.nextInt(14);
@@ -300,6 +301,8 @@ class _ShopScreenState extends State<ShopScreen> {
     }
 
     bool unlocked = false;
+    int hintsAdded = 0;
+    int wallpapersUnlocked = 0;
 
     if (!ad) {
       for (int i = 0; i < worlds.length; i++) {
@@ -313,129 +316,240 @@ class _ShopScreenState extends State<ShopScreen> {
       }
     }
 
+    // Special handling for the enhanced bundle
+    if (isEnhancedBundle) {
+      addCrystals(7000); // Adds 7000 crystals
+      hintsAdded = 30; // Adds 30 hints
+      puzzle.addHints(hintsAdded);
+      wallpapersUnlocked = 3; // Assume bundle gives 3 wallpapers
+      for (int i = 0; i < wallpapersUnlocked; i++) {
+        newWallpaper = random.nextInt(14);
+        while (boughtWallpapers.contains(newWallpaper)) {
+          newWallpaper = random.nextInt(14);
+        }
+        boughtWallpapers.add(newWallpaper);
+        puzzle.saveBoughtWallpaper(newWallpaper);
+      }
+      puzzle.saveNoAds(true);
+      noAds = true;
+      unlocked = true;
+    }
+
+    if (title ==
+        "${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}") {
+      addCrystals(amount);
+    }
+
     showDialog(
       context: context,
-      barrierDismissible:
-          false, // Damit das Dialogfenster nicht außerhalb geschlossen werden kann
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          content: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 15),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '$title!',
-                  style: TextStyle(
-                    color: Colors.blueGrey[800],
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Quicksand',
+          content: SingleChildScrollView(
+            // Makes the content scrollable
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    spreadRadius: 2,
                   ),
-                ),
-                const SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    title ==
-                            "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}"
-                        ? const Icon(
-                            Icons.lightbulb,
-                            size: 50,
-                            color: Colors.amber,
-                          )
-                        : title ==
-                                "${AppLocalizations.of(context)?.colorizer ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}"
-                            ? const Icon(Icons.colorize,
-                                size: 50, color: Colors.redAccent)
-                            : Image.asset(
-                                'images/Crystals.png',
-                                height: 50,
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '$title!',
+                    style: TextStyle(
+                      color: Colors.blueGrey[800],
+                      fontSize: 24, // Reduced font size
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Quicksand',
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  if (!isEnhancedBundle)
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            title ==
+                                    "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}"
+                                ? const Icon(
+                                    Icons.lightbulb,
+                                    size: 50,
+                                    color: Colors.amber,
+                                  )
+                                : title ==
+                                        "${AppLocalizations.of(context)?.colorizer ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}"
+                                    ? const Icon(Icons.colorize,
+                                        size: 50, color: Colors.redAccent)
+                                    : Image.asset(
+                                        'images/Crystals.png',
+                                        height: 50,
+                                      ),
+                            const SizedBox(width: 20),
+                            Text(
+                              '+$amount',
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold,
                               ),
-                    const SizedBox(width: 20),
-                    Text(
-                      '+$amount',
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        )
+                      ],
+                    ),
+                  if (isEnhancedBundle)
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'images/Crystals.png',
+                              height: 40, // Smaller image
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              '+7000 Crystals',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 20, // Smaller font size
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.lightbulb,
+                              size: 40, // Smaller icon
+                              color: Colors.amber,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              '+$hintsAdded Hints',
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.image,
+                              size: 40, // Smaller icon
+                              color: Colors.green,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              '+$wallpapersUnlocked Wallpapers',
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.block,
+                              size: 40, // Smaller icon
+                              color: Colors.red,
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              'Ads Removed',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  if (newWallpaper != -1 && !isEnhancedBundle)
+                    Container(
+                      height: (MediaQuery.of(context).size.height > 700)
+                          ? 150
+                          : 120,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage("images/w$newWallpaper.jpg"),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 30),
-                if (newWallpaper != -1)
-                  Container(
-                    height:
-                        (MediaQuery.of(context).size.height > 700) ? 200 : 150,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage("images/w$newWallpaper.jpg"),
-                        fit: BoxFit.cover,
+                  const SizedBox(height: 20),
+                  if (unlocked)
+                    Column(
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.lock_open,
+                              size: 25, // Slightly smaller icon
+                              color: Colors.green,
+                            ),
+                            Text(
+                              AppLocalizations.of(context)?.unlockedWorlds ??
+                                  "World",
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 14, // Smaller font size
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                    ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
                       ),
                     ),
-                  ),
-                const SizedBox(
-                  height: 20,
-                ),
-                if (unlocked)
-                  Column(
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.lock_open,
-                            size: 30,
-                            color: Colors.green,
-                          ),
-                          Text(
-                            AppLocalizations.of(context)?.unlockedWorlds ??
-                                "World",
-                            style: const TextStyle(
-                                color: Colors.black, fontSize: 15),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 20,
-                      )
-                    ],
-                  ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (title ==
-                        "${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}") {
-                      addCrystals(amount);
-                    }
-                    Navigator.of(context).pop();
-                    Navigator.of(context).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15.0),
+                    child: Text(
+                      AppLocalizations.of(context)?.great ?? "World",
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
-                  child: Text(
-                    AppLocalizations.of(context)?.great ?? "World",
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -585,7 +699,8 @@ class _ShopScreenState extends State<ShopScreen> {
                   '"${AppLocalizations.of(context)?.noAdsTitle ?? "Play"}"-Bundle',
                   0,
                   puzzle,
-                  false);
+                  false,
+                  isEnhancedBundle: true);
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),

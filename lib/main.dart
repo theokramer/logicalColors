@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:color_puzzle/coin_manager.dart';
 import 'package:color_puzzle/hints_manager.dart';
@@ -21,6 +23,9 @@ void main() async {
   int maxLevel = await loadWorldProgress(
       currentWorld); // Load progress for the current world
   tutorialActive = await loadTutorial();
+  selectedLanguage = await loadSelectedLanguage();
+  vibration = await loadVibration();
+  sounds = await loadSounds();
   selectedLevel = maxLevel;
   runApp(MyApp(maxLevel: maxLevel));
 }
@@ -46,6 +51,36 @@ Future<int> loadWorldProgress(int worldId) async {
 Future<void> saveWorldProgress(int worldId, int maxLevel) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setInt('world_$worldId', maxLevel);
+}
+
+Future<int> loadSelectedLanguage() async {
+  final String defaultLocale = Platform.localeName;
+  final prefs = await SharedPreferences.getInstance();
+
+  var intLanguage = prefs.getInt('selectedLanguage') ?? -1;
+  if (intLanguage == -1) {
+    switch (defaultLocale) {
+      case "en_DE":
+        return 0;
+      case "de_DE":
+        return 1;
+      case "es_DE":
+        return 2;
+      default:
+        return 0;
+    }
+  }
+  return intLanguage;
+}
+
+Future<bool> loadVibration() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('vibration') ?? true;
+}
+
+Future<bool> loadSounds() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('sounds') ?? true;
 }
 
 class MyApp extends StatelessWidget {
@@ -158,6 +193,15 @@ class MyApp extends StatelessWidget {
     return {"size": s, "maxMoves": m};
   }
 
+  Locale currentLocale() {
+    final String defaultLocale = Platform.localeName;
+    if (selectedLanguage == -1) {
+      return Locale(defaultLocale);
+    } else {
+      return Locale(locales[selectedLanguage]);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -176,13 +220,18 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CoinProvider()),
         ChangeNotifierProvider(create: (_) => HintsProvider()),
         ChangeNotifierProvider(create: (_) => RemsProvider()),
+        ChangeNotifierProvider(
+          create: (_) => LanguageProvider(),
+        )
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         supportedLocales: const [
           Locale('en', ''), // Englisch
           Locale('de', ''), // Deutsch
+          Locale('es', ''), // Spanisch
         ],
+        locale: currentLocale(),
         // Lokalisierungsdelegaten konfigurieren
         localizationsDelegates: const [
           AppLocalizations.delegate,
@@ -203,5 +252,21 @@ class MyApp extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+class LanguageProvider with ChangeNotifier {
+  Locale _locale = const Locale('en');
+
+  Locale get locale => _locale;
+
+  void setLocale(Locale locale) {
+    _locale = locale;
+    notifyListeners(); // Benachrichtige alle Widgets, dass sich die Sprache geändert hat
+  }
+
+  void clearLocale() {
+    _locale = const Locale('en');
+    notifyListeners();
   }
 }

@@ -3,6 +3,7 @@ import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:color_puzzle/shop_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class CustomInfoButton extends StatefulWidget {
   final String value;
@@ -157,7 +158,7 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
                   if (widget.targetColor != -1) ...[
                     // Target Color
                     Text(
-                      'Fill',
+                      AppLocalizations.of(context)?.fill ?? "Play",
                       style: TextStyle(
                           color: widget.textColor.withOpacity(0.8),
                           fontSize: fontSize,
@@ -185,7 +186,7 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
                   if (widget.movesLeft > -1 && widget.targetColor == -1) ...[
                     // Moves Left
                     Text(
-                      '${widget.movesLeft} ${widget.movesLeft == 1 ? "Move" : "Moves"}',
+                      '${widget.movesLeft} ${widget.movesLeft == 1 ? AppLocalizations.of(context)?.move ?? "Play" : AppLocalizations.of(context)?.moves ?? "Play"}',
                       style: TextStyle(
                           color: widget.textColor,
                           fontSize: fontSize,
@@ -206,15 +207,15 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(widget.targetColor != -1
-              ? 'Color the grid'
-              : "${widget.movesLeft == 1 ? 'One Step' : "${widget.movesLeft} Steps"} left"),
+              ? AppLocalizations.of(context)?.colorTheGrid ?? "Play"
+              : "${widget.movesLeft == 1 ? AppLocalizations.of(context)?.oneNStep ?? "Play" : "${widget.movesLeft} ${AppLocalizations.of(context)?.dialogMoreSteps ?? "Play"}"} ${AppLocalizations.of(context)?.left ?? "Play"}"),
           content: Column(
             mainAxisSize: MainAxisSize.min, // To fit the content size
             children: [
               Text(
                 widget.targetColor != -1
-                    ? 'Fill the entire grid with the displayed color. You have ${widget.movesLeft == 1 ? 'one Step' : "${widget.movesLeft} Steps"} left! Remember that adjacent cells also change color.'
-                    : 'You have ${widget.movesLeft == 1 ? 'one Step' : "${widget.movesLeft} Steps"} left to reach the goal.',
+                    ? '${AppLocalizations.of(context)?.tDialogContentTargetColor ?? "Play"} ${widget.movesLeft == 1 ? AppLocalizations.of(context)?.oneNStep ?? "Play" : "${widget.movesLeft} ${AppLocalizations.of(context)?.dialogMoreSteps ?? "Play"}"} ${AppLocalizations.of(context)?.left ?? "Play"}! ${AppLocalizations.of(context)?.dialogReminderAdjacent ?? "Play"}'
+                    : '${AppLocalizations.of(context)?.tDialogContentStepsLeft ?? "Play"} ${widget.movesLeft == 1 ? AppLocalizations.of(context)?.oneNStep ?? "Play" : "${widget.movesLeft} ${AppLocalizations.of(context)?.dialogMoreSteps ?? "Play"}"} ${AppLocalizations.of(context)?.left ?? "Play"}, ${AppLocalizations.of(context)?.toReachGoal ?? "Play"}.',
               ),
               const SizedBox(height: 30), // Space between text and GIF
               Image.asset(

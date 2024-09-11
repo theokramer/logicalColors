@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'custom_info_button.dart'; // Dein CustomInfoButton
 import 'coin_manager.dart'; // Dein CoinManager
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key});
@@ -54,34 +55,54 @@ class _ShopScreenState extends State<ShopScreen> {
     int type = item['type'] as int;
     int value = int.parse(item['title'] as String);
     int costs = 0;
-    if (item['price'] == "Gratis" || type == 2 || type == 0 || type == 1) {
+    if (item['price'] == (AppLocalizations.of(context)?.free ?? "World") ||
+        type == 2 ||
+        type == 0 ||
+        type == 1) {
       costs = 0;
     } else {
       costs = int.parse(item['price'] as String);
     }
 
-    if (item['price'] == "Watch Ad") {
+    if (item['price'] == "") {
       _rewardedAd?.show(
         onUserEarnedReward: (_, reward) {
-          _showPurchaseDialog(context, 'Crystals earned', value, puzzle,
+          _showPurchaseDialog(
+              context,
+              '${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.earned ?? "World"}',
+              value,
+              puzzle,
               true); // Zeige Pop-Up an
         },
       );
       _loadRewardedAd();
     }
-    if (type == 2 && item['price'] != "Watch Ad") {
-      _showPurchaseDialog(context, 'Crystals purchased', value, puzzle,
+    if (type == 2 &&
+        item['price'] != (AppLocalizations.of(context)?.watchAds ?? "World")) {
+      _showPurchaseDialog(
+          context,
+          '${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}',
+          value,
+          puzzle,
           false); // Zeige Pop-Up an
     }
     if (type == 0) {
       addHints(value);
 
       _showPurchaseDialog(
-          context, 'Hints purchased', value, puzzle, false); // Zeige Pop-Up an
+          context,
+          '${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}',
+          value,
+          puzzle,
+          false); // Zeige Pop-Up an
     }
     if (type == 1) {
       addRems(value);
-      _showPurchaseDialog(context, 'Colorizer purchased', value, puzzle,
+      _showPurchaseDialog(
+          context,
+          '${AppLocalizations.of(context)?.colorizer ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}',
+          value,
+          puzzle,
           false); // Zeige Pop-Up an
     }
   }
@@ -135,9 +156,9 @@ class _ShopScreenState extends State<ShopScreen> {
     return Scaffold(
       backgroundColor: Colors.indigo[900],
       appBar: AppBar(
-        title: const Text(
-          "Shop",
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.of(context)?.shop ?? "World",
+          style: const TextStyle(
               color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30),
         ),
         foregroundColor: Colors.white,
@@ -191,7 +212,7 @@ class _ShopScreenState extends State<ShopScreen> {
                   // ? ""
                   // : "With the purchase of any item in the shop, you unlock all current and future Levels in the game.",
                   (boughtWallpapers.length < 14)
-                      ? "You get a free wallpaper for each purchase."
+                      ? AppLocalizations.of(context)?.freeWallpaper ?? "World"
                       : "",
                   style: const TextStyle(color: Colors.white, fontSize: 15),
                 ),
@@ -278,6 +299,20 @@ class _ShopScreenState extends State<ShopScreen> {
       newWallpaper = -1;
     }
 
+    bool unlocked = false;
+
+    if (!ad) {
+      for (int i = 0; i < worlds.length; i++) {
+        if (!puzzle.isWorldUnlocked(i + 1)) {
+          puzzle.saveWorldUnlocked(i + 1, true);
+          puzzle.unlockWorld(i + 1);
+          puzzle.updateWorldLevel(i + 1, 1);
+          puzzle.saveWorldProgress(i + 1, 1);
+          unlocked = true;
+        }
+      }
+    }
+
     showDialog(
       context: context,
       barrierDismissible:
@@ -299,7 +334,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 ),
               ],
             ),
-            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 30),
+            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 15),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -316,13 +351,15 @@ class _ShopScreenState extends State<ShopScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    title == "Hints purchased"
+                    title ==
+                            "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}"
                         ? const Icon(
                             Icons.lightbulb,
                             size: 50,
                             color: Colors.amber,
                           )
-                        : title == "Colorizer purchased"
+                        : title ==
+                                "${AppLocalizations.of(context)?.colorizer ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}"
                             ? const Icon(Icons.colorize,
                                 size: 50, color: Colors.redAccent)
                             : Image.asset(
@@ -344,7 +381,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 if (newWallpaper != -1)
                   Container(
                     height:
-                        (MediaQuery.of(context).size.height > 700) ? 300 : 200,
+                        (MediaQuery.of(context).size.height > 700) ? 200 : 150,
                     decoration: BoxDecoration(
                       image: DecorationImage(
                         image: AssetImage("images/w$newWallpaper.jpg"),
@@ -355,9 +392,36 @@ class _ShopScreenState extends State<ShopScreen> {
                 const SizedBox(
                   height: 20,
                 ),
+                if (unlocked)
+                  Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.lock_open,
+                            size: 30,
+                            color: Colors.green,
+                          ),
+                          Text(
+                            AppLocalizations.of(context)?.unlockedWorlds ??
+                                "World",
+                            style: const TextStyle(
+                                color: Colors.black, fontSize: 15),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      )
+                    ],
+                  ),
                 ElevatedButton(
                   onPressed: () {
-                    if (title == "Crystals purchased") addCrystals(amount);
+                    if (title ==
+                        "${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}") {
+                      addCrystals(amount);
+                    }
+                    Navigator.of(context).pop();
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
@@ -366,9 +430,9 @@ class _ShopScreenState extends State<ShopScreen> {
                       borderRadius: BorderRadius.circular(15.0),
                     ),
                   ),
-                  child: const Text(
-                    'Great',
-                    style: TextStyle(color: Colors.white),
+                  child: Text(
+                    AppLocalizations.of(context)?.great ?? "World",
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ],
@@ -459,11 +523,11 @@ class _ShopScreenState extends State<ShopScreen> {
             height: 65, // Slightly larger image
           ),
           const SizedBox(height: 5),
-          const Text(
-            "Removes all ads.\nYou can still watch\nads for rewards.",
+          Text(
+            AppLocalizations.of(context)?.removeAdsBody ?? "Play",
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 10, // Larger font size
+            style: const TextStyle(
+              fontSize: 8.5, // Larger font size
               fontWeight: FontWeight.w600,
               color: Colors.black87, // Darker text color
             ),
@@ -499,12 +563,12 @@ class _ShopScreenState extends State<ShopScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 8.0),
+        Padding(
+          padding: const EdgeInsets.only(left: 8.0),
           child: Text(
-            '"No ads"-Bundle',
-            style: TextStyle(
-              fontSize: 20.0, // Larger font size
+            '"${AppLocalizations.of(context)?.noAdsTitle ?? "Play"}"-Bundle',
+            style: const TextStyle(
+              fontSize: 16.0, // Larger font size
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -516,11 +580,12 @@ class _ShopScreenState extends State<ShopScreen> {
             onPressed: () {
               puzzle.saveNoAds(true);
               noAds = true;
-              Navigator.of(context).pushReplacement(
-                FadePageRoute(
-                  page: const MainMenuScreen(),
-                ),
-              );
+              _showPurchaseDialog(
+                  context,
+                  '"${AppLocalizations.of(context)?.noAdsTitle ?? "Play"}"-Bundle',
+                  0,
+                  puzzle,
+                  false);
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
@@ -733,7 +798,9 @@ class _ShopScreenState extends State<ShopScreen> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  (type == 0 || type == 1) && price != 'Gratis!'
+                  (type == 0 || type == 1) &&
+                          price !=
+                              '${AppLocalizations.of(context)?.free ?? "Play"}!'
                       ? const SizedBox(
                           width: 8,
                         )
@@ -910,20 +977,20 @@ class _ShopScreenState extends State<ShopScreen> {
                     const SizedBox(
                       width: 15,
                     ),
-                    const Column(
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'No ads',
-                          style: TextStyle(
-                            fontSize: 20.0,
+                          AppLocalizations.of(context)?.noAdsTitle ?? "Play",
+                          style: const TextStyle(
+                            fontSize: 16.0,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
                         Text(
-                          'Removes all ads. You can\nstill watch ads for rewards.',
-                          style: TextStyle(
+                          AppLocalizations.of(context)?.removeAdsBody ?? "Play",
+                          style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                             color: Colors.white70,
@@ -941,11 +1008,12 @@ class _ShopScreenState extends State<ShopScreen> {
                   onPressed: () {
                     puzzle.saveNoAds(true);
                     noAds = true;
-                    Navigator.of(context).pushReplacement(
-                      FadePageRoute(
-                        page: const MainMenuScreen(),
-                      ),
-                    );
+                    _showPurchaseDialog(
+                        context,
+                        AppLocalizations.of(context)?.noAdsTitle ?? "Play",
+                        0,
+                        puzzle,
+                        false);
                   },
                   style: ElevatedButton.styleFrom(
                     padding:

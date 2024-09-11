@@ -17,6 +17,7 @@ import 'shop_screen.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 Widget _buildUnlockButton(
     BuildContext context, String text, Color color, VoidCallback onPressed) {
@@ -177,9 +178,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                       borderRadius: BorderRadius.circular(15.0),
                     ),
                   ),
-                  child: const Text(
-                    'Great',
-                    style: TextStyle(color: Colors.white),
+                  child: Text(
+                    AppLocalizations.of(context)?.great ?? "Great",
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ],
@@ -229,7 +230,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
               //selectedLevel += 1;
             },
           );
-          print("HIER");
           setState(() {
             _interstitialAd = ad;
           });
@@ -323,11 +323,13 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
   List<PopupMenuEntry<String>> _showPopupMenu() {
     return <PopupMenuEntry<String>>[
-      _buildPopupMenuItem('home', 'Home', Icons.home, Colors.indigo),
-      _buildPopupMenuItem('shop', 'Shop', Icons.shopping_cart, Colors.indigo),
+      _buildPopupMenuItem('home', AppLocalizations.of(context)?.home ?? "Home",
+          Icons.home, Colors.indigo),
+      _buildPopupMenuItem('shop', AppLocalizations.of(context)?.shop ?? "Shop",
+          Icons.shopping_cart, Colors.indigo),
       _buildPopupMenuItem(
           'refresh',
-          'New Level ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 10 Crystals' : ""}',
+          '${AppLocalizations.of(context)?.newS ?? "New"} Level ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 10 ${AppLocalizations.of(context)?.crystals ?? "Crystals"}' : ""}',
           Icons.refresh,
           Colors.indigo),
       if (selectedLevel > 1)
@@ -335,8 +337,13 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             Icons.skip_previous, Colors.indigo),
       _buildPopupMenuItem(
           'next',
-          'Level ${selectedLevel + 1} ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 100 Crystals' : ""}',
+          'Level ${selectedLevel + 1} ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 100 ${AppLocalizations.of(context)?.crystals ?? "Crystals"}' : ""}',
           Icons.skip_next,
+          Colors.indigo),
+      _buildPopupMenuItem(
+          'settings',
+          '${AppLocalizations.of(context)?.settings ?? "New"} ',
+          Icons.settings,
           Colors.indigo),
     ];
   }
@@ -360,28 +367,31 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         bottomLeft: Radius.circular(10),
                         bottomRight: Radius.circular(10))),
                 padding: const EdgeInsets.all(16.0),
-                child: const Text(
-                  'Unlocking all Worlds',
-                  style: TextStyle(
+                child: Text(
+                  AppLocalizations.of(context)?.unlockTitle ?? "Unlock",
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.all(16.0),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Text(
-                  'You can unlock all worlds and levels in the game, by purchasing one item in the shop.',
+                  AppLocalizations.of(context)?.unlockBody ?? "Unlock",
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     color: Colors.black87,
                   ),
                 ),
               ),
               const SizedBox(height: 10),
-              _buildUnlockButton(context, "Open Shop", Colors.teal, () {
+              _buildUnlockButton(
+                  context,
+                  AppLocalizations.of(context)?.openShop ?? "Open Shop",
+                  Colors.teal, () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => const ShopScreen(),
@@ -432,7 +442,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                   );
                 },
                 child: Text(
-                  'Back to Home',
+                  AppLocalizations.of(context)?.backToHome ?? "Back to home",
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 16,
@@ -467,7 +477,11 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   void handleWatchAdForMoves() {
     _rewardedAd?.show(
       onUserEarnedReward: (_, reward) {
-        _showPurchaseDialog(context, "Moves earned", 3, true);
+        _showPurchaseDialog(
+            context,
+            "${AppLocalizations.of(context)?.moves ?? "Moves'"} ${AppLocalizations.of(context)?.earned ?? "earned'"}",
+            3,
+            true);
       },
     );
     _loadRewardedAd();
@@ -521,7 +535,11 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   void handleWatchAdForHints() {
     _rewardedAd?.show(
       onUserEarnedReward: (_, reward) {
-        _showPurchaseDialog(context, "Hints earned", 3, true);
+        _showPurchaseDialog(
+            context,
+            "${AppLocalizations.of(context)?.hints ?? "Hints'"} ${AppLocalizations.of(context)?.earned ?? "earned'"}",
+            3,
+            true);
       },
     );
     _loadRewardedAd();
@@ -530,7 +548,11 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   void handleWatchAdForRems() {
     _rewardedAd?.show(
       onUserEarnedReward: (_, reward) {
-        _showPurchaseDialog(context, "Colorizer earned", 5, true);
+        _showPurchaseDialog(
+            context,
+            "${AppLocalizations.of(context)?.colorizer ?? "Colorizer'"} ${AppLocalizations.of(context)?.earned ?? "earned'"}",
+            5,
+            true);
       },
     );
     _loadRewardedAd();
@@ -794,6 +816,19 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                   ),
                                                 ),
                                               );
+                                            case 'settings': // Neu hinzugefügt
+                                              showModalBottomSheet(
+                                                context: context,
+                                                builder:
+                                                    (BuildContext context) {
+                                                  return SettingsScreen(
+                                                    puzzle: puzzle,
+                                                  ); // Hier wird die SettingsScreen als Modal geladen
+                                                },
+                                                isScrollControlled:
+                                                    true, // Optional: damit Modal den ganzen Bildschirm ausfüllt
+                                              );
+                                              break;
                                           }
                                         },
                                         itemBuilder: (BuildContext context) =>
@@ -808,7 +843,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           flex: 2,
                           child: Center(
                             child: Text(
-                              'World $currentWorld – Level $selectedLevel',
+                              '${AppLocalizations.of(context)?.world ?? "World"} $currentWorld – Level $selectedLevel',
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Colors.white70,
@@ -1043,6 +1078,10 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                     });
                                   } else {
                                     HapticFeedback.selectionClick();
+                                    if (puzzle.maxMoves == puzzle.moves &&
+                                        tutorialActive) {
+                                      showResetGadgetHint = true;
+                                    }
                                   }
                                 }
                                 if (puzzle.moves >= puzzle.maxMoves &&
@@ -1050,14 +1089,12 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                     !puzzle.isGridFilledWithTargetColor()) {
                                   showGadgetPopup(
                                       context,
-                                      'Moves',
+                                      AppLocalizations.of(context)?.moves ??
+                                          "Moves",
                                       handleBuyMoves,
                                       handleWatchAdForMoves,
                                       [Colors.indigo, Colors.indigoAccent],
                                       false);
-                                } else if (puzzle.maxMoves == puzzle.moves &&
-                                    tutorialActive) {
-                                  showResetGadgetHint = true;
                                 }
                               }
                             },
@@ -1140,7 +1177,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                               } else {
                                 showGadgetPopup(
                                     context,
-                                    'Hints',
+                                    AppLocalizations.of(context)?.hints ??
+                                        "Hints",
                                     handleBuyHint,
                                     handleWatchAdForHints,
                                     [Colors.amber, Colors.orange],
@@ -1178,7 +1216,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                 } else {
                                   showGadgetPopup(
                                       context,
-                                      'Colorizer',
+                                      AppLocalizations.of(context)?.colorizer ??
+                                          "Colorizer'",
                                       handleBuyRem,
                                       handleWatchAdForRems,
                                       [
@@ -1285,27 +1324,44 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           blink: currentTutorialStep == TutorialStep.step2 &&
                               tutorialActive,
                           message: isRemoveTileMode
-                              ? "Click on a tile to increase its value by one. Tap again on the gadget to cancel."
+                              ? AppLocalizations.of(context)?.tRemoveTile ??
+                                  "removeTile"
                               : showResetGadgetHint
-                                  ? "You have no moves left. Use the reset or the undo gadget to try again."
+                                  ? AppLocalizations.of(context)
+                                          ?.tResetGadget ??
+                                      "reset Gadget"
                                   : currentTutorialStep == TutorialStep.step2 &&
                                           tutorialActive
-                                      ? 'Click on the tile to change its color'
+                                      ? AppLocalizations.of(context)?.tStep2 ??
+                                          "Step 2"
                                       : currentTutorialStep ==
                                                   TutorialStep.step3 &&
                                               tutorialActive
-                                          ? 'Click on the tile to also change the color of its neighbours'
+                                          ? AppLocalizations.of(context)
+                                                  ?.tStep3 ??
+                                              "Step 3"
                                           : currentTutorialStep ==
                                                       TutorialStep.step4 &&
                                                   tutorialActive
-                                              ? "Fill the Grid with the color indicated. You have only one move!"
+                                              ? AppLocalizations.of(
+                                                          context)
+                                                      ?.tStep4 ??
+                                                  "Step 4"
                                               : currentTutorialStep ==
                                                           TutorialStep.step5 &&
                                                       tutorialActive
                                                   ? (changeTextStep5
-                                                      ? "Finish the level by filling the whole grid with the color indicated."
-                                                      : "If you struggle with the puzzle, use a hint. In this level you have two moves.")
-                                                  : "You can also use the Colorizer, it increases a single tile by one. Try it out!",
+                                                      ? AppLocalizations.of(
+                                                                  context)
+                                                              ?.tStep52 ??
+                                                          "Step 52"
+                                                      : AppLocalizations.of(
+                                                                  context)
+                                                              ?.tStep51 ??
+                                                          "Step 51")
+                                                  : AppLocalizations.of(context)
+                                                          ?.tStepCompleted ??
+                                                      "Step Completed",
                           onClose: () {},
                         ),
                       ],
@@ -1473,10 +1529,12 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                     children: [
                                       // Title text
                                       Text(
-                                        'Level Complete!',
+                                        AppLocalizations.of(context)
+                                                ?.levelComplete ??
+                                            "Step 4",
                                         style: TextStyle(
                                           color: Colors.blueGrey[800],
-                                          fontSize: 32,
+                                          fontSize: 28,
                                           fontWeight: FontWeight.bold,
                                           fontFamily: 'Quicksand',
                                         ),
@@ -1840,12 +1898,13 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Color the grid'),
+          title: Text(
+            AppLocalizations.of(context)?.colorTheGrid ?? "Play",
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min, // To fit the content size
             children: [
-              const Text(
-                  'Fill the entire grid with the displayed color. When you click on a cell, its color and the color of all adjacent cells will change.'),
+              Text(AppLocalizations.of(context)?.colorTheGridBody ?? "Play"),
               const SizedBox(height: 30), // Space between text and GIF
               Image.asset(
                 'images/tutorial_animation.gif', // Replace with your local path to the GIF
@@ -1860,7 +1919,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('OK'),
+              child: const Text('Ok'),
             ),
           ],
         );
@@ -1874,19 +1933,20 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Difficulty Explanation'),
-          content: const Text(
-            'The difficulty bar indicates how challenging the current puzzle is. '
-            'Light segments indicate an easier puzzle, darker segments indicate moderate difficulty, '
-            'and dark segments indicate a higher level of difficulty. The bar fills up based on the '
-            'maximum number of moves and grid size, providing a visual representation of the challenge level.',
+          title: Text(
+            AppLocalizations.of(context)?.difficultyExplTitle ?? "Play",
+          ),
+          content: Text(
+            AppLocalizations.of(context)?.difficultyExplBody ?? "Play",
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Close'),
+              child: Text(
+                AppLocalizations.of(context)?.close ?? "Cancel",
+              ),
             ),
           ],
         );
@@ -1959,9 +2019,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
                 ),
-                child: const Text(
-                  'Start',
-                  style: TextStyle(fontSize: 20, color: Colors.white),
+                child: Text(
+                  AppLocalizations.of(context)?.start ?? "Start",
+                  style: const TextStyle(fontSize: 20, color: Colors.white),
                 ),
               ),
             ],
@@ -1994,8 +2054,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
               children: [
                 Text(
                   sale
-                      ? "Get more $gadgetName with a 200 Crystals discount"
-                      : 'Get more $gadgetName',
+                      ? "${AppLocalizations.of(context)?.getMore ?? "Play"} $gadgetName with a 200 Crystals discount"
+                      : '${AppLocalizations.of(context)?.getMore ?? "Play"}  $gadgetName',
                   style: const TextStyle(
                     color: Colors.white,
                     fontFamily: 'Quicksand',
@@ -2006,11 +2066,13 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  gadgetName == "Colorizer"
-                      ? "Choose how to get your Colorizer"
-                      : gadgetName == "Hints"
-                          ? "Choose how to get your Hints"
-                          : "Choose how to get your Moves",
+                  gadgetName ==
+                          (AppLocalizations.of(context)?.colorizer ?? "Play")
+                      ? "${AppLocalizations.of(context)?.chooseHowTo ?? "Play"} ${AppLocalizations.of(context)?.colorizer ?? "Play"} ${AppLocalizations.of(context)?.getChoose ?? "Play"}"
+                      : gadgetName ==
+                              (AppLocalizations.of(context)?.hints ?? "Play")
+                          ? "${AppLocalizations.of(context)?.chooseHowTo ?? "Play"} ${AppLocalizations.of(context)?.hints ?? "Play"} ${AppLocalizations.of(context)?.getChoose ?? "Play"}"
+                          : "${AppLocalizations.of(context)?.chooseHowTo ?? "Play"} ${AppLocalizations.of(context)?.moves ?? "Play"} ${AppLocalizations.of(context)?.getChoose ?? "Play"}",
                   style: const TextStyle(
                     color: Colors.white,
                     fontFamily: 'Quicksand',
@@ -2024,9 +2086,13 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      gadgetName == "Colorizer"
+                      gadgetName ==
+                              (AppLocalizations.of(context)?.colorizer ??
+                                  "Play")
                           ? Icons.colorize
-                          : gadgetName == "Hints"
+                          : gadgetName ==
+                                  (AppLocalizations.of(context)?.hints ??
+                                      "Play")
                               ? Icons.lightbulb
                               : Icons.bolt,
                       size: 60,
@@ -2036,7 +2102,10 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                       width: 25,
                     ),
                     Text(
-                      gadgetName == "Moves" ? "x3" : gadgetName,
+                      gadgetName ==
+                              (AppLocalizations.of(context)?.moves ?? "Play")
+                          ? "x3"
+                          : gadgetName,
                       style: TextStyle(
                         color: gradientColors.first,
                         fontFamily: 'Quicksand',
@@ -2059,11 +2128,16 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                       label: Padding(
                         padding: const EdgeInsets.only(left: 8.0),
                         child: Text(
-                          gadgetName == "Colorizer"
-                              ? 'Watch Ad for\n2 Colorizer'
-                              : gadgetName == "Hints"
-                                  ? 'Watch Ad for\n3 Hints'
-                                  : "Watch Ad",
+                          gadgetName ==
+                                  (AppLocalizations.of(context)?.colorizer ??
+                                      "Play")
+                              ? '${AppLocalizations.of(context)?.watchAds ?? "Play"} ${AppLocalizations.of(context)?.forName ?? "Play"} 2 ${AppLocalizations.of(context)?.colorizer ?? "Play"}'
+                              : gadgetName ==
+                                      (AppLocalizations.of(context)?.hints ??
+                                          "Play")
+                                  ? '${AppLocalizations.of(context)?.watchAds ?? "Play"} ${AppLocalizations.of(context)?.forName ?? "Play"} 3 ${AppLocalizations.of(context)?.hints ?? "Play"}'
+                                  : AppLocalizations.of(context)?.watchAds ??
+                                      "Play",
                           style: const TextStyle(
                             fontFamily: 'Quicksand',
                             fontSize: 16,
@@ -2089,7 +2163,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           /*coinProvider.Crystals >= 200
                               ? onBuyPressed()
                               : Navigator.of(context).popAndPushNamed("/shop");*/
-                          if (gadgetName == "Moves") {
+                          if (gadgetName ==
+                              (AppLocalizations.of(context)?.moves ?? "Play")) {
                             coinProvider.Crystals >= 150
                                 ? onBuyPressed()
                                 : Navigator.of(context)
@@ -2102,15 +2177,19 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         label: Padding(
                           padding: const EdgeInsets.only(left: 8.0),
                           child: Text(
-                            gadgetName == "Colorizer"
+                            gadgetName ==
+                                    (AppLocalizations.of(context)?.colorizer ??
+                                        "Play")
                                 ? (sale
-                                    ? '100 Crystals for 10 Colorizers'
-                                    : 'EUR 0.49 for\n10 Colorizer')
-                                : gadgetName == "Hints"
+                                    ? '100 ${AppLocalizations.of(context)?.crystals ?? "Play"} ${AppLocalizations.of(context)?.forName ?? "Play"} 10 ${AppLocalizations.of(context)?.colorizer ?? "Play"}'
+                                    : 'EUR 0,49 ${AppLocalizations.of(context)?.forName ?? "Play"}\n10 ${AppLocalizations.of(context)?.colorizer ?? "Play"}')
+                                : gadgetName ==
+                                        (AppLocalizations.of(context)?.hints ??
+                                            "Play")
                                     ? (sale
-                                        ? '100 Crystals for 15 Hints'
-                                        : 'EUR 0.49 for\n15 Hints')
-                                    : "150 Crystals",
+                                        ? '100 ${AppLocalizations.of(context)?.crystals ?? "Play"} ${AppLocalizations.of(context)?.forName ?? "Play"} 15 ${AppLocalizations.of(context)?.hints ?? "Play"}'
+                                        : 'EUR 0,49 ${AppLocalizations.of(context)?.forName ?? "Play"}\n15 ${AppLocalizations.of(context)?.hints ?? "Play"}')
+                                    : "150 ${AppLocalizations.of(context)?.crystals ?? "Play"}",
                             style: const TextStyle(
                               fontFamily: 'Quicksand',
                               fontSize: 16,
@@ -2360,7 +2439,7 @@ class _AnimatedTextState extends State<AnimatedText>
       animation: _controller,
       builder: (context, child) {
         return Text(
-          'Tap to claim',
+          AppLocalizations.of(context)?.tapToClaim ?? "Play",
           style: TextStyle(
             color: _colorAnimation.value,
             fontSize: _sizeAnimation.value,
@@ -2481,5 +2560,118 @@ class _CoinAnimationState extends State<CoinAnimation>
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+}
+
+class SettingsScreen extends StatefulWidget {
+  PuzzleModel puzzle = PuzzleModel(size: 0, level: 0, colorMapping: {});
+  SettingsScreen({super.key, required PuzzleModel puzzle});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  // Liste der verfügbaren Sprachen
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      height: MediaQuery.of(context).size.height * 0.45 +
+          100, // Begrenzt die Höhe auf 50% des Bildschirms
+      child: Column(
+        children: [
+          // Eine kleine "Leiste" zum Schließen der modalen Ansicht
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                AppLocalizations.of(context)?.settings ?? "Settings",
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Schließt die Modal-Ansicht
+                },
+              ),
+            ],
+          ),
+          const Divider(), // Linie als Trenner
+          Expanded(
+            child: ListView(
+              children: [
+                SwitchListTile(
+                  title: const Text('Vibration'),
+                  value: true, // Beispielwert
+                  onChanged: (bool value) {
+                    // Logik, um Vibration zu aktivieren/deaktivieren
+                  },
+                ),
+                const SizedBox(height: 20), // Abstandsregelung
+                SwitchListTile(
+                  title: Text(
+                    AppLocalizations.of(context)?.sounds ?? "Sounds",
+                  ),
+                  value: false, // Beispielwert
+                  onChanged: (bool value) {
+                    // Logik, um Töne zu aktivieren/deaktivieren
+                  },
+                ),
+                const SizedBox(height: 20), // Abstandsregelung
+                ListTile(
+                  title: Text(
+                    AppLocalizations.of(context)?.language ?? "Language",
+                  ),
+                  trailing: DropdownButton<String>(
+                    value: languages[selectedLanguage],
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        switch (newValue) {
+                          case "English":
+                            selectedLanguage = 0;
+                            widget.puzzle.saveSelectedLanguage(0);
+
+                          case "Deutsch":
+                            selectedLanguage = 1;
+                            widget.puzzle.saveSelectedLanguage(1);
+                          case "Español":
+                            selectedLanguage = 2;
+                            widget.puzzle.saveSelectedLanguage(2);
+                          default:
+                            selectedLanguage = 0;
+                            widget.puzzle.saveSelectedLanguage(0);
+                        }
+                      });
+                    },
+                    items: languages
+                        .map<DropdownMenuItem<String>>((String language) {
+                      return DropdownMenuItem<String>(
+                        value: language,
+                        child: Text(language),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                ListTile(
+                    title: Center(
+                        child: Text(
+                  AppLocalizations.of(context)?.privacy ?? "Language",
+                  style: const TextStyle(color: Colors.indigo, fontSize: 15),
+                ))),
+                ListTile(
+                    title: Center(
+                        child: Text(
+                  AppLocalizations.of(context)?.restorePurchases ?? "Language",
+                  style: const TextStyle(color: Colors.indigo, fontSize: 15),
+                ))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

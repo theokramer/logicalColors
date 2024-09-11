@@ -14,6 +14,15 @@ int selectedWallpaper = 0;
 
 bool noAds = false;
 
+final List<String> languages = ['English', 'Deutsch', 'Español'];
+final List<String> locales = ['en', 'de', 'es'];
+
+int selectedLanguage = -1;
+
+bool vibration = false;
+
+bool sounds = false;
+
 TutorialStep currentTutorialStep = TutorialStep.step1;
 
 List<int> boughtWallpapers = [0];
@@ -247,6 +256,21 @@ class PuzzleModel with ChangeNotifier {
   Future<bool> loadBoughtWallpaper(int selectedWallpaper) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('w$selectedWallpaper') ?? false;
+  }
+
+  Future<void> saveSounds(bool sounds) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('sounds', sounds);
+  }
+
+  Future<void> saveVibration(bool vibration) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('vibration', vibration);
+  }
+
+  Future<void> saveSelectedLanguage(int language) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('selectedLanguage', language);
   }
 
   Future<void> saveNoAds(bool noAds) async {

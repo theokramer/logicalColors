@@ -1051,34 +1051,52 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                       });
                                     }
 
-                                    _confettiController.play();
+                                    if (animations) {
+                                      _confettiController.play();
+                                    }
+
                                     if (vibration) {
                                       HapticFeedback.heavyImpact();
                                     }
-                                    _animationController.forward().then((_) {
-                                      Future.delayed(
-                                          Duration(
-                                              milliseconds: tutorialActive
-                                                  ? 600
-                                                  : 300), () {
-                                        _animationController
-                                            .reverse()
-                                            .then((_) {
-                                          Future.delayed(
-                                              Duration(
-                                                  milliseconds: tutorialActive
-                                                      ? 1000
-                                                      : 500), () {
-                                            setState(() {
-                                              showBanner = true;
+                                    if (animations) {
+                                      _animationController.forward().then((_) {
+                                        Future.delayed(
+                                            Duration(
+                                                milliseconds: tutorialActive
+                                                    ? 600
+                                                    : 300), () {
+                                          _animationController
+                                              .reverse()
+                                              .then((_) {
+                                            Future.delayed(
+                                                Duration(
+                                                    milliseconds: tutorialActive
+                                                        ? 1000
+                                                        : 500), () {
+                                              setState(() {
+                                                showBanner = true;
+                                              });
+                                              if (_interstitialAd != null) {
+                                                _interstitialAd?.show();
+                                              }
                                             });
-                                            if (_interstitialAd != null) {
-                                              _interstitialAd?.show();
-                                            }
                                           });
                                         });
                                       });
-                                    });
+                                    } else {
+                                      Future.delayed(
+                                          Duration(
+                                              milliseconds: tutorialActive
+                                                  ? 900
+                                                  : 600), () {
+                                        setState(() {
+                                          showBanner = true;
+                                        });
+                                        if (_interstitialAd != null) {
+                                          _interstitialAd?.show();
+                                        }
+                                      });
+                                    }
                                   } else {
                                     if (vibration) {
                                       HapticFeedback.selectionClick();
@@ -1769,7 +1787,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                 ),
 
               // Confetti effect
-              if (animationStarted && showCoinAnimation)
+              if (animationStarted && showCoinAnimation && animations)
                 CoinAnimation(
                   start: Offset(MediaQuery.of(context).size.width / 2,
                       MediaQuery.of(context).size.height / 2),
@@ -2447,8 +2465,8 @@ class _AnimatedTextState extends State<AnimatedText>
         return Text(
           AppLocalizations.of(context)?.tapToClaim ?? "Play",
           style: TextStyle(
-            color: _colorAnimation.value,
-            fontSize: _sizeAnimation.value,
+            color: animations ? _colorAnimation.value : Colors.indigo,
+            fontSize: animations ? _sizeAnimation.value : 26,
             fontWeight: FontWeight.bold,
             fontFamily: 'Quicksand',
           ),

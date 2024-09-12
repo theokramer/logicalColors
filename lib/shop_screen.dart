@@ -302,6 +302,7 @@ class _ShopScreenState extends State<ShopScreen> {
 
     bool unlocked = false;
     int hintsAdded = 0;
+    int remsAdded = 0;
     int wallpapersUnlocked = 0;
 
     if (!ad) {
@@ -321,8 +322,10 @@ class _ShopScreenState extends State<ShopScreen> {
       addCrystals(7000); // Adds 7000 crystals
       hintsAdded = 30; // Adds 30 hints
       puzzle.addHints(hintsAdded);
+      remsAdded = 20;
+      puzzle.addRems(hintsAdded);
       wallpapersUnlocked = 3; // Assume bundle gives 3 wallpapers
-      for (int i = 0; i < wallpapersUnlocked; i++) {
+      for (int i = 0; i < wallpapersUnlocked - 1; i++) {
         newWallpaper = random.nextInt(14);
         while (boughtWallpapers.contains(newWallpaper)) {
           newWallpaper = random.nextInt(14);
@@ -459,6 +462,26 @@ class _ShopScreenState extends State<ShopScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(
+                              Icons.colorize,
+                              size: 40, // Smaller icon
+                              color: Colors.red,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              '+$remsAdded Colorizer',
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
                               Icons.image,
                               size: 40, // Smaller icon
                               color: Colors.green,
@@ -520,12 +543,15 @@ class _ShopScreenState extends State<ShopScreen> {
                               size: 25, // Slightly smaller icon
                               color: Colors.green,
                             ),
+                            const SizedBox(
+                              width: 5,
+                            ),
                             Text(
                               AppLocalizations.of(context)?.unlockedWorlds ??
                                   "World",
                               style: const TextStyle(
                                 color: Colors.black,
-                                fontSize: 14, // Smaller font size
+                                fontSize: 12, // Smaller font size
                               ),
                             ),
                           ],
@@ -641,7 +667,7 @@ class _ShopScreenState extends State<ShopScreen> {
             AppLocalizations.of(context)?.removeAdsBody ?? "Play",
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 8.5, // Larger font size
+              fontSize: 9, // Larger font size
               fontWeight: FontWeight.w600,
               color: Colors.black87, // Darker text color
             ),
@@ -725,7 +751,7 @@ class _ShopScreenState extends State<ShopScreen> {
 
   Widget _buildItem(IconData icon, String text, Color color, String imagePath) {
     return Container(
-      width: 95, // Slightly wider container
+      width: 80, // Slightly wider container
       margin: const EdgeInsets.symmetric(horizontal: 3.0),
       padding: const EdgeInsets.all(6.0),
       decoration: BoxDecoration(
@@ -1106,7 +1132,7 @@ class _ShopScreenState extends State<ShopScreen> {
                         Text(
                           AppLocalizations.of(context)?.removeAdsBody ?? "Play",
                           style: const TextStyle(
-                            fontSize: 10,
+                            fontSize: 9,
                             fontWeight: FontWeight.bold,
                             color: Colors.white70,
                           ),

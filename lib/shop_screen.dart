@@ -167,11 +167,21 @@ class _ShopScreenState extends State<ShopScreen> {
         _showPurchaseDialog(
             context,
             "${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
-            40,
+            int.parse(products
+                .firstWhere((p) => p.id == purchaseDetails.productID,
+                    orElse: () => ProductDetails(
+                        id: "",
+                        title: "",
+                        description: "",
+                        price: "",
+                        rawPrice: 0,
+                        currencyCode: ""))
+                .title
+                .split(' ')
+                .first),
             widget.puzzle,
             false);
         break;
-
     }
 
     // Add more product logic as needed

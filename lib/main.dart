@@ -260,7 +260,13 @@ class MyApp extends StatelessWidget {
           routes: {
             '/': (context) => const PuzzleScreen(),
             '/roadmap': (context) => const MainMenuScreen(),
-            '/shop': (context) => const ShopScreen(),
+            '/shop': (context) {
+              // Access PuzzleModel using Provider
+              final puzzle = Provider.of<PuzzleModel>(context, listen: false);
+
+              // Pass PuzzleModel to ShopScreen
+              return ShopScreen(puzzle: puzzle);
+            },
             '/menu': (context) => const MainMenuScreen(),
           },
         );

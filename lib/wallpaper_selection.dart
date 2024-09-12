@@ -242,7 +242,9 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
     } else {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => const ShopScreen(),
+          builder: (context) => ShopScreen(
+            puzzle: puzzle,
+          ),
         ),
       );
     }

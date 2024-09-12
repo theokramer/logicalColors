@@ -106,8 +106,9 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
               : widget.isLarge == 2 && !widget.originShop
                   ? Navigator.of(context).push(
                       FadePageRoute(
-                        page:
-                            const ShopScreen(), // Verwende hier das existierende PuzzleModel
+                        page: ShopScreen(
+                          puzzle: puzzle,
+                        ), // Verwende hier das existierende PuzzleModel
                       ),
                     )
                   : null, // Show info dialog on tap

@@ -260,7 +260,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const ShopScreen(),
+                          builder: (context) => ShopScreen(
+                            puzzle: puzzle,
+                          ),
                         ),
                       );
                     },
@@ -677,7 +679,9 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
                 Colors.teal, () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const ShopScreen(),
+                  builder: (context) => ShopScreen(
+                    puzzle: puzzle,
+                  ),
                 ),
               );
             }),

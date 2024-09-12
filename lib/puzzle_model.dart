@@ -14,6 +14,17 @@ int selectedWallpaper = 0;
 
 bool noAds = false;
 
+final List<String> languages = ['English', 'Deutsch', 'Español'];
+final List<String> locales = ['en', 'de', 'es'];
+
+int selectedLanguage = -1;
+
+bool vibration = false;
+
+bool animations = false;
+
+bool sounds = false;
+
 TutorialStep currentTutorialStep = TutorialStep.step1;
 
 List<int> boughtWallpapers = [0];
@@ -83,7 +94,7 @@ class PuzzleModel with ChangeNotifier {
   int _elapsedTime;
   int _targetColorNumber;
   int moveWhereError = -1;
-  int _coinsEarned;
+  int _CrystalsEarned;
   double countClicks = 0;
 
   final List<List<dynamic>> _undoStack = []; // Stack für Undo-Funktion
@@ -115,7 +126,7 @@ class PuzzleModel with ChangeNotifier {
             List.generate(size, (_) => List.generate(size, (_) => 1)),
         clicks = List.generate(level, (_) => []),
         savedClicks = List.generate(level, (_) => []),
-        _coinsEarned = 10,
+        _CrystalsEarned = 10,
         _targetColorNumber = 1,
         _colorMapping = {
           1: worlds[currentWorld - 1].colors[0],
@@ -137,7 +148,7 @@ class PuzzleModel with ChangeNotifier {
       _colorMapping[_targetColorNumber] ?? Colors.transparent;
   int? get hintX => _hintX;
   int? get hintY => _hintY;
-  int get coinsEarned => _coinsEarned;
+  int get CrystalsEarned => _CrystalsEarned;
 
   // Setters
   set grid(List<List<int>> newGrid) {
@@ -247,6 +258,26 @@ class PuzzleModel with ChangeNotifier {
   Future<bool> loadBoughtWallpaper(int selectedWallpaper) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('w$selectedWallpaper') ?? false;
+  }
+
+  Future<void> saveSounds(bool sounds) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('sounds', sounds);
+  }
+
+  Future<void> saveVibration(bool vibration) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('vibration', vibration);
+  }
+
+  Future<void> saveAnimations(bool animations) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('animations', animations);
+  }
+
+  Future<void> saveSelectedLanguage(int language) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('selectedLanguage', language);
   }
 
   Future<void> saveNoAds(bool noAds) async {
@@ -466,8 +497,8 @@ class PuzzleModel with ChangeNotifier {
     initializeProgress(); // Lade den Fortschritt
   }
 
-  Future<void> addCoins(int amount) async {
-    await CoinManager.addCoins(amount);
+  Future<void> addCrystals(int amount) async {
+    await CoinManager.addCrystals(amount);
     notifyListeners();
   }
 
@@ -486,9 +517,9 @@ class PuzzleModel with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> subtractCoins(int amount) async {
-    await CoinManager.subtractCoins(amount);
-    if (await CoinManager.loadCoins() < 0) await CoinManager.saveCoins(0);
+  Future<void> subtractCrystals(int amount) async {
+    await CoinManager.subtractCrystals(amount);
+    if (await CoinManager.loadCrystals() < 0) await CoinManager.saveCrystals(0);
     notifyListeners();
   }
 
@@ -504,25 +535,24 @@ class PuzzleModel with ChangeNotifier {
     notifyListeners();
   }
 
-  int calculateCoinsEarned(
+  int calculateCrystalsEarned(
       int maxMoves, int size, int selectedLevel, int worldID) {
-    double difficulty = calculateDifficulty(maxMoves, size) * 6;
+    double difficulty = calculateDifficulty(maxMoves, size) * 8;
 
     // Skaliere die Schwierigkeit stärker für höhere Belohnungen
     num difficultyWeight = difficulty > 1 ? pow(difficulty, 2) : difficulty;
 
-    // Dynamische Anpassung der Coins-Belohnung basierend auf Level und Schwierigkeit
-    double baseCoins = difficultyWeight * 2; // Grundwert pro Schwierigkeit
+    // Dynamische Anpassung der Crystals-Belohnung basierend auf Level und Schwierigkeit
+    double baseCrystals = difficultyWeight * 2; // Grundwert pro Schwierigkeit
     double levelFactor =
         log(selectedLevel); // sorgt für geringeren Einfluss bei kleinen Levels
 
-    // Endberechnung der Coins mit minimalen und maximalen Grenzen
-    int coinsEarned =
-        (((baseCoins + levelFactor)) + ((baseCoins + levelFactor) * 0.4))
-            .clamp(1, 1000)
-            .ceil(); // z.B. Mindestwert 1, Maximalwert 1000
+    // Endberechnung der Crystals mit minimalen und maximalen Grenzen
+    int CrystalsEarned = ((baseCrystals + levelFactor) * 0.5 + 15)
+        .clamp(1, 1000)
+        .ceil(); // z.B. Mindestwert 1, Maximalwert 1000
 
-    return coinsEarned;
+    return CrystalsEarned;
   }
 
   void _initializeGrid() {
@@ -530,14 +560,14 @@ class PuzzleModel with ChangeNotifier {
         _random.nextInt(3) + 1; // Target color number to achieve
     setTargetColor(_targetColorNumber);
     if (worlds[currentWorld - 1].maxLevel <= selectedLevel) {
-      _coinsEarned =
-          calculateCoinsEarned(maxMoves, size, selectedLevel, currentWorld);
-      //_coinsEarned = ((calculateDifficulty(maxMoves, size) * 100 + (selectedLevel * 0.3)) * 0.5).ceil();
+      _CrystalsEarned =
+          calculateCrystalsEarned(maxMoves, size, selectedLevel, currentWorld);
+      //_CrystalsEarned = ((calculateDifficulty(maxMoves, size) * 100 + (selectedLevel * 0.3)) * 0.5).ceil();
     } else {
-      //? Auskommentieren, wenn mehr Coins in abgeschlossenen Levels gewünscht
-      //_coinsEarned =
-      //calculateCoinsEarned(maxMoves, size, selectedLevel, currentWorld);
-      _coinsEarned = 5;
+      //? Auskommentieren, wenn mehr Crystals in abgeschlossenen Levels gewünscht
+      //_CrystalsEarned =
+      //calculateCrystalsEarned(maxMoves, size, selectedLevel, currentWorld);
+      _CrystalsEarned = 5;
     }
     // Initialize the grid with the target color
     for (int i = 0; i < size; i++) {
@@ -619,9 +649,9 @@ class PuzzleModel with ChangeNotifier {
             var hint = clicks[0];
             setHint(hint[0], hint[1]); // Set hint coordinates
           } else {
-            if (await CoinManager.loadCoins() >= 50) {
+            if (await CoinManager.loadCrystals() >= 50) {
               gotHint = true;
-              subtractCoins(50);
+              subtractCrystals(50);
 
               var hint = clicks[0];
               setHint(hint[0], hint[1]); // Set hint coordinates

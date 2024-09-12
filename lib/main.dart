@@ -1,25 +1,43 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:color_puzzle/coin_manager.dart';
 import 'package:color_puzzle/hints_manager.dart';
 import 'package:color_puzzle/main_menu_screen.dart';
 import 'package:color_puzzle/shop_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'puzzle_model.dart'; // Import your PuzzleModel
 import 'puzzle_screen.dart'; // Import your screen
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MobileAds.instance.initialize();
+
   int maxLevel = await loadWorldProgress(
       currentWorld); // Load progress for the current world
   tutorialActive = await loadTutorial();
+  selectedLanguage = await loadSelectedLanguage();
+  vibration = await loadVibration();
+  animations = await loadAnimations();
+  sounds = await loadSounds();
   selectedLevel = maxLevel;
-  runApp(MyApp(maxLevel: maxLevel));
+  int savedLanguage = await loadSelectedLanguage();
+  runApp(MyApp(
+    maxLevel: maxLevel,
+    savedLanguage: savedLanguage,
+  ));
+}
+
+int maxWorld() {
+  for (int i = worlds.length; i > 0; i--) {}
+  return 0;
 }
 
 Future<bool> loadTutorial() async {
@@ -40,10 +58,48 @@ Future<void> saveWorldProgress(int worldId, int maxLevel) async {
   await prefs.setInt('world_$worldId', maxLevel);
 }
 
+Future<int> loadSelectedLanguage() async {
+  final String defaultLocale = Platform.localeName;
+  final prefs = await SharedPreferences.getInstance();
+
+  var intLanguage = prefs.getInt('selectedLanguage') ?? -1;
+  if (intLanguage == -1) {
+    switch (defaultLocale) {
+      case "en_DE":
+        return 0;
+      case "de_DE":
+        return 1;
+      case "es_DE":
+        return 2;
+      default:
+        return 0;
+    }
+  }
+
+  return intLanguage;
+}
+
+Future<bool> loadVibration() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('vibration') ?? true;
+}
+
+Future<bool> loadAnimations() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('animations') ?? true;
+}
+
+Future<bool> loadSounds() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('sounds') ?? true;
+}
+
 class MyApp extends StatelessWidget {
   final int maxLevel;
 
-  const MyApp({super.key, required this.maxLevel});
+  final int savedLanguage; // The saved language passed from main()
+
+  const MyApp({super.key, required this.maxLevel, required this.savedLanguage});
 
   Map<String, int> getSizeAndMaxMoves(int level) {
     int s = currentWorld == 1 ? 1 : 2;
@@ -150,6 +206,15 @@ class MyApp extends StatelessWidget {
     return {"size": s, "maxMoves": m};
   }
 
+  Locale currentLocale() {
+    final String defaultLocale = Platform.localeName;
+    if (selectedLanguage == -1) {
+      return Locale(defaultLocale);
+    } else {
+      return Locale(locales[selectedLanguage]);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -166,23 +231,68 @@ class MyApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(create: (_) => CoinProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider(savedLanguage)),
         ChangeNotifierProvider(create: (_) => HintsProvider()),
         ChangeNotifierProvider(create: (_) => RemsProvider()),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Color Change Puzzle',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
-        initialRoute: tutorialActive ? '/' : '/menu',
-        routes: {
-          '/': (context) => const PuzzleScreen(),
-          '/roadmap': (context) => const MainMenuScreen(),
-          '/shop': (context) => const ShopScreen(),
-          '/menu': (context) => const MainMenuScreen(),
-        },
-      ),
+      child: Consumer<LanguageProvider>(
+          builder: (context, languageProvider, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          supportedLocales: const [
+            Locale('en', ''), // Englisch
+            Locale('de', ''), // Deutsch
+            Locale('es', ''), // Spanisch
+          ],
+          locale: languageProvider.locale,
+          // Lokalisierungsdelegaten konfigurieren
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          title: "Logical Colors",
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+          ),
+          initialRoute: tutorialActive ? '/' : '/menu',
+          routes: {
+            '/': (context) => const PuzzleScreen(),
+            '/roadmap': (context) => const MainMenuScreen(),
+            '/shop': (context) {
+              // Access PuzzleModel using Provider
+              final puzzle = Provider.of<PuzzleModel>(context, listen: false);
+
+              // Pass PuzzleModel to ShopScreen
+              return ShopScreen(puzzle: puzzle);
+            },
+            '/menu': (context) => const MainMenuScreen(),
+          },
+        );
+      }),
     );
+  }
+}
+
+class LanguageProvider with ChangeNotifier {
+  Locale _locale;
+
+  // Constructor that sets the initial locale from the saved language
+  LanguageProvider(int savedLanguage)
+      : _locale = Locale(locales[savedLanguage]);
+
+  Locale get locale => _locale;
+
+  // Update the locale and notify listeners
+  void setLocale(Locale locale) {
+    if (_locale == locale) return;
+    _locale = locale;
+    notifyListeners();
+  }
+
+  void clearLocale() {
+    _locale = const Locale('en');
+    notifyListeners();
   }
 }

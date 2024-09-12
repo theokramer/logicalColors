@@ -9,6 +9,7 @@ import 'custom_info_button.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:color_puzzle/shop_screen.dart';
 import 'package:color_puzzle/coin_manager.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -259,7 +260,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const ShopScreen(),
+                          builder: (context) => ShopScreen(
+                            puzzle: puzzle,
+                          ),
                         ),
                       );
                     },
@@ -302,10 +305,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   Consumer<CoinProvider>(
                     builder: (context, coinProvider, child) {
                       return CustomInfoButton(
-                        value: '${coinProvider.coins}',
+                        value: '${coinProvider.Crystals}',
                         targetColor: -1,
                         movesLeft: -1,
-                        iconPath: 'images/coins.png',
+                        iconPath: 'images/Crystals.png',
                         backgroundColor: Colors.black45,
                         textColor: Colors.white,
                         isLarge: 2,
@@ -354,7 +357,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   Widget _buildTitleText(int maxLevel) {
     return Text(
-      'World $currentWorld ${maxLevel > 1 ? ("– Level $maxLevel") : ""}',
+      '${AppLocalizations.of(context)?.world ?? "World"} $currentWorld ${maxLevel > 1 ? ("– Level $maxLevel") : ""}',
       textAlign: TextAlign.center,
       style: TextStyle(
         color: Colors.white,
@@ -435,14 +438,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             );
           }
         },
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.play_arrow, color: Colors.white, size: 36),
-            SizedBox(width: 8),
+            const Icon(Icons.play_arrow, color: Colors.white, size: 36),
+            const SizedBox(width: 8),
             Text(
-              'PLAY',
-              style: TextStyle(
+              AppLocalizations.of(context)?.play ?? "Play",
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -482,14 +485,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 16),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.lock_open, color: Colors.white, size: 36),
-            SizedBox(width: 8),
+            const Icon(Icons.lock_open, color: Colors.white, size: 36),
+            const SizedBox(width: 8),
             Text(
-              'Unlock',
-              style: TextStyle(
+              AppLocalizations.of(context)?.unlock ?? "Unlock",
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -649,31 +652,36 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
                       bottomLeft: Radius.circular(10),
                       bottomRight: Radius.circular(10))),
               padding: const EdgeInsets.all(16.0),
-              child: const Text(
-                'Unlocking all worlds',
-                style: TextStyle(
+              child: Text(
+                AppLocalizations.of(context)?.unlockTitle ?? "",
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(16.0),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Text(
-                'You can unlock all worlds and levels in the game, by purchasing one item in the shop.',
+                AppLocalizations.of(context)?.unlockBody ?? "",
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 18,
                   color: Colors.black87,
                 ),
               ),
             ),
             const SizedBox(height: 10),
-            _buildUnlockButton(context, "Open Shop", Colors.teal, () {
+            _buildUnlockButton(
+                context,
+                AppLocalizations.of(context)?.openShop ?? "Open Shop",
+                Colors.teal, () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const ShopScreen(),
+                  builder: (context) => ShopScreen(
+                    puzzle: puzzle,
+                  ),
                 ),
               );
             }),
@@ -717,7 +725,7 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
                 Navigator.of(context).pop(); // Close dialog
               },
               child: Text(
-                'Cancel',
+                AppLocalizations.of(context)?.cancel ?? "Cancel",
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 16,

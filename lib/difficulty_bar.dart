@@ -1,5 +1,6 @@
 import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 double calculateDifficulty(int maxMoves, int gridSize) {
   double difficulty = ((maxMoves * 3) / ((gridSize * gridSize) + 10)) *
@@ -75,9 +76,9 @@ class HorizontalDifficultyBar extends StatelessWidget {
           children: segments,
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Difficulty',
-          style: TextStyle(
+        Text(
+          ' ${AppLocalizations.of(context)?.difficulty ?? "Play"}',
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 14,
           ),

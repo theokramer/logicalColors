@@ -148,47 +148,48 @@ class _CustomActionButtonState extends State<CustomActionButton>
                       ],
                     ),
                   ),
-                  if (widget.count == 0)
-                    SizedBox(
-                      width: 90,
-                      height: 80,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                  SizedBox(
+                    width: 90,
+                    height: 80,
+                    child: widget.count == 0
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              Stack(
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  Positioned(
-                                    child: Container(
-                                      width: 25,
-                                      height: 25,
-                                      decoration: const BoxDecoration(
-                                        color: Colors.green, // Badge color
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.green,
-                                            blurRadius: 4,
-                                            offset: Offset(2, 2),
+                                  Stack(
+                                    children: [
+                                      Positioned(
+                                        child: Container(
+                                          width: 25,
+                                          height: 25,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.green, // Badge color
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.green,
+                                                blurRadius: 4,
+                                                offset: Offset(2, 2),
+                                              ),
+                                            ],
                                           ),
-                                        ],
+                                          child: const Icon(
+                                            Icons.add,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                        ),
                                       ),
-                                      child: const Icon(
-                                        Icons.add,
-                                        color: Colors.white,
-                                        size: 18,
-                                      ),
-                                    ),
+                                    ],
                                   ),
                                 ],
                               ),
                             ],
-                          ),
-                        ],
-                      ),
-                    )
+                          )
+                        : const SizedBox(),
+                  )
                 ],
               ),
             ],

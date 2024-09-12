@@ -3,80 +3,79 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'coin_manager.dart'; // Importiere CoinManager
 
-
 class CoinManager {
-  static const String _coinsKey = 'coins';
+  static const String _CrystalsKey = 'Crystals';
 
-  // Laden der Coins von SharedPreferences
-  static Future<int> loadCoins() async {
-  try {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_coinsKey) ?? 0; // Standardwert 0, falls nicht gespeichert
-  } catch (e) {
-    print('Error loading coins: $e');
-    return 0; // Standardwert bei Fehler
+  // Laden der Crystals von SharedPreferences
+  static Future<int> loadCrystals() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      return prefs.getInt(_CrystalsKey) ??
+          0; // Standardwert 0, falls nicht gespeichert
+    } catch (e) {
+      print('Error loading Crystals: $e');
+      return 0; // Standardwert bei Fehler
+    }
+  }
+
+  static Future<void> saveCrystals(int Crystals) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_CrystalsKey, Crystals);
+    } catch (e) {
+      print('Error saving Crystals: $e');
+    }
+  }
+
+  static Future<void> addCrystals(int amount) async {
+    try {
+      int currentCrystals = await loadCrystals();
+      await saveCrystals(currentCrystals + amount);
+    } catch (e) {
+      print('Error adding Crystals: $e');
+    }
+  }
+
+  static Future<void> subtractCrystals(int amount) async {
+    try {
+      int currentCrystals = await loadCrystals();
+      await saveCrystals(
+          (currentCrystals - amount).clamp(0, double.infinity).toInt());
+    } catch (e) {
+      print('Error subtracting Crystals: $e');
+    }
   }
 }
-
-static Future<void> saveCoins(int coins) async {
-  try {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_coinsKey, coins);
-  } catch (e) {
-    print('Error saving coins: $e');
-  }
-}
-
-static Future<void> addCoins(int amount) async {
-  try {
-    int currentCoins = await loadCoins();
-    await saveCoins(currentCoins + amount);
-  } catch (e) {
-    print('Error adding coins: $e');
-  }
-}
-
-static Future<void> subtractCoins(int amount) async {
-  try {
-    int currentCoins = await loadCoins();
-    await saveCoins((currentCoins - amount).clamp(0, double.infinity).toInt());
-  } catch (e) {
-    print('Error subtracting coins: $e');
-  }
-}
-
-}
-
 
 class CoinProvider extends ChangeNotifier {
-  int _coins = 0;
+  int _Crystals = 0;
 
-  int get coins => _coins;
+  int get Crystals => _Crystals;
 
-  // Laden der Coins
-  Future<void> loadCoins() async {
-    _coins = await CoinManager.loadCoins();
+  // Laden der Crystals
+  Future<void> loadCrystals() async {
+    _Crystals = await CoinManager.loadCrystals();
     notifyListeners();
   }
 
-  // Speichern der Coins
-  Future<void> saveCoins(int coins) async {
-    _coins = coins;
-    await CoinManager.saveCoins(coins);
+  // Speichern der Crystals
+  Future<void> saveCrystals(int Crystals) async {
+    _Crystals = Crystals;
+    await CoinManager.saveCrystals(Crystals);
     notifyListeners();
   }
 
-  // Coins hinzufügen
-  Future<void> addCoins(int amount) async {
-    _coins += amount;
-    await CoinManager.saveCoins(_coins);
+  // Crystals hinzufügen
+  Future<void> addCrystals(int amount) async {
+    _Crystals += amount;
+    await CoinManager.saveCrystals(_Crystals);
     notifyListeners();
   }
 
-  // Coins abziehen
-  Future<void> subtractCoins(int amount) async {
-    _coins = (_coins - amount).clamp(0, double.infinity).toInt();
-    await CoinManager.saveCoins(_coins);
+  // Crystals abziehen
+  Future<void> subtractCrystals(int amount) async {
+    _Crystals = (_Crystals - amount).clamp(0, double.infinity).toInt();
+    await CoinManager.saveCrystals(_Crystals);
     notifyListeners();
   }
 }

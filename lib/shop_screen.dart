@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:color_puzzle/hints_manager.dart';
@@ -8,6 +9,7 @@ import 'package:color_puzzle/puzzle_model.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'custom_info_button.dart'; // Dein CustomInfoButton
@@ -22,11 +24,92 @@ class ShopScreen extends StatefulWidget {
 }
 
 class _ShopScreenState extends State<ShopScreen> {
+  final InAppPurchase inAppPurchase = InAppPurchase.instance;
+  final List<ProductDetails> products = [];
+  late StreamSubscription<List<PurchaseDetails>> _subscription;
+  bool available = true; // Track availability of in-app purchases
+  // Fetch product details (to be called when the page loads)
+  void _loadProducts() async {
+    const Set<String> productIds = {
+      'de.tk.enhanced.no.ads.bundle',
+      'de.tk.700.crystals'
+    };
+    final ProductDetailsResponse response =
+        await inAppPurchase.queryProductDetails(productIds);
+    if (response.error == null && response.productDetails.isNotEmpty) {
+      products.addAll(response.productDetails);
+    }
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+
   @override
   void initState() {
+    _loadProducts();
     if (_rewardedAd == null) {
       _loadRewardedAd();
     }
+    // Listen to the purchaseUpdatedStream
+    final Stream<List<PurchaseDetails>> purchaseUpdated =
+        InAppPurchase.instance.purchaseStream;
+    _subscription = purchaseUpdated.listen((purchases) {
+      _handlePurchaseUpdates(purchases);
+    }, onDone: () {
+      _subscription.cancel();
+    }, onError: (error) {
+      // Handle errors here if necessary
+      print('Error in purchase stream: $error');
+    });
+  }
+
+  void _buyProduct(ProductDetails productDetails, PuzzleModel puzzle) {
+    final PurchaseParam purchaseParam =
+        PurchaseParam(productDetails: productDetails);
+    InAppPurchase.instance.buyNonConsumable(purchaseParam: purchaseParam);
+  }
+
+  // Handle the purchase updates
+  void _handlePurchaseUpdates(List<PurchaseDetails> purchaseDetailsList) {
+    for (var purchaseDetails in purchaseDetailsList) {
+      if (purchaseDetails.status == PurchaseStatus.purchased) {
+        // If the purchase is successful
+        bool isVerified = _verifyPurchase(purchaseDetails);
+        if (isVerified) {
+          // Call your custom function after successful purchase
+          _onPurchaseSuccess(purchaseDetails);
+        }
+      } else if (purchaseDetails.status == PurchaseStatus.canceled) {
+        // Handle purchase failure
+        print('Purchase failed: ${purchaseDetails.error}');
+      }
+
+      // Complete the purchase if necessary
+      if (purchaseDetails.pendingCompletePurchase) {
+        InAppPurchase.instance.completePurchase(purchaseDetails);
+      }
+    }
+  }
+
+  bool _verifyPurchase(PurchaseDetails purchaseDetails) {
+    // Perform your verification logic (server-side verification is recommended)
+    return true; // For demo purposes, assuming all purchases are verified.
+  }
+
+  // Function to call when the purchase is successful
+  void _onPurchaseSuccess(PurchaseDetails purchaseDetails) {
+    // Call your desired function after purchase success
+    print('Purchase successful: ${purchaseDetails.productID}');
+    // For example, unlock content or remove ads
+    if (purchaseDetails.productID == 'de.tk.enhanced.no.ads.bundle') {
+      print("Success");
+    } else if (purchaseDetails.productID == 'item_10') {
+      // Give user 10 items
+    }
+    // Add more product logic as needed
   }
 
   void addCrystals(int amount) async {
@@ -199,7 +282,30 @@ class _ShopScreenState extends State<ShopScreen> {
         child: Column(
           children: [
             const SizedBox(height: 15),
-            if (!noAds) _buildEnhancedBundleSection(puzzle),
+            if (!noAds &&
+                products
+                        .firstWhere(
+                            (p) => p.id == 'de.tk.enhanced.no.ads.bundle',
+                            orElse: () => ProductDetails(
+                                id: "",
+                                title: "",
+                                description: "",
+                                price: "",
+                                rawPrice: 0,
+                                currencyCode: ""))
+                        .id !=
+                    "")
+              _buildEnhancedBundleSection(
+                  puzzle,
+                  products.firstWhere(
+                      (p) => p.id == 'de.tk.enhanced.no.ads.bundle',
+                      orElse: () => ProductDetails(
+                          id: "",
+                          title: "",
+                          description: "",
+                          price: "",
+                          rawPrice: 0,
+                          currencyCode: ""))),
             if (!noAds) const SizedBox(height: 15),
             _buildPageViewSection(puzzle),
             const SizedBox(height: 15),
@@ -583,7 +689,8 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  Widget _buildEnhancedBundleSection(PuzzleModel puzzle) {
+  Widget _buildEnhancedBundleSection(
+      PuzzleModel puzzle, ProductDetails product) {
     return Container(
       padding: const EdgeInsets.all(6.0),
       decoration: BoxDecoration(
@@ -647,7 +754,7 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
           ),
           const SizedBox(height: 4), // Adjusted spacing
-          _buildBottomCard(puzzle),
+          _buildBottomCard(puzzle, product),
         ],
       ),
     );
@@ -699,14 +806,14 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  Widget _buildBottomCard(PuzzleModel puzzle) {
+  Widget _buildBottomCard(PuzzleModel puzzle, ProductDetails product) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 8.0),
           child: Text(
-            '"${AppLocalizations.of(context)?.noAdsTitle ?? "Play"}"-Bundle',
+            product.title,
             style: const TextStyle(
               fontSize: 16.0, // Larger font size
               fontWeight: FontWeight.bold,
@@ -718,15 +825,8 @@ class _ShopScreenState extends State<ShopScreen> {
           padding: const EdgeInsets.only(right: 8.0),
           child: ElevatedButton(
             onPressed: () {
-              puzzle.saveNoAds(true);
-              noAds = true;
-              _showPurchaseDialog(
-                  context,
-                  '"${AppLocalizations.of(context)?.noAdsTitle ?? "Play"}"-Bundle',
-                  0,
-                  puzzle,
-                  false,
-                  isEnhancedBundle: true);
+              // Ensure products are available before proceeding
+              _buyProduct(product, puzzle);
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
@@ -735,9 +835,9 @@ class _ShopScreenState extends State<ShopScreen> {
                 borderRadius: BorderRadius.circular(12.0), // Rounded corners
               ),
             ),
-            child: const Text(
-              'EUR 4,99',
-              style: TextStyle(
+            child: Text(
+              "${product.rawPrice} ${product.currencySymbol}",
+              style: const TextStyle(
                 fontSize: 16.0, // Larger font size
                 fontWeight: FontWeight.bold,
                 color: Colors.white, // Text color matching button border

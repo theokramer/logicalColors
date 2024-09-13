@@ -1072,7 +1072,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  if (!isEnhancedBundle)
+                  if (!isEnhancedBundle && amount != 0)
                     Column(
                       children: [
                         Row(

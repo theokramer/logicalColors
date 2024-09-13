@@ -12,6 +12,32 @@ int currentWorld = 1;
 
 int selectedWallpaper = 0;
 
+Color getBackgroundColor(int index) {
+  // Define colors for the 5 new solid-colored wallpapers
+  Color? color;
+  if (index >= 0 && index < 5) {
+    switch (index) {
+      case 0:
+        color = Colors.blue[200];
+        break;
+      case 1:
+        color = Colors.red;
+        break;
+      case 2:
+        color = Colors.green;
+        break;
+      case 3:
+        color = Colors.yellow;
+        break;
+      case 4:
+        color = Colors.purple;
+        break;
+    }
+  }
+
+  return color ?? Colors.white;
+}
+
 bool noAds = false;
 
 final List<String> languages = ['English', 'Deutsch', 'Español'];

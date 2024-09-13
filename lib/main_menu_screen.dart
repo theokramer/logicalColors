@@ -3,6 +3,7 @@ import 'package:color_puzzle/main.dart';
 import 'package:color_puzzle/wallpaper_selection.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
 import 'puzzle_model.dart';
 import 'custom_info_button.dart';
@@ -19,12 +20,72 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
+  // final InAppPurchase inAppPurchase = InAppPurchase.instance;
+  // final List<ProductDetails> products = [];
   int selectedWallpaperIndex = 1; // Default wallpaper selection
+  //bool available = true; // Track availability of in-app purchases
   late BannerAd _bannerAd;
   bool _isBannerAdReady = false;
 
+  // void _loadProduct() async {
+  //   const Set<String> productIds = {
+  //     'de.tk.no.ads',
+  //   };
+
+  //   final ProductDetailsResponse response =
+  //       await inAppPurchase.queryProductDetails(productIds);
+  //   if (response.error == null && response.productDetails.isNotEmpty) {
+  //     products.addAll(response.productDetails);
+  //   }
+  // }
+
+  // void _buyProduct(ProductDetails productDetails, PuzzleModel puzzle) {
+  //   final PurchaseParam purchaseParam =
+  //       PurchaseParam(productDetails: productDetails);
+  //   InAppPurchase.instance.buyNonConsumable(purchaseParam: purchaseParam);
+  // }
+
+  // // Handle the purchase updates
+  // void _handlePurchaseUpdates(List<PurchaseDetails> purchaseDetailsList) {
+  //   for (var purchaseDetails in purchaseDetailsList) {
+  //     if (purchaseDetails.status == PurchaseStatus.purchased) {
+  //       // If the purchase is successful
+  //       bool isVerified = _verifyPurchase(purchaseDetails);
+  //       if (isVerified) {
+  //         // Call your custom function after successful purchase
+  //         _onPurchaseSuccess(purchaseDetails);
+  //       }
+  //     } else if (purchaseDetails.status == PurchaseStatus.canceled) {
+  //       // Handle purchase failure
+  //       print('Purchase failed: ${purchaseDetails.error}');
+  //     }
+
+  //     // Complete the purchase if necessary
+  //     if (purchaseDetails.pendingCompletePurchase) {
+  //       InAppPurchase.instance.completePurchase(purchaseDetails);
+  //     }
+  //   }
+  // }
+
+  // bool _verifyPurchase(PurchaseDetails purchaseDetails) {
+  //   // Perform your verification logic (server-side verification is recommended)
+  //   return true; // For demo purposes, assuming all purchases are verified.
+  // }
+
+  // void _onPurchaseSuccess(PurchaseDetails purchaseDetails) {
+  //   puzzle.saveNoAds(true);
+  //   noAds = true;
+  //   _showPurchaseDialog(
+  //       context,
+  //       AppLocalizations.of(context)?.noAdsTitle ?? "Play",
+  //       0,
+  //       widget.puzzle,
+  //       false);
+  // }
+
   @override
   void initState() {
+    //_loadProduct;
     _bannerAd = BannerAd(
       adUnitId:
           "ca-app-pub-3940256099942544/2435281174", // correct one: 'ca-app-pub-3263827122305139/6797409538'
@@ -134,14 +195,16 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     bool isWorldUnlocked = puzzle.isWorldUnlocked(currentWorld);
 
     return Scaffold(
-      backgroundColor: Colors.blueGrey[50],
+      backgroundColor: getBackgroundColor(selectedWallpaper),
       body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("images/w$selectedWallpaper.jpg"),
-            fit: BoxFit.cover,
-          ),
-        ),
+        decoration: selectedWallpaper < 5
+            ? const BoxDecoration()
+            : BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage("images/w${selectedWallpaper - 5}.jpg"),
+                  fit: BoxFit.cover,
+                ),
+              ),
         child: SafeArea(
           child: Stack(
             children: [
@@ -326,7 +389,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               ),
             ],
           ),
-          if (!noAds)
+          if (!noAds && false)
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [

@@ -50,7 +50,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                 mainAxisSpacing: 12.0,
                 childAspectRatio: 0.65,
               ),
-              itemCount: 14,
+              itemCount: 19, // updated to 19
               itemBuilder: (context, index) {
                 bool isLocked = !boughtWallpapers.contains(index);
 
@@ -78,16 +78,20 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                               : Colors.transparent,
                           width: 5,
                         ),
-                        image: DecorationImage(
-                          image: AssetImage("images/w$index.jpg"),
-                          fit: BoxFit.cover,
-                          colorFilter: isLocked
-                              ? ColorFilter.mode(
-                                  Colors.black.withOpacity(0.5),
-                                  BlendMode.darken,
-                                )
-                              : null,
-                        ),
+                        // If it's one of the 5 new wallpapers, just use a solid color
+                        color: getBackgroundColor(index),
+                        image: index < 19
+                            ? DecorationImage(
+                                image: AssetImage("images/w${index - 5}.jpg"),
+                                fit: BoxFit.cover,
+                                colorFilter: isLocked
+                                    ? ColorFilter.mode(
+                                        Colors.black.withOpacity(0.5),
+                                        BlendMode.darken,
+                                      )
+                                    : null,
+                              )
+                            : null,
                       ),
                       child: isLocked
                           ? Center(
@@ -107,7 +111,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
               },
             ),
           ),
-          if (boughtWallpapers.length < 14)
+          if (boughtWallpapers.length < 19)
             Column(
               children: [
                 const SizedBox(
@@ -151,10 +155,24 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      image: DecorationImage(
-                        image: AssetImage("images/w$index.jpg"),
-                        fit: BoxFit.cover,
-                      ),
+                      // Show color preview for new wallpapers
+                      color: index >= 14
+                          ? (index == 14
+                              ? Colors.blue
+                              : index == 15
+                                  ? Colors.red
+                                  : index == 16
+                                      ? Colors.green
+                                      : index == 17
+                                          ? Colors.yellow
+                                          : Colors.purple)
+                          : null,
+                      image: index < 14
+                          ? DecorationImage(
+                              image: AssetImage("images/w${index - 5}.jpg"),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
                     ),
                     height: 500,
                     width: 300,
@@ -179,12 +197,10 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                       : ElevatedButton(
                           onPressed: () {
                             setState(() {
-                              // Unlock the wallpaper logic here
                               selectedWallpaper = index;
                             });
-                            puzzle.saveSelectedWallpaper(
-                                selectedWallpaper); // Save the selection
-                            Navigator.pop(context); // Close the purchase dialog
+                            puzzle.saveSelectedWallpaper(selectedWallpaper);
+                            Navigator.pop(context);
                           },
                           child: Text(
                               AppLocalizations.of(context)?.selectWallpaper ??
@@ -205,12 +221,9 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
   void _buyRandomWallpaper(
       BuildContext context, CoinProvider coinProvider, PuzzleModel puzzle) {
     const int wallpaperCost = 2000;
-
-    // Select a random wallpaper
-    int totalWallpapers = 14; // Assuming there are 14 wallpapers
+    int totalWallpapers = 19; // Updated to 19 wallpapers
     int randomWallpaperIndex = Random().nextInt(totalWallpapers);
 
-    // Ensure the random wallpaper hasn't been bought already
     while (boughtWallpapers.contains(randomWallpaperIndex)) {
       randomWallpaperIndex = Random().nextInt(totalWallpapers);
     }
@@ -227,18 +240,16 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
     int wallpaperCost,
   ) {
     if (coinProvider.Crystals >= wallpaperCost) {
-      coinProvider.subtractCrystals(wallpaperCost); // Deduct Crystals
+      coinProvider.subtractCrystals(wallpaperCost);
       setState(() {
-        // Unlock the wallpaper logic here
         selectedWallpaper = index;
       });
       puzzle.saveBoughtWallpaper(selectedWallpaper);
-      puzzle.saveSelectedWallpaper(selectedWallpaper); // Save the selection
+      puzzle.saveSelectedWallpaper(selectedWallpaper);
       if (!boughtWallpapers.contains(selectedWallpaper)) {
         boughtWallpapers.add(selectedWallpaper);
       }
-      Navigator.pop(context); // Close the purchase dialog
-      //Navigator.pop(context); // Close the preview dialog
+      Navigator.pop(context);
     } else {
       Navigator.of(context).push(
         MaterialPageRoute(

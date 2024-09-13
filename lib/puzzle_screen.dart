@@ -579,14 +579,18 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     Future.microtask(() => context.read<RemsProvider>().loadRems());
 
     return Scaffold(
-      backgroundColor: Colors.blue[50], // Playful background color
+      //backgroundColor: Colors.blue[50], // Playful background color
+      backgroundColor:
+          getBackgroundColor(selectedWallpaper), // Playful background color
       body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("images/w$selectedWallpaper.jpg"),
-            fit: BoxFit.cover,
-          ),
-        ),
+        decoration: selectedWallpaper < 5
+            ? const BoxDecoration()
+            : BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage("images/w${selectedWallpaper - 5}.jpg"),
+                  fit: BoxFit.cover,
+                ),
+              ),
         child: SafeArea(
           child: Stack(
             children: [

@@ -702,7 +702,7 @@ class PuzzleModel with ChangeNotifier {
     } else {
       if (moves < maxMoves) {
         if (!gotHint) {
-          if (await HintsManager.loadHints() > 0) {
+          if (await HintsManager.loadHints() > 0 && clicks.isNotEmpty) {
             gotHint = true;
             HintsManager.subtractHints(1);
             var hint = clicks[0];

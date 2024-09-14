@@ -97,7 +97,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   }
 
   void _showPurchaseDialog(
-      BuildContext context, String title, int amount, bool ad) {
+      BuildContext context, String title, int amount, bool ad, int type) {
     showDialog(
       context: context,
       barrierDismissible:
@@ -136,19 +136,17 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    amount == 3
+                    type == 0
                         ? const Icon(
                             Icons.lightbulb,
                             size: 50,
                             color: Colors.amber,
                           )
-                        : amount == 5
+                        : type == 1
                             ? const Icon(Icons.colorize,
                                 size: 50, color: Colors.redAccent)
-                            : Image.asset(
-                                'images/Crystals.png',
-                                height: 50,
-                              ),
+                            : const Icon(Icons.bolt,
+                                size: 50, color: Colors.indigo),
                     const SizedBox(width: 20),
                     Text(
                       '+$amount',
@@ -166,11 +164,11 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    amount == 3
-                        ? title == "Moves earned"
-                            ? addMoves(3)
-                            : addHints(3)
-                        : addRems(5);
+                    type == 2
+                        ? addMoves(amount)
+                        : type == 0
+                            ? addHints(amount)
+                            : addRems(amount);
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
@@ -485,7 +483,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             context,
             "${AppLocalizations.of(context)?.moves ?? "Moves'"} ${AppLocalizations.of(context)?.earned ?? "earned'"}",
             3,
-            true);
+            true,
+            2);
       },
     );
     _loadRewardedAd();
@@ -543,7 +542,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             context,
             "${AppLocalizations.of(context)?.hints ?? "Hints'"} ${AppLocalizations.of(context)?.earned ?? "earned'"}",
             3,
-            true);
+            true,
+            0);
       },
     );
     _loadRewardedAd();
@@ -555,8 +555,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
         _showPurchaseDialog(
             context,
             "${AppLocalizations.of(context)?.colorizer ?? "Colorizer'"} ${AppLocalizations.of(context)?.earned ?? "earned'"}",
-            5,
-            true);
+            2,
+            true,
+            1);
       },
     );
     _loadRewardedAd();

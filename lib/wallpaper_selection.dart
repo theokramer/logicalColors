@@ -96,7 +96,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                       child: isLocked
                           ? Center(
                               child: Text(
-                                '${(exp(index * 0.55) * 15 + index * 220 + log(index * 10000)).floor()}\n${AppLocalizations.of(context)?.crystals ?? "Crystals"}',
+                                '${(exp(index * 0.4) * 15 + index * 50 + log(index * 10000)).floor()}\n${AppLocalizations.of(context)?.crystals ?? "Crystals"}',
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   color: Colors.white,
@@ -156,18 +156,10 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       // Show color preview for new wallpapers
-                      color: index >= 14
-                          ? (index == 14
-                              ? Colors.blue
-                              : index == 15
-                                  ? Colors.red
-                                  : index == 16
-                                      ? Colors.green
-                                      : index == 17
-                                          ? Colors.yellow
-                                          : Colors.purple)
+                      color: index >= 0 && index < 5
+                          ? (getBackgroundColor(index))
                           : null,
-                      image: index < 14
+                      image: index > 4
                           ? DecorationImage(
                               image: AssetImage("images/w${index - 5}.jpg"),
                               fit: BoxFit.cover,
@@ -186,13 +178,13 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                                 index,
                                 coinProvider,
                                 puzzle,
-                                (exp(index * 0.5) * 10 +
-                                        index * 200 +
+                                (exp(index * 0.4) * 15 +
+                                        index * 50 +
                                         log(index * 10000))
                                     .floor());
                           },
                           child: Text(
-                              '${AppLocalizations.of(context)?.unlock ?? "Unlock"} ${AppLocalizations.of(context)?.forName ?? "for"} ${(exp(index * 0.5) * 10 + index * 200 + log(index * 10000)).floor()} ${AppLocalizations.of(context)?.crystals ?? "Crystals"}'),
+                              '${AppLocalizations.of(context)?.unlock ?? "Unlock"} ${AppLocalizations.of(context)?.forName ?? "for"} ${(exp(index * 0.4) * 15 + index * 50 + log(index * 10000)).floor()} ${AppLocalizations.of(context)?.crystals ?? "Crystals"}'),
                         )
                       : ElevatedButton(
                           onPressed: () {

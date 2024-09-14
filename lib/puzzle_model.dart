@@ -21,16 +21,16 @@ Color getBackgroundColor(int index) {
         color = Colors.blue[200];
         break;
       case 1:
-        color = Colors.red;
+        color = Colors.red[200];
         break;
       case 2:
-        color = Colors.green;
+        color = Colors.green[200];
         break;
       case 3:
-        color = Colors.yellow;
+        color = Colors.amber[200];
         break;
       case 4:
-        color = Colors.purple;
+        color = Colors.purple[200];
         break;
     }
   }
@@ -196,17 +196,16 @@ class PuzzleModel with ChangeNotifier {
   }
 
   Future<int> loadWorldProgress(int worldId) async {
-    //!Temp
     final prefs = await SharedPreferences.getInstance();
     //return 100;
     return prefs.getInt('world_$worldId') ??
-        0; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+        1; // 0 ist der Standardwert, wenn nichts gespeichert wurde
   }
 
   Future<bool> loadWorldUnlocked(int worldId) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('world_${worldId}_unlocked') ??
-        false; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+        true; // 0 ist der Standardwert, wenn nichts gespeichert wurde
   }
 
   Future<void> saveWorldUnlocked(int worldId, bool unlocked) async {
@@ -377,7 +376,11 @@ class PuzzleModel with ChangeNotifier {
 
   Map<String, int> getSizeAndMaxMoves(int level) {
     getMaxLevelForWorld(currentWorld);
-    int s = currentWorld == 1 ? 1 : 2; // Grid-Size
+    int s = currentWorld == 1
+        ? 1
+        : currentWorld == 5 || currentWorld == 6
+            ? 3
+            : 2; // Grid-Size
     int m = 1; // MaxMoves
     int startLevel = 1; // Startlevel für die aktuelle Grid-Size
 
@@ -445,6 +448,36 @@ class PuzzleModel with ChangeNotifier {
           break;
         default:
           s = 2;
+          m = 3;
+          break;
+      }
+      return {"size": s, "maxMoves": m};
+    } else if (currentWorld != 1 && currentWorld < 5 && level < 10) {
+      switch (level) {
+        case 1:
+          s = 2;
+          m = 1;
+          break;
+        case 2:
+        case 3:
+          s = 2;
+          m = 2;
+          break;
+        case 4:
+        case 5:
+          s = 2;
+          m = 3;
+          break;
+        case 6:
+          s = 3;
+          m = 1;
+        case 7:
+        case 8:
+          s = 3;
+          m = 2;
+          break;
+        case 9:
+          s = 3;
           m = 3;
           break;
       }
@@ -574,7 +607,7 @@ class PuzzleModel with ChangeNotifier {
         log(selectedLevel); // sorgt für geringeren Einfluss bei kleinen Levels
 
     // Endberechnung der Crystals mit minimalen und maximalen Grenzen
-    int CrystalsEarned = ((baseCrystals + levelFactor) * 0.5 + 15)
+    int CrystalsEarned = ((baseCrystals + levelFactor) * 0.4 + 5)
         .clamp(1, 1000)
         .ceil(); // z.B. Mindestwert 1, Maximalwert 1000
 

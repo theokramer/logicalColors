@@ -1,4 +1,4 @@
-package com.example.color_puzzle
+package de.tk.color_puzzle
 
 import io.flutter.embedding.android.FlutterActivity
 

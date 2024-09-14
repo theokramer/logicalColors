@@ -336,11 +336,12 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       if (selectedLevel > 1)
         _buildPopupMenuItem('prev', 'Level ${selectedLevel - 1}',
             Icons.skip_previous, Colors.indigo),
-      _buildPopupMenuItem(
-          'next',
-          'Level ${selectedLevel + 1} ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 100 ${AppLocalizations.of(context)?.crystals ?? "Crystals"}' : ""}',
-          Icons.skip_next,
-          Colors.indigo),
+      if (!(worlds[currentWorld - 1].maxLevel <= selectedLevel))
+        _buildPopupMenuItem(
+            'next',
+            'Level ${selectedLevel + 1} ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 100 ${AppLocalizations.of(context)?.crystals ?? "Crystals"}' : ""}',
+            Icons.skip_next,
+            Colors.indigo),
       _buildPopupMenuItem(
           'settings',
           '${AppLocalizations.of(context)?.settings ?? "New"} ',
@@ -1047,7 +1048,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                     getsLightBulb = -1;
                                   } else {
                                     setState(() {
-                                      getsLightBulb = ((_random.nextInt(8)) +
+                                      getsLightBulb = ((_random.nextInt(7)) +
                                                   (calculateDifficulty(
                                                           puzzle.maxMoves,
                                                           puzzle.size) *

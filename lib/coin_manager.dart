@@ -11,7 +11,7 @@ class CoinManager {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       return prefs.getInt(_CrystalsKey) ??
-          0; // Standardwert 0, falls nicht gespeichert
+          100000; // Standardwert 0, falls nicht gespeichert
     } catch (e) {
       print('Error loading Crystals: $e');
       return 0; // Standardwert bei Fehler

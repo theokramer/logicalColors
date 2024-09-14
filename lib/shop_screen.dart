@@ -2,11 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:color_puzzle/hints_manager.dart';
-import 'package:color_puzzle/main_menu_screen.dart';
 import 'package:color_puzzle/puzzle_model.dart';
-import 'package:color_puzzle/puzzle_model.dart';
-import 'package:color_puzzle/puzzle_model.dart';
-import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -51,6 +47,7 @@ class _ShopScreenState extends State<ShopScreen> {
     if (response.error == null && response.productDetails.isNotEmpty) {
       products.addAll(response.productDetails);
     }
+    print(response.error);
   }
 
   @override
@@ -410,7 +407,12 @@ class _ShopScreenState extends State<ShopScreen> {
                             .id !=
                         ""
                     ? _buildShopItemsGrid(products)
-                    : const SizedBox()),
+                    : Center(
+                        child: Text(
+                          AppLocalizations.of(context)?.noInternet ?? "World",
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      )),
             if (!worlds[1].unlocked)
               SafeArea(
                 child: Text(
@@ -419,7 +421,7 @@ class _ShopScreenState extends State<ShopScreen> {
                   // ? ""
                   // : "With the purchase of any item in the shop, you unlock all current and future Levels in the game.",
                   (boughtWallpapers.length < 14)
-                      ? AppLocalizations.of(context)?.freeWallpaper ?? "World"
+                      ? "${AppLocalizations.of(context)?.freeWallpaper ?? "World"} "
                       : "",
                   style: const TextStyle(color: Colors.white, fontSize: 15),
                 ),
@@ -1120,9 +1122,9 @@ class _ShopScreenState extends State<ShopScreen> {
                               height: 40, // Smaller image
                             ),
                             const SizedBox(width: 10),
-                            const Text(
-                              '+7000 Crystals',
-                              style: TextStyle(
+                            Text(
+                              '+7000 ${AppLocalizations.of(context)?.crystals ?? "World"}',
+                              style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 20, // Smaller font size
                                 fontWeight: FontWeight.bold,
@@ -1141,7 +1143,7 @@ class _ShopScreenState extends State<ShopScreen> {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              '+$hintsAdded Hints',
+                              '+$hintsAdded ${AppLocalizations.of(context)?.hints ?? "World"}',
                               style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 20,
@@ -1161,7 +1163,7 @@ class _ShopScreenState extends State<ShopScreen> {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              '+$remsAdded Colorizer',
+                              '+$remsAdded ${AppLocalizations.of(context)?.colorizer ?? "World"}',
                               style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 20,
@@ -1181,7 +1183,7 @@ class _ShopScreenState extends State<ShopScreen> {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              '+$wallpapersUnlocked Wallpapers',
+                              '+$wallpapersUnlocked ${AppLocalizations.of(context)?.wallpapers ?? "World"}',
                               style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 20,
@@ -1191,18 +1193,19 @@ class _ShopScreenState extends State<ShopScreen> {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        const Row(
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.block,
                               size: 40, // Smaller icon
                               color: Colors.red,
                             ),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             Text(
-                              'Ads Removed',
-                              style: TextStyle(
+                              AppLocalizations.of(context)?.adsRemoved ??
+                                  "World",
+                              style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,

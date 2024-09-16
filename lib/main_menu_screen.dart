@@ -2,6 +2,7 @@ import 'package:color_puzzle/level_selection.dart';
 import 'package:color_puzzle/main.dart';
 import 'package:color_puzzle/wallpaper_selection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
@@ -268,7 +269,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           crossAxisSpacing: 8.0,
           mainAxisSpacing: 8.0,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 95.0),
+        padding: EdgeInsets.symmetric(
+            horizontal: (MediaQuery.of(context).size.width < 500) ? 95.0 : 300),
         itemCount: 9,
         itemBuilder: (context, index) {
           int x = index ~/ 3;

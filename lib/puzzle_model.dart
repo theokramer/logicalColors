@@ -18,7 +18,7 @@ Color getBackgroundColor(int index) {
   if (index >= 0 && index < 5) {
     switch (index) {
       case 0:
-        color = Colors.blue[200];
+        color = Colors.teal[500];
         break;
       case 1:
         color = Colors.red[200];
@@ -27,7 +27,7 @@ Color getBackgroundColor(int index) {
         color = Colors.green[200];
         break;
       case 3:
-        color = Colors.amber[200];
+        color = Colors.blue[200];
         break;
       case 4:
         color = Colors.purple[200];
@@ -828,7 +828,7 @@ class PuzzleModel with ChangeNotifier {
 
     int currentColorNumber = _grid[x][y];
     if (currentColorNumber == newColorNumber) return;
-    if (currentWorld != 2 && currentWorld != 4) {
+    if ((currentWorld != 2 && currentWorld != 4) || oneTile) {
       _grid[x][y] = newColorNumber;
     }
     if (!oneTile) {

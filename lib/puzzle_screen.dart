@@ -464,8 +464,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       subtractCrystals(200);
       
     } else {}*/
-    addHints(3);
-    Navigator.pop(context);
+    // addHints(15);
+    // Navigator.pop(context);
   }
 
   Future<void> handleBuyMoves() async {
@@ -531,7 +531,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     } else {
       // Handle not enough Crystals
     }*/
-    addRems(5);
+    addRems(10);
     Navigator.pop(context);
   }
 
@@ -1210,11 +1210,16 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                               showGadgetPopup(
                                   context,
                                   AppLocalizations.of(context)?.hints ??
-                                      "Hints",
-                                  handleBuyHint,
-                                  handleWatchAdForHints,
-                                  [Colors.amber, Colors.orange],
-                                  false);
+                                      "Hints", () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => ShopScreen(
+                                      puzzle: puzzle,
+                                    ),
+                                  ),
+                                );
+                              }, handleWatchAdForHints,
+                                  [Colors.amber, Colors.orange], false);
                             }
                             //}
                           },
@@ -1249,8 +1254,15 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                 showGadgetPopup(
                                     context,
                                     AppLocalizations.of(context)?.colorizer ??
-                                        "Colorizer'",
-                                    handleBuyRem,
+                                        "Colorizer'", () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => ShopScreen(
+                                        puzzle: puzzle,
+                                      ),
+                                    ),
+                                  );
+                                },
                                     handleWatchAdForRems,
                                     [
                                       const Color.fromARGB(255, 176, 2, 124),

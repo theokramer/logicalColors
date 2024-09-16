@@ -50,7 +50,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                 mainAxisSpacing: 12.0,
                 childAspectRatio: 0.65,
               ),
-              itemCount: 19, // updated to 19
+              itemCount: 17, // updated to 19
               itemBuilder: (context, index) {
                 bool isLocked = !boughtWallpapers.contains(index);
 
@@ -80,7 +80,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                         ),
                         // If it's one of the 5 new wallpapers, just use a solid color
                         color: getBackgroundColor(index),
-                        image: index < 19
+                        image: index < 17
                             ? DecorationImage(
                                 image: AssetImage("images/w${index - 5}.jpg"),
                                 fit: BoxFit.cover,
@@ -111,7 +111,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
               },
             ),
           ),
-          if (boughtWallpapers.length < 19)
+          if (boughtWallpapers.length < 17)
             Column(
               children: [
                 const SizedBox(

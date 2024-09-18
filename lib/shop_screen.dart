@@ -30,16 +30,16 @@ class _ShopScreenState extends State<ShopScreen> {
   // Fetch product details (to be called when the page loads)
   void _loadProducts() async {
     const Set<String> productIds = {
-      'de.tk.enhanced.no.ads.bundle',
-      'de.tk.no.ads',
-      'de.tk.colorizer',
-      'de.tk.small.hints',
-      'de.tk.big.hints',
-      'de.tk.700.crystals',
-      'de.tk.Small2.Crystals',
-      'de.tk.medium.crystals',
-      'de.tk.big.crystals2',
-      'de.tk.big1.crystals',
+      'de.tk.noAds.bundle',
+      'de.tk.noAds',
+      'de.tk.colorizer1',
+      'de.tk.hints1',
+      'de.tk.hints2',
+      'de.tk.crystals1',
+      'de.tk.crystals2',
+      'de.tk.crystals3',
+      'de.tk.crystals4',
+      'de.tk.crystals5',
     };
 
     final ProductDetailsResponse response =
@@ -47,7 +47,7 @@ class _ShopScreenState extends State<ShopScreen> {
     if (response.error == null && response.productDetails.isNotEmpty) {
       products.addAll(response.productDetails);
     }
-    print(response.error);
+    print(products.length);
   }
 
   @override
@@ -82,17 +82,19 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 
   // Handle the purchase updates
+// Handle the purchase updates, including restored purchases
   void _handlePurchaseUpdates(List<PurchaseDetails> purchaseDetailsList) {
     for (var purchaseDetails in purchaseDetailsList) {
-      if (purchaseDetails.status == PurchaseStatus.purchased) {
-        // If the purchase is successful
+      if (purchaseDetails.status == PurchaseStatus.purchased ||
+          purchaseDetails.status == PurchaseStatus.restored) {
+        // Include restored purchases
         bool isVerified = _verifyPurchase(purchaseDetails);
         if (isVerified) {
-          // Call your custom function after successful purchase
+          // Call your custom function after successful purchase or restoration
           _onPurchaseSuccess(purchaseDetails);
         }
       } else if (purchaseDetails.status == PurchaseStatus.canceled) {
-        // Handle purchase failure
+        // Handle purchase cancellation
         print('Purchase failed: ${purchaseDetails.error}');
       }
 
@@ -114,16 +116,16 @@ class _ShopScreenState extends State<ShopScreen> {
     print('Purchase successful: ${purchaseDetails.productID}');
     // For example, unlock content or remove ads
     switch (purchaseDetails.productID) {
-      case "de.tk.enhanced.no.ads.bundle":
+      case "de.tk.noAds.bundle":
         _showPurchaseDialog(
             context,
             '${products.firstWhere((element) => element.id == purchaseDetails.productID).title} ${AppLocalizations.of(context)?.purchased ?? "Open Shop"}',
             1000,
             widget.puzzle,
-            true,
+            false,
             isEnhancedBundle: true);
         break;
-      case "de.tk.no.ads":
+      case "de.tk.noAds":
         widget.puzzle.saveNoAds(true);
         noAds = true;
         _showPurchaseDialog(
@@ -133,7 +135,7 @@ class _ShopScreenState extends State<ShopScreen> {
             widget.puzzle,
             false);
         break;
-      case 'de.tk.colorizer':
+      case 'de.tk.colorizer1':
         addRems(10);
         _showPurchaseDialog(
             context,
@@ -142,8 +144,8 @@ class _ShopScreenState extends State<ShopScreen> {
             widget.puzzle,
             false);
         break;
-      case 'de.tk.small.hints':
-        addRems(15);
+      case 'de.tk.hints1':
+        addHints(15);
         _showPurchaseDialog(
             context,
             "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
@@ -151,8 +153,8 @@ class _ShopScreenState extends State<ShopScreen> {
             widget.puzzle,
             false);
         break;
-      case 'de.tk.big.hints':
-        addRems(15);
+      case 'de.tk.hints2':
+        addHints(40);
         _showPurchaseDialog(
             context,
             "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
@@ -182,6 +184,12 @@ class _ShopScreenState extends State<ShopScreen> {
     }
 
     // Add more product logic as needed
+  }
+
+// Restore purchases functionality
+  void _restorePurchases() {
+    // Initiates the process of restoring purchases
+    inAppPurchase.restorePurchases();
   }
 
   void addCrystals(int amount) async {
@@ -225,7 +233,7 @@ class _ShopScreenState extends State<ShopScreen> {
           _showPurchaseDialog(
               context,
               '${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.earned ?? "World"}',
-              value,
+              150,
               puzzle,
               true); // Zeige Pop-Up an
         },
@@ -319,7 +327,7 @@ class _ShopScreenState extends State<ShopScreen> {
         actions: [
           SizedBox(
             height: 65,
-            width: 150,
+            width: 100,
             child: Stack(
               children: [
                 Positioned(
@@ -328,8 +336,7 @@ class _ShopScreenState extends State<ShopScreen> {
                   child: Consumer<CoinProvider>(
                     builder: (context, coinProvider, child) {
                       return CustomInfoButton(
-                        value:
-                            '${coinProvider.Crystals}', // Verwende die Crystals aus dem Provider
+                        value: '${coinProvider.Crystals}',
                         targetColor: -1,
                         movesLeft: -1,
                         iconPath: 'images/Crystals.png',
@@ -355,8 +362,7 @@ class _ShopScreenState extends State<ShopScreen> {
             const SizedBox(height: 15),
             (!noAds &&
                     products
-                            .firstWhere(
-                                (p) => p.id == 'de.tk.enhanced.no.ads.bundle',
+                            .firstWhere((p) => p.id == 'de.tk.noAds.bundle',
                                 orElse: () => ProductDetails(
                                     id: "",
                                     title: "",
@@ -371,7 +377,7 @@ class _ShopScreenState extends State<ShopScreen> {
                       _buildEnhancedBundleSection(
                           puzzle,
                           products.firstWhere(
-                              (p) => p.id == 'de.tk.enhanced.no.ads.bundle',
+                              (p) => p.id == 'de.tk.noAds.bundle',
                               orElse: () => ProductDetails(
                                   id: "",
                                   title: "",
@@ -382,7 +388,7 @@ class _ShopScreenState extends State<ShopScreen> {
                       if (!noAds) const SizedBox(height: 15),
                       _buildPageViewSection(
                           puzzle,
-                          products.firstWhere((p) => p.id == 'de.tk.no.ads',
+                          products.firstWhere((p) => p.id == 'de.tk.noAds',
                               orElse: () => ProductDetails(
                                   id: "",
                                   title: "",
@@ -396,7 +402,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 : const SizedBox(),
             Expanded(
                 child: products
-                            .firstWhere((p) => p.id == 'de.tk.colorizer',
+                            .firstWhere((p) => p.id == 'de.tk.colorizer1',
                                 orElse: () => ProductDetails(
                                     id: "",
                                     title: "",
@@ -415,15 +421,33 @@ class _ShopScreenState extends State<ShopScreen> {
                       )),
             if (!worlds[1].unlocked)
               SafeArea(
-                child: Text(
-                  textAlign: TextAlign.center,
-                  //worlds[1].unlocked
-                  // ? ""
-                  // : "With the purchase of any item in the shop, you unlock all current and future Levels in the game.",
-                  (boughtWallpapers.length < 14)
-                      ? "${AppLocalizations.of(context)?.freeWallpaper ?? "World"} "
-                      : "",
-                  style: const TextStyle(color: Colors.white, fontSize: 15),
+                child: Column(
+                  children: [
+                    Text(
+                      textAlign: TextAlign.center,
+                      //worlds[1].unlocked
+                      // ? ""
+                      // : "With the purchase of any item in the shop, you unlock all current and future Levels in the game.",
+                      (boughtWallpapers.length < 14)
+                          ? "${AppLocalizations.of(context)?.freeWallpaper ?? "World"} "
+                          : "",
+                      style: const TextStyle(color: Colors.white, fontSize: 15),
+                    ),
+                    const SizedBox(
+                      height: 7,
+                    ),
+                    GestureDetector(
+                      onTap: _restorePurchases,
+                      child: Text(
+                        "${AppLocalizations.of(context)?.restorePurchases ?? "World"} ",
+                        style: const TextStyle(
+                            color: Colors.white,
+                            decoration: TextDecoration
+                                .underline, // Add this line to underline the text
+                            decorationColor: Colors.white),
+                      ),
+                    ),
+                  ],
                 ),
               )
           ],
@@ -506,14 +530,13 @@ class _ShopScreenState extends State<ShopScreen> {
 
     // Filtere Ads-Produkte heraus und sortiere nach Kategorie und Preis
     final filteredAndSortedProducts = items
-        .where((p) =>
-            p.id != 'de.tk.no.ads' && p.id != 'de.tk.enhanced.no.ads.bundle')
+        .where((p) => p.id != 'de.tk.noAds' && p.id != 'de.tk.noAds.bundle')
         .toList()
       ..sort((a, b) {
         // Erstes Kriterium: Kategorie
         int getCategoryOrder(ProductDetails item) {
-          if (item.id == 'de.tk.colorizer') return 0; // Colorizer kommt zuerst
-          if (item.id == 'de.tk.small.hints' || item.id == 'de.tk.big.hints') {
+          if (item.id == 'de.tk.colorizer1') return 0; // Colorizer kommt zuerst
+          if (item.id == 'de.tk.hints1' || item.id == 'de.tk.hints2') {
             return 1; // Hints kommen danach
           }
           return 2; // Crystals kommen zuletzt
@@ -531,9 +554,9 @@ class _ShopScreenState extends State<ShopScreen> {
 
     // Füge "Watch Ad" Item vor dem ersten Crystal-Item hinzu
     final firstCrystalIndex = filteredAndSortedProducts.indexWhere((p) =>
-        !(p.id == 'de.tk.colorizer' ||
-            p.id == 'de.tk.small.hints' ||
-            p.id == 'de.tk.big.hints'));
+        !(p.id == 'de.tk.colorizer1' ||
+            p.id == 'de.tk.hints1' ||
+            p.id == 'de.tk.hints2'));
 
     // Erstelle ein Dummy-Item für "Watch Ad"
     if (firstCrystalIndex != -1) {
@@ -576,9 +599,9 @@ class _ShopScreenState extends State<ShopScreen> {
             child: _buildShopItemCard(
               firstWordOfTitle, // Zeige nur das erste Wort an
               item.price,
-              {'de.tk.small.hints', 'de.tk.big.hints'}.contains(item.id)
+              {'de.tk.hints1', 'de.tk.hints2'}.contains(item.id)
                   ? 0
-                  : 'de.tk.colorizer' == item.id
+                  : 'de.tk.colorizer1' == item.id
                       ? 1
                       : 2, // Nutze den Stil der Kristalle für "Watch Ad"
             ));
@@ -1034,7 +1057,8 @@ class _ShopScreenState extends State<ShopScreen> {
     }
 
     if (title ==
-        "${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}") {
+            "${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}" ||
+        amount == 150) {
       addCrystals(amount);
     }
 

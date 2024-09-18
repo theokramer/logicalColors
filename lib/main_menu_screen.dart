@@ -88,8 +88,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   void initState() {
     //_loadProduct;
     _bannerAd = BannerAd(
-      adUnitId:
-          "ca-app-pub-3940256099942544/2435281174", // correct one: 'ca-app-pub-3263827122305139/6797409538'
+      adUnitId: 'ca-app-pub-3263827122305139/6797409538',
       request: const AdRequest(),
       size: AdSize.banner,
       listener: BannerAdListener(

@@ -205,7 +205,7 @@ class PuzzleModel with ChangeNotifier {
   Future<bool> loadWorldUnlocked(int worldId) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('world_${worldId}_unlocked') ??
-        true; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+        false; // 0 ist der Standardwert, wenn nichts gespeichert wurde
   }
 
   Future<void> saveWorldUnlocked(int worldId, bool unlocked) async {

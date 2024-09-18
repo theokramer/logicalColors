@@ -219,8 +219,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
   void _loadInterstitialAd() {
     InterstitialAd.load(
-      adUnitId:
-          "ca-app-pub-3940256099942544/4411468910", // correct one: 'ca-app-pub-3263827122305139/6797409538'
+      adUnitId: 'ca-app-pub-3263827122305139/6797409538', // correct one:
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
@@ -257,8 +256,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     }
 
     _bannerAd = BannerAd(
-      adUnitId:
-          "ca-app-pub-3940256099942544/2435281174", // correct one: 'ca-app-pub-3263827122305139/6797409538'
+      adUnitId: 'ca-app-pub-3263827122305139/6797409538',
       request: const AdRequest(),
       size: AdSize.banner,
       listener: BannerAdListener(

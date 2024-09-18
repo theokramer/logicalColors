@@ -9,7 +9,7 @@ class HintsManager {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       return prefs.getInt(_hintsKey) ??
-          5; // Standardwert 0, falls nicht gespeichert
+          2; // Standardwert 0, falls nicht gespeichert
     } catch (e) {
       print('Error loading hints: $e');
       return 0; // Standardwert bei Fehler
@@ -53,7 +53,7 @@ class RemsManager {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       return prefs.getInt(_remsKey) ??
-          5; // Standardwert 0, falls nicht gespeichert
+          2; // Standardwert 0, falls nicht gespeichert
     } catch (e) {
       print('Error loading rems: $e');
       return 0; // Standardwert bei Fehler

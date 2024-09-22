@@ -88,7 +88,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   void initState() {
     //_loadProduct;
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3263827122305139/6797409538',
+      adUnitId: 'ca-app-pub-3263827122305139/4072388867',
       request: const AdRequest(),
       size: AdSize.banner,
       listener: BannerAdListener(
@@ -323,10 +323,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     icon: Icons.shopping_cart,
                     onPressed: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => ShopScreen(
-                            puzzle: puzzle,
-                          ),
+                        FadePageRoute(
+                          page: const ShopScreen(),
                         ),
                       );
                     },
@@ -742,10 +740,8 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
                 AppLocalizations.of(context)?.openShop ?? "Open Shop",
                 Colors.teal, () {
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => ShopScreen(
-                    puzzle: puzzle,
-                  ),
+                FadePageRoute(
+                  page: const ShopScreen(),
                 ),
               );
             }),

@@ -13,10 +13,8 @@ import 'coin_manager.dart'; // Dein CoinManager
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ShopScreen extends StatefulWidget {
-  final PuzzleModel puzzle; // Add the PuzzleModel field
-
   // Constructor to accept PuzzleModel
-  const ShopScreen({super.key, required this.puzzle});
+  const ShopScreen({super.key});
 
   @override
   State<ShopScreen> createState() => _ShopScreenState();
@@ -56,49 +54,108 @@ class _ShopScreenState extends State<ShopScreen> {
     super.dispose();
   }
 
+  void _showLoadingDialog(BuildContext context) async {
+    // Use a post-frame callback to ensure the dialog is shown after the widget is built
+    showDialog(
+      context: context,
+      barrierDismissible:
+          false, // Prevent closing the dialog by tapping outside
+      builder: (BuildContext context) {
+        return const Dialog(
+          backgroundColor: Colors.transparent,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 10),
+                Text(
+                  'Processing...',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _hideLoadingDialog(BuildContext context) {
+    Navigator.of(context).pop(); // Close the loading dialog
+  }
+
   @override
   void initState() {
-    _loadProducts();
-    if (_rewardedAd == null) {
-      _loadRewardedAd();
-    }
-    // Listen to the purchaseUpdatedStream
-    final Stream<List<PurchaseDetails>> purchaseUpdated =
-        InAppPurchase.instance.purchaseStream;
-    _subscription = purchaseUpdated.listen((purchases) {
-      _handlePurchaseUpdates(purchases);
-    }, onDone: () {
-      _subscription.cancel();
-    }, onError: (error) {
-      // Handle errors here if necessary
-      print('Error in purchase stream: $error');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Access PuzzleModel via Provider here
+      PuzzleModel puzzle = Provider.of<PuzzleModel>(context, listen: false);
+
+      // Now you can safely use puzzle in your initState logic
+      // For example, loading some data or calling a method on the PuzzleModel
+      // You can call other methods on puzzle as needed
+
+      _loadProducts();
+      if (_rewardedAd == null) {
+        _loadRewardedAd();
+      }
+      // Listen to the purchaseUpdatedStream
+      final Stream<List<PurchaseDetails>> purchaseUpdated =
+          InAppPurchase.instance.purchaseStream;
+      _subscription = purchaseUpdated.listen((purchases) {
+        _handlePurchaseUpdates(purchases, puzzle);
+      }, onDone: () {
+        _subscription.cancel();
+      }, onError: (error) {
+        // Handle errors here if necessary
+        print('Error in purchase stream: $error');
+      });
     });
   }
 
-  void _buyProduct(ProductDetails productDetails, PuzzleModel puzzle) {
-    final PurchaseParam purchaseParam =
-        PurchaseParam(productDetails: productDetails);
-    InAppPurchase.instance.buyNonConsumable(purchaseParam: purchaseParam);
+  void _buyProduct(ProductDetails productDetails, PuzzleModel puzzle) async {
+    try {
+      final PurchaseParam purchaseParam =
+          PurchaseParam(productDetails: productDetails);
+      await InAppPurchase.instance
+          .buyNonConsumable(purchaseParam: purchaseParam);
+    } catch (e) {
+      print('Purchase error: $e');
+      _hideLoadingDialog(context);
+    }
+  }
+
+  void _restorePurchases(PuzzleModel puzzle) async {
+    if (!(await puzzle.loadHasRestoredPurchases())) {
+      try {
+        await inAppPurchase.restorePurchases();
+      } catch (e) {
+        print('Restoration error: $e');
+      }
+    }
   }
 
   // Handle the purchase updates
 // Handle the purchase updates, including restored purchases
-  void _handlePurchaseUpdates(List<PurchaseDetails> purchaseDetailsList) {
+  void _handlePurchaseUpdates(
+      List<PurchaseDetails> purchaseDetailsList, PuzzleModel puzzle) {
     for (var purchaseDetails in purchaseDetailsList) {
+      if (purchaseDetails.status == PurchaseStatus.restored) {
+        puzzle.saveHasRestoredPurchases(true);
+      }
       if (purchaseDetails.status == PurchaseStatus.purchased ||
           purchaseDetails.status == PurchaseStatus.restored) {
-        // Include restored purchases
+        _hideLoadingDialog(context);
         bool isVerified = _verifyPurchase(purchaseDetails);
+        if (purchaseDetails.status == PurchaseStatus.restored) {}
         if (isVerified) {
-          // Call your custom function after successful purchase or restoration
-          _onPurchaseSuccess(purchaseDetails);
+          _onPurchaseSuccess(purchaseDetails, puzzle);
         }
-      } else if (purchaseDetails.status == PurchaseStatus.canceled) {
-        // Handle purchase cancellation
+      } else if (purchaseDetails.status == PurchaseStatus.error ||
+          purchaseDetails.status == PurchaseStatus.canceled) {
         print('Purchase failed: ${purchaseDetails.error}');
       }
 
-      // Complete the purchase if necessary
       if (purchaseDetails.pendingCompletePurchase) {
         InAppPurchase.instance.completePurchase(purchaseDetails);
       }
@@ -111,28 +168,47 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 
   // Function to call when the purchase is successful
-  void _onPurchaseSuccess(PurchaseDetails purchaseDetails) {
+  void _onPurchaseSuccess(PurchaseDetails purchaseDetails, PuzzleModel puzzle) {
     // Call your desired function after purchase success
     print('Purchase successful: ${purchaseDetails.productID}');
+
     // For example, unlock content or remove ads
+
     switch (purchaseDetails.productID) {
       case "de.tk.noAds.bundle":
+        final ProductDetails productDetail = products.firstWhere(
+          (element) => element.id == purchaseDetails.productID,
+          orElse: () => ProductDetails(
+              id: "",
+              title: "",
+              description: "",
+              price: "",
+              rawPrice: 0,
+              currencyCode: ""), // Provide a fallback value or handle it
+        );
+
+        if (productDetail.id == "") {
+          // Handle the case where the product detail is not found
+          print('Product not found for ID: ${purchaseDetails.productID}');
+          return;
+        }
         _showPurchaseDialog(
-            context,
-            '${products.firstWhere((element) => element.id == purchaseDetails.productID).title} ${AppLocalizations.of(context)?.purchased ?? "Open Shop"}',
-            1000,
-            widget.puzzle,
-            false,
-            isEnhancedBundle: true);
+          context,
+          '${productDetail.title} ${AppLocalizations.of(context)?.purchased ?? "Open Shop"}',
+          1000,
+          puzzle,
+          false,
+          isEnhancedBundle: true,
+        );
         break;
       case "de.tk.noAds":
-        widget.puzzle.saveNoAds(true);
+        puzzle.saveNoAds(true);
         noAds = true;
         _showPurchaseDialog(
             context,
             AppLocalizations.of(context)?.noAdsTitle ?? "Play",
             0,
-            widget.puzzle,
+            puzzle,
             false);
         break;
       case 'de.tk.colorizer1':
@@ -141,7 +217,7 @@ class _ShopScreenState extends State<ShopScreen> {
             context,
             "${AppLocalizations.of(context)?.colorizer ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
             10,
-            widget.puzzle,
+            puzzle,
             false);
         break;
       case 'de.tk.hints1':
@@ -150,7 +226,7 @@ class _ShopScreenState extends State<ShopScreen> {
             context,
             "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
             15,
-            widget.puzzle,
+            puzzle,
             false);
         break;
       case 'de.tk.hints2':
@@ -159,7 +235,7 @@ class _ShopScreenState extends State<ShopScreen> {
             context,
             "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
             40,
-            widget.puzzle,
+            puzzle,
             false);
         break;
       default:
@@ -178,18 +254,12 @@ class _ShopScreenState extends State<ShopScreen> {
                 .title
                 .split(' ')
                 .first),
-            widget.puzzle,
+            puzzle,
             false);
         break;
     }
 
     // Add more product logic as needed
-  }
-
-// Restore purchases functionality
-  void _restorePurchases() {
-    // Initiates the process of restoring purchases
-    inAppPurchase.restorePurchases();
   }
 
   void addCrystals(int amount) async {
@@ -273,7 +343,7 @@ class _ShopScreenState extends State<ShopScreen> {
 
   void _loadRewardedAd() {
     RewardedAd.load(
-      adUnitId: "ca-app-pub-3940256099942544/1712485313",
+      adUnitId: "ca-app-pub-3263827122305139/4563343451",
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
@@ -312,7 +382,7 @@ class _ShopScreenState extends State<ShopScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final puzzle = widget.puzzle;
+    PuzzleModel puzzle = context.read<PuzzleModel>();
     Future.microtask(() => context.read<CoinProvider>().loadCrystals());
 
     return Scaffold(
@@ -360,96 +430,106 @@ class _ShopScreenState extends State<ShopScreen> {
         child: Column(
           children: [
             const SizedBox(height: 15),
-            (!noAds &&
-                    products
-                            .firstWhere((p) => p.id == 'de.tk.noAds.bundle',
-                                orElse: () => ProductDetails(
-                                    id: "",
-                                    title: "",
-                                    description: "",
-                                    price: "",
-                                    rawPrice: 0,
-                                    currencyCode: ""))
-                            .id !=
-                        "")
-                ? Column(
-                    children: [
-                      _buildEnhancedBundleSection(
-                          puzzle,
-                          products.firstWhere(
-                              (p) => p.id == 'de.tk.noAds.bundle',
-                              orElse: () => ProductDetails(
-                                  id: "",
-                                  title: "",
-                                  description: "",
-                                  price: "",
-                                  rawPrice: 0,
-                                  currencyCode: ""))),
-                      if (!noAds) const SizedBox(height: 15),
-                      _buildPageViewSection(
-                          puzzle,
-                          products.firstWhere((p) => p.id == 'de.tk.noAds',
-                              orElse: () => ProductDetails(
-                                  id: "",
-                                  title: "",
-                                  description: "",
-                                  price: "",
-                                  rawPrice: 0,
-                                  currencyCode: ""))),
-                      const SizedBox(height: 15),
-                    ],
-                  )
-                : const SizedBox(),
+            // (!noAds &&
+            //             products
+            //                     .firstWhere((p) => p.id == 'de.tk.noAds.bundle',
+            //                         orElse: () => ProductDetails(
+            //                             id: "",
+            //                             title: "",
+            //                             description: "",
+            //                             price: "",
+            //                             rawPrice: 0,
+            //                             currencyCode: ""))
+            //                     .id !=
+            //                 "")
+            //     ?
+            Column(
+              children: [
+                _buildEnhancedBundleSection(
+                    puzzle,
+                    products.firstWhere((p) => p.id == 'de.tk.noAds.bundle',
+                        orElse: () => ProductDetails(
+                            id: "",
+                            title: "",
+                            description: "",
+                            price: "",
+                            rawPrice: 0,
+                            currencyCode: ""))),
+                if (!noAds) const SizedBox(height: 15),
+                _buildPageViewSection(
+                    puzzle,
+                    products.firstWhere((p) => p.id == 'de.tk.noAds',
+                        orElse: () => ProductDetails(
+                            id: "",
+                            title: "",
+                            description: "",
+                            price: "",
+                            rawPrice: 0,
+                            currencyCode: ""))),
+                const SizedBox(height: 15),
+              ],
+            ),
+            //: const SizedBox(),
             Expanded(
-                child: products
-                            .firstWhere((p) => p.id == 'de.tk.colorizer1',
-                                orElse: () => ProductDetails(
-                                    id: "",
-                                    title: "",
-                                    description: "",
-                                    price: "",
-                                    rawPrice: 0,
-                                    currencyCode: ""))
-                            .id !=
-                        ""
-                    ? _buildShopItemsGrid(products)
-                    : Center(
-                        child: Text(
-                          AppLocalizations.of(context)?.noInternet ?? "World",
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      )),
-            if (!worlds[1].unlocked)
-              SafeArea(
-                child: Column(
-                  children: [
-                    Text(
-                      textAlign: TextAlign.center,
-                      //worlds[1].unlocked
-                      // ? ""
-                      // : "With the purchase of any item in the shop, you unlock all current and future Levels in the game.",
-                      (boughtWallpapers.length < 14)
-                          ? "${AppLocalizations.of(context)?.freeWallpaper ?? "World"} "
-                          : "",
-                      style: const TextStyle(color: Colors.white, fontSize: 15),
-                    ),
-                    const SizedBox(
-                      height: 7,
-                    ),
-                    GestureDetector(
-                      onTap: _restorePurchases,
-                      child: Text(
-                        "${AppLocalizations.of(context)?.restorePurchases ?? "World"} ",
-                        style: const TextStyle(
-                            color: Colors.white,
-                            decoration: TextDecoration
-                                .underline, // Add this line to underline the text
-                            decorationColor: Colors.white),
-                      ),
-                    ),
-                  ],
+                child:
+                    // products
+                    //                 .firstWhere((p) => p.id == 'de.tk.colorizer1',
+                    //                     orElse: () => ProductDetails(
+                    //                         id: "",
+                    //                         title: "",
+                    //                         description: "",
+                    //                         price: "",
+                    //                         rawPrice: 0,
+                    //                         currencyCode: ""))
+                    //                 .id !=
+                    //             ""
+                    //     ?
+                    _buildShopItemsGrid(products)
+                // : Center(
+                //     child: Column(
+                //       mainAxisSize: MainAxisSize.min,
+                //       children: [
+                //         const CircularProgressIndicator(),
+                //         const SizedBox(height: 10),
+                //         Text(
+                //           '${AppLocalizations.of(context)?.pleaseWait ?? "World"} ',
+                //           style: const TextStyle(color: Colors.white),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
                 ),
-              )
+            SafeArea(
+              child: Column(
+                children: [
+                  Text(
+                    textAlign: TextAlign.center,
+                    worlds[1].unlocked
+                        ? (boughtWallpapers.length < 14)
+                            ? "${AppLocalizations.of(context)?.freeWallpaper ?? "World"} "
+                            : ""
+                        : "${AppLocalizations.of(context)?.unlockWorldsShop ?? "World"} ",
+                    style: const TextStyle(color: Colors.white, fontSize: 15),
+                  ),
+                  const SizedBox(
+                    height: 7,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _restorePurchases(puzzle);
+                    },
+                    child: Text(
+                      "${AppLocalizations.of(context)?.restorePurchases ?? "World"} ",
+                      style: const TextStyle(
+                          color: Colors.white,
+                          decoration: TextDecoration
+                              .underline, // Add this line to underline the text
+                          decorationColor: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),
@@ -1003,10 +1083,10 @@ class _ShopScreenState extends State<ShopScreen> {
       {bool isEnhancedBundle = false}) {
     final Random random = Random();
 
-    int newWallpaper = random.nextInt(14);
-    if (boughtWallpapers.length < 14) {
+    int newWallpaper = random.nextInt(19);
+    if (boughtWallpapers.length < 19) {
       while (boughtWallpapers.contains(newWallpaper)) {
-        newWallpaper = random.nextInt(14);
+        newWallpaper = random.nextInt(19);
       }
       if (!boughtWallpapers.contains(newWallpaper) && !ad) {
         boughtWallpapers.add(newWallpaper);
@@ -1041,12 +1121,16 @@ class _ShopScreenState extends State<ShopScreen> {
       hintsAdded = 30; // Adds 30 hints
       puzzle.addHints(hintsAdded);
       remsAdded = 20;
-      puzzle.addRems(hintsAdded);
+      puzzle.addRems(remsAdded);
       wallpapersUnlocked = 3; // Assume bundle gives 3 wallpapers
       for (int i = 0; i < wallpapersUnlocked - 1; i++) {
-        newWallpaper = random.nextInt(14);
-        while (boughtWallpapers.contains(newWallpaper)) {
-          newWallpaper = random.nextInt(14);
+        newWallpaper = random.nextInt(19);
+        if (boughtWallpapers.length < 19) {
+          while (boughtWallpapers.contains(newWallpaper)) {
+            newWallpaper = random.nextInt(19);
+          }
+        } else {
+          break;
         }
         boughtWallpapers.add(newWallpaper);
         puzzle.saveBoughtWallpaper(newWallpaper);
@@ -1240,17 +1324,27 @@ class _ShopScreenState extends State<ShopScreen> {
                         const SizedBox(height: 20),
                       ],
                     ),
-                  if (newWallpaper != -1 && !isEnhancedBundle)
+                  if (!isEnhancedBundle && newWallpaper >= 5)
                     Container(
                       height: (MediaQuery.of(context).size.height > 700)
                           ? 150
                           : 120,
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                          image: AssetImage("images/w$newWallpaper.jpg"),
+                          image: AssetImage("images/w${newWallpaper - 5}.jpg"),
                           fit: BoxFit.cover,
                         ),
                       ),
+                    ),
+                  if (!isEnhancedBundle &&
+                      newWallpaper > -1 &&
+                      newWallpaper < 5)
+                    Container(
+                      height: (MediaQuery.of(context).size.height > 700)
+                          ? 150
+                          : 120,
+                      decoration: BoxDecoration(
+                          color: getBackgroundColor(newWallpaper)),
                     ),
                   const SizedBox(height: 20),
                   if (unlocked)
@@ -1440,6 +1534,7 @@ class _ShopScreenState extends State<ShopScreen> {
           child: ElevatedButton(
             onPressed: () {
               // Ensure products are available before proceeding
+              _showLoadingDialog(context);
               _buyProduct(product, puzzle);
             },
             style: ElevatedButton.styleFrom(

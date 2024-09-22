@@ -12,7 +12,7 @@ if (localPropertiesFile.exists()) {
     }
 }
 
-def flutterVersionCode = "7"
+def flutterVersionCode = "8"
 /*localProperties.getProperty("flutter.versionCode")
 if (flutterVersionCode == null) {
     flutterVersionCode = "3"

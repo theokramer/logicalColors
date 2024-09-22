@@ -265,7 +265,7 @@ class MyApp extends StatelessWidget {
               final puzzle = Provider.of<PuzzleModel>(context, listen: false);
 
               // Pass PuzzleModel to ShopScreen
-              return ShopScreen(puzzle: puzzle);
+              return const ShopScreen();
             },
             '/menu': (context) => const MainMenuScreen(),
           },

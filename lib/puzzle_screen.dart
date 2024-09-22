@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'puzzle_model.dart';
 import 'shop_screen.dart';
 import 'package:confetti/confetti.dart';
@@ -89,7 +90,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
   InterstitialAd? _interstitialAd;
 
-  RewardedAd? _rewardedAd;
+  RewardedAd? _rewardedAdHints;
+  RewardedAd? _rewardedAdRems;
+  RewardedAd? _rewardedAdMoves;
 
   Future<void> saveTutorial(bool tutorial) async {
     final prefs = await SharedPreferences.getInstance();
@@ -190,9 +193,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     );
   }
 
-  void _loadRewardedAd() {
+  void _loadRewardedAdHints() {
     RewardedAd.load(
-      adUnitId: "ca-app-pub-3940256099942544/1712485313",
+      adUnitId: "ca-app-pub-3263827122305139/2631314684",
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
@@ -200,14 +203,68 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             onAdDismissedFullScreenContent: (ad) {
               setState(() {
                 ad.dispose();
-                _rewardedAd = null;
+                _rewardedAdHints = null;
               });
-              _loadRewardedAd();
+              _loadRewardedAdHints();
             },
           );
 
           setState(() {
-            _rewardedAd = ad;
+            _rewardedAdHints = ad;
+          });
+        },
+        onAdFailedToLoad: (err) {
+          print('Failed to load a rewarded ad: ${err.message}');
+        },
+      ),
+    );
+  }
+
+  void _loadRewardedAdRems() {
+    RewardedAd.load(
+      adUnitId: "ca-app-pub-3263827122305139/9970748650",
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              setState(() {
+                ad.dispose();
+                _rewardedAdRems = null;
+              });
+              _loadRewardedAdRems();
+            },
+          );
+
+          setState(() {
+            _rewardedAdRems = ad;
+          });
+        },
+        onAdFailedToLoad: (err) {
+          print('Failed to load a rewarded ad: ${err.message}');
+        },
+      ),
+    );
+  }
+
+  void _loadRewardedAdMoves() {
+    RewardedAd.load(
+      adUnitId: "ca-app-pub-3263827122305139/7344585315",
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              setState(() {
+                ad.dispose();
+                _rewardedAdMoves = null;
+              });
+              _loadRewardedAdMoves();
+            },
+          );
+
+          setState(() {
+            _rewardedAdMoves = ad;
           });
         },
         onAdFailedToLoad: (err) {
@@ -219,7 +276,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
   void _loadInterstitialAd() {
     InterstitialAd.load(
-      adUnitId: 'ca-app-pub-3263827122305139/6797409538', // correct one:
+      adUnitId: 'ca-app-pub-3263827122305139/1837668840', // correct one:
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
@@ -243,7 +300,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   void initState() {
     super.initState();
 
-    if (levelsSinceAd > 5 && worlds[0].maxLevel > 10 && !noAds) {
+    if (((selectedLevel > 40 && levelsSinceAd > 4) || levelsSinceAd > 7) &&
+        worlds[0].maxLevel > 10 &&
+        !noAds) {
       if (_interstitialAd == null) {
         _loadInterstitialAd();
       }
@@ -251,12 +310,20 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       levelsSinceAd = 0;
     }
 
-    if (_rewardedAd == null) {
-      _loadRewardedAd();
+    if (_rewardedAdHints == null) {
+      _loadRewardedAdHints();
+    }
+
+    if (_rewardedAdRems == null) {
+      _loadRewardedAdRems();
+    }
+
+    if (_rewardedAdMoves == null) {
+      _loadRewardedAdMoves();
     }
 
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3263827122305139/6797409538',
+      adUnitId: 'ca-app-pub-3263827122305139/9324715541',
       request: const AdRequest(),
       size: AdSize.banner,
       listener: BannerAdListener(
@@ -392,9 +459,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                   Colors.teal, () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => ShopScreen(
-                      puzzle: puzzle,
-                    ),
+                    builder: (context) => const ShopScreen(),
                   ),
                 );
               }),
@@ -475,7 +540,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   }
 
   void handleWatchAdForMoves() {
-    _rewardedAd?.show(
+    _rewardedAdMoves?.show(
       onUserEarnedReward: (_, reward) {
         _showPurchaseDialog(
             context,
@@ -485,7 +550,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             2);
       },
     );
-    _loadRewardedAd();
+    _loadRewardedAdMoves();
   }
 
   Future<void> handleBuyHintSale() async {
@@ -534,7 +599,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   }
 
   void handleWatchAdForHints() {
-    _rewardedAd?.show(
+    _rewardedAdHints?.show(
       onUserEarnedReward: (_, reward) {
         _showPurchaseDialog(
             context,
@@ -544,11 +609,11 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             0);
       },
     );
-    _loadRewardedAd();
+    _loadRewardedAdHints();
   }
 
   void handleWatchAdForRems() {
-    _rewardedAd?.show(
+    _rewardedAdRems?.show(
       onUserEarnedReward: (_, reward) {
         _showPurchaseDialog(
             context,
@@ -558,7 +623,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             1);
       },
     );
-    _loadRewardedAd();
+    _loadRewardedAdRems();
   }
 
   @override
@@ -570,6 +635,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
     super.dispose();
   }
+
+  bool resettedGrid = false;
 
   @override
   Widget build(BuildContext context) {
@@ -636,9 +703,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                   page: ChangeNotifierProvider
                                                       .value(
                                                     value: puzzle,
-                                                    child: ShopScreen(
-                                                      puzzle: puzzle,
-                                                    ),
+                                                    child: const ShopScreen(),
                                                   ),
                                                 ),
                                               );
@@ -668,9 +733,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                     page: ChangeNotifierProvider
                                                         .value(
                                                       value: puzzle,
-                                                      child: ShopScreen(
-                                                        puzzle: puzzle,
-                                                      ),
+                                                      child: const ShopScreen(),
                                                     ),
                                                   ),
                                                 );
@@ -785,9 +848,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                     page: ChangeNotifierProvider
                                                         .value(
                                                       value: puzzle,
-                                                      child: ShopScreen(
-                                                        puzzle: puzzle,
-                                                      ),
+                                                      child: const ShopScreen(),
                                                     ),
                                                   ),
                                                 );
@@ -1108,8 +1169,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                     HapticFeedback.selectionClick();
                                   }
 
-                                  if (puzzle.maxMoves == puzzle.moves &&
-                                      tutorialActive) {
+                                  if (puzzle.maxMoves == puzzle.moves) {
                                     showResetGadgetHint = true;
                                   }
                                 }
@@ -1196,9 +1256,17 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                               changeTextStep5 = true;
                             }
                             if (hintsProvider.hints > 0) {
-                              bool hintUsed = await puzzle.getHint();
-                              if (hintUsed) {
-                                // Your hint used logic here
+                              bool temp = await puzzle.getHint();
+                              setState(() {
+                                resettedGrid = temp;
+                              });
+                              if (resettedGrid) {
+                                Future.delayed(
+                                    const Duration(milliseconds: 2000), () {
+                                  setState(() {
+                                    resettedGrid = false;
+                                  });
+                                });
                               } else {
                                 /*Future.delayed(Duration(milliseconds: 500), () {
                       puzzle.clearHint();
@@ -1211,9 +1279,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                       "Hints", () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (context) => ShopScreen(
-                                      puzzle: puzzle,
-                                    ),
+                                    builder: (context) => const ShopScreen(),
                                   ),
                                 );
                               }, handleWatchAdForHints,
@@ -1255,9 +1321,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                         "Colorizer'", () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (context) => ShopScreen(
-                                        puzzle: puzzle,
-                                      ),
+                                      builder: (context) => const ShopScreen(),
                                     ),
                                   );
                                 },
@@ -1303,9 +1367,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         ],
 
                         iconColor: Colors.white,
-                        blink: tutorialActive &&
-                            puzzle.maxMoves == puzzle.moves &&
-                            showResetGadgetHint,
+                        blink: puzzle.maxMoves == puzzle.moves &&
+                            showResetGadgetHint &&
+                            selectedLevel < 12,
                       ),
                       CustomActionButton(
                         icon: Icons.refresh,
@@ -1331,9 +1395,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           Colors.deepPurpleAccent
                         ],
                         iconColor: Colors.white,
-                        blink: tutorialActive &&
-                            puzzle.maxMoves == puzzle.moves &&
-                            showResetGadgetHint,
+                        blink: puzzle.maxMoves == puzzle.moves &&
+                            showResetGadgetHint &&
+                            selectedLevel < 12,
                       ),
                     ],
                   ),
@@ -1358,52 +1422,54 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                 ),
 
               tutorialActive && currentTutorialStep != TutorialStep.none ||
-                      isRemoveTileMode
+                      isRemoveTileMode ||
+                      resettedGrid
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         AnimatedCustomOverlay(
                           blink: currentTutorialStep == TutorialStep.step2 &&
-                              tutorialActive,
-                          message: isRemoveTileMode
-                              ? AppLocalizations.of(context)?.tRemoveTile ??
+                              tutorialActive &&
+                              !resettedGrid,
+                          message: resettedGrid
+                              ? AppLocalizations.of(context)?.resettedGrid ??
                                   "removeTile"
-                              : showResetGadgetHint
-                                  ? AppLocalizations.of(context)
-                                          ?.tResetGadget ??
-                                      "reset Gadget"
-                                  : currentTutorialStep == TutorialStep.step2 &&
-                                          tutorialActive
-                                      ? AppLocalizations.of(context)?.tStep2 ??
-                                          "Step 2"
-                                      : currentTutorialStep ==
-                                                  TutorialStep.step3 &&
+                              : isRemoveTileMode
+                                  ? AppLocalizations.of(context)?.tRemoveTile ??
+                                      "removeTile"
+                                  : showResetGadgetHint
+                                      ? AppLocalizations.of(context)?.tResetGadget ??
+                                          "reset Gadget"
+                                      : currentTutorialStep == TutorialStep.step2 &&
                                               tutorialActive
-                                          ? AppLocalizations.of(context)
-                                                  ?.tStep3 ??
-                                              "Step 3"
+                                          ? AppLocalizations.of(context)?.tStep2 ??
+                                              "Step 2"
                                           : currentTutorialStep ==
-                                                      TutorialStep.step4 &&
+                                                      TutorialStep.step3 &&
                                                   tutorialActive
-                                              ? AppLocalizations.of(
-                                                          context)
-                                                      ?.tStep4 ??
-                                                  "Step 4"
+                                              ? AppLocalizations.of(context)
+                                                      ?.tStep3 ??
+                                                  "Step 3"
                                               : currentTutorialStep ==
-                                                          TutorialStep.step5 &&
+                                                          TutorialStep.step4 &&
                                                       tutorialActive
-                                                  ? (changeTextStep5
-                                                      ? AppLocalizations.of(
-                                                                  context)
-                                                              ?.tStep52 ??
-                                                          "Step 52"
-                                                      : AppLocalizations.of(
-                                                                  context)
-                                                              ?.tStep51 ??
-                                                          "Step 51")
-                                                  : AppLocalizations.of(context)
-                                                          ?.tStepCompleted ??
-                                                      "Step Completed",
+                                                  ? AppLocalizations.of(context)
+                                                          ?.tStep4 ??
+                                                      "Step 4"
+                                                  : currentTutorialStep ==
+                                                              TutorialStep
+                                                                  .step5 &&
+                                                          tutorialActive
+                                                      ? (changeTextStep5
+                                                          ? AppLocalizations.of(context)
+                                                                  ?.tStep52 ??
+                                                              "Step 52"
+                                                          : AppLocalizations.of(context)
+                                                                  ?.tStep51 ??
+                                                              "Step 51")
+                                                      : AppLocalizations.of(context)
+                                                              ?.tStepCompleted ??
+                                                          "Step Completed",
                           onClose: () {},
                         ),
                       ],
@@ -2097,7 +2163,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                 Text(
                   sale
                       ? "${AppLocalizations.of(context)?.getMore ?? "Play"} $gadgetName with a 200 Crystals discount"
-                      : '${AppLocalizations.of(context)?.getMore ?? "Play"}  $gadgetName',
+                      : '${AppLocalizations.of(context)?.getMore ?? "Play"} $gadgetName',
                   style: const TextStyle(
                     color: Colors.white,
                     fontFamily: 'Quicksand',
@@ -2614,6 +2680,16 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  // Function to open a URL
+  void _launchPrivacyPolicy(BuildContext context) async {
+    final Uri uri = Uri.parse('https://694764.8b.io/privacy.html');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      // can't launch url
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Access the LanguageProvider to change the locale
@@ -2729,16 +2805,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           const TextStyle(color: Colors.indigo, fontSize: 15),
                     ),
                   ),
-                ),
-                ListTile(
-                  title: Center(
-                    child: Text(
-                      AppLocalizations.of(context)?.restorePurchases ??
-                          "Restore Purchases",
-                      style:
-                          const TextStyle(color: Colors.indigo, fontSize: 15),
-                    ),
-                  ),
+                  onTap: () => _launchPrivacyPolicy(context), // Open URL on tap
                 ),
               ],
             ),

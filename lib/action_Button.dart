@@ -33,7 +33,10 @@ class _CustomActionButtonState extends State<CustomActionButton>
   @override
   void initState() {
     super.initState();
+    initializeController();
+  }
 
+  void initializeController() {
     // Initialize the AnimationController
     _controller = AnimationController(
       duration: const Duration(milliseconds: 500), // Duration of one blink
@@ -72,16 +75,15 @@ class _CustomActionButtonState extends State<CustomActionButton>
 
   @override
   Widget build(BuildContext context) {
+    bool disabled = tutorialActive &&
+        widget.count != -1 &&
+        currentTutorialStep != TutorialStep.step5 &&
+        currentTutorialStep != TutorialStep.completed;
     return AnimatedBuilder(
       animation: _colorAnimation,
       builder: (context, child) {
         return GestureDetector(
-          onTap: tutorialActive &&
-                  widget.count != -1 &&
-                  currentTutorialStep != TutorialStep.step5 &&
-                  currentTutorialStep != TutorialStep.completed
-              ? null
-              : widget.onPressed,
+          onTap: disabled ? null : widget.onPressed,
           child: Column(
             children: [
               Stack(

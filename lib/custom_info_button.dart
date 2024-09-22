@@ -41,7 +41,10 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
   @override
   void initState() {
     super.initState();
+    initializeController();
+  }
 
+  void initializeController() {
     // Initialize the AnimationController
     _controller = AnimationController(
       duration: const Duration(milliseconds: 500), // Duration of one blink
@@ -106,9 +109,8 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
               : widget.isLarge == 2 && !widget.originShop
                   ? Navigator.of(context).push(
                       FadePageRoute(
-                        page: ShopScreen(
-                          puzzle: puzzle,
-                        ), // Verwende hier das existierende PuzzleModel
+                        page:
+                            const ShopScreen(), // Verwende hier das existierende PuzzleModel
                       ),
                     )
                   : null, // Show info dialog on tap
@@ -238,23 +240,5 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
         );
       },
     );
-  }
-
-  // Helper function to get color from name
-  Color getColorFromName(String colorName) {
-    switch (colorName.toLowerCase()) {
-      case 'red':
-        return Colors.red;
-      case 'green':
-        return Colors.green;
-      case 'blue':
-        return Colors.blue;
-      case 'yellow':
-        return Colors.yellow;
-      case 'purple':
-        return Colors.purple;
-      default:
-        return Colors.grey; // Default color
-    }
   }
 }

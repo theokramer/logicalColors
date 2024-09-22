@@ -285,6 +285,16 @@ class PuzzleModel with ChangeNotifier {
     return prefs.getBool('w$selectedWallpaper') ?? false;
   }
 
+  Future<void> saveHasRestoredPurchases(bool hasRestoredPurchases) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasRestoredPurchases', hasRestoredPurchases);
+  }
+
+  Future<bool> loadHasRestoredPurchases() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('hasRestoredPurchases') ?? false;
+  }
+
   Future<void> saveSounds(bool sounds) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('sounds', sounds);
@@ -688,6 +698,24 @@ class PuzzleModel with ChangeNotifier {
     }
   }
 
+  // Helper function to get color from name
+  Color getColorFromName(String colorName) {
+    switch (colorName.toLowerCase()) {
+      case 'red':
+        return Colors.red;
+      case 'green':
+        return Colors.green;
+      case 'blue':
+        return Colors.blue;
+      case 'yellow':
+        return Colors.yellow;
+      case 'purple':
+        return Colors.purple;
+      default:
+        return Colors.grey; // Default color
+    }
+  }
+
   Future<bool> getHint() async {
     bool resetOccurred = false;
 
@@ -699,27 +727,26 @@ class PuzzleModel with ChangeNotifier {
       moveWhereError = -1;
       resetOccurred = true;
       undoStack.clear();
-    } else {
-      if (moves < maxMoves) {
-        if (!gotHint) {
-          if (await HintsManager.loadHints() > 0 && clicks.isNotEmpty) {
-            gotHint = true;
-            HintsManager.subtractHints(1);
-            var hint = clicks[0];
-            setHint(hint[0], hint[1]); // Set hint coordinates
-          } else {
-            if (await CoinManager.loadCrystals() >= 50) {
-              gotHint = true;
-              subtractCrystals(50);
-
-              var hint = clicks[0];
-              setHint(hint[0], hint[1]); // Set hint coordinates
-            }
-          }
-        } else {
+    }
+    if (moves < maxMoves) {
+      if (!gotHint) {
+        if (await HintsManager.loadHints() > 0 && clicks.isNotEmpty) {
+          gotHint = true;
+          HintsManager.subtractHints(1);
           var hint = clicks[0];
           setHint(hint[0], hint[1]); // Set hint coordinates
+        } else {
+          if (await CoinManager.loadCrystals() >= 50) {
+            gotHint = true;
+            subtractCrystals(50);
+
+            var hint = clicks[0];
+            setHint(hint[0], hint[1]); // Set hint coordinates
+          }
         }
+      } else {
+        var hint = clicks[0];
+        setHint(hint[0], hint[1]); // Set hint coordinates
       }
     }
 

@@ -8,9 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-int currentWorld = 1;
+int currentWorld = 2;
+
+int timeElapsed = 0;
 
 int selectedWallpaper = 0;
+
+IconData currencyIcon = Icons.bedtime;
+Color currencyColor = Colors.blueGrey[800] ?? Colors.blue;
 
 Color getBackgroundColor(int index) {
   // Define colors for the 5 new solid-colored wallpapers
@@ -18,7 +23,7 @@ Color getBackgroundColor(int index) {
   if (index >= 0 && index < 5) {
     switch (index) {
       case 0:
-        color = Colors.teal[500];
+        color = Colors.blueGrey[300];
         break;
       case 1:
         color = Colors.red[200];
@@ -59,6 +64,7 @@ List<World> worlds = [
   World(
       id: 1,
       maxLevel: 1,
+      anzahlLevels: 20,
       colors: const [
         Color(0xff48cae4),
         Color(0xff0077b6),
@@ -68,6 +74,7 @@ List<World> worlds = [
   World(
       id: 2,
       maxLevel: 0,
+      anzahlLevels: 25,
       colors: const [
         Color(0xff9CDBA6),
         Color(0xff50B498),
@@ -77,6 +84,7 @@ List<World> worlds = [
   World(
       id: 3,
       maxLevel: 0,
+      anzahlLevels: 25,
       colors: const [
         Color(0xffdb222a),
         Color(0xff7c2e41),
@@ -86,6 +94,7 @@ List<World> worlds = [
   World(
       id: 4,
       maxLevel: 0,
+      anzahlLevels: 25,
       colors: const [
         Color(0xff720455),
         Color(0xff3C0753),
@@ -95,6 +104,7 @@ List<World> worlds = [
   World(
       id: 5,
       maxLevel: 0,
+      anzahlLevels: 25,
       colors: const [
         Color(0xffFFBB5C),
         Color(0xffd25E3E),
@@ -104,6 +114,7 @@ List<World> worlds = [
   World(
       id: 6,
       maxLevel: 0,
+      anzahlLevels: 25,
       colors: const [
         Color(0xffFFBB5C),
         Color(0xffd25E3E),
@@ -189,9 +200,14 @@ class PuzzleModel with ChangeNotifier {
   }
 
   // Methods
-  void addWorld(int id, int maxLevel, List<Color> colors, bool unlocked) {
-    worlds.add(
-        World(id: id, maxLevel: maxLevel, colors: colors, unlocked: unlocked));
+  void addWorld(int id, int maxLevel, List<Color> colors, bool unlocked,
+      int anzahlLevels) {
+    worlds.add(World(
+        id: id,
+        maxLevel: maxLevel,
+        colors: colors,
+        unlocked: unlocked,
+        anzahlLevels: anzahlLevels));
     notifyListeners();
   }
 
@@ -200,6 +216,28 @@ class PuzzleModel with ChangeNotifier {
     //return 100;
     return prefs.getInt('world_$worldId') ??
         1; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+  }
+
+  int getCurrencyAmount() {
+    int currencyAmount = 0;
+    for (int i = 1; i <= worlds.length; i++) {
+      int temp = (getMaxLevelForWorld(i) == -2
+          ? worlds[i - 1].anzahlLevels
+          : getMaxLevelForWorld(i) - 1);
+      print("id: $i");
+      print(temp);
+      currencyAmount += temp;
+    }
+
+    return currencyAmount;
+  }
+
+  int getNeededCurrencyAmount(int world) {
+    int nCurrencyAmount = 0;
+    for (int i = 0; i < world; i++) {
+      nCurrencyAmount += worlds[i].anzahlLevels;
+    }
+    return nCurrencyAmount;
   }
 
   Future<bool> loadWorldUnlocked(int worldId) async {
@@ -327,7 +365,7 @@ class PuzzleModel with ChangeNotifier {
 
   void updateWorldLevel(int worldId, int newLevel) {
     var world = worlds.firstWhere((w) => w.id == worldId);
-    if (newLevel > world.maxLevel) {
+    if (newLevel > world.maxLevel || newLevel == -2) {
       world.maxLevel = newLevel;
       saveWorldProgress(worldId, newLevel); // Speichere den neuen Fortschritt
     }
@@ -366,17 +404,27 @@ class PuzzleModel with ChangeNotifier {
   void unlockWorld(int worldID) {
     worlds
         .firstWhere((world) => world.id == worldID,
-            orElse: () =>
-                World(id: -1, colors: [], maxLevel: 1, unlocked: false))
+            orElse: () => World(
+                id: -1,
+                colors: [],
+                maxLevel: 1,
+                unlocked: false,
+                anzahlLevels: -1))
         .unlocked = true;
   }
 
   int getMaxLevelForWorld(int worldId) {
-    // Use `orElse` to handle the case when no element matches the condition
-    //return 100;
     var world = worlds.firstWhere((w) => w.id == worldId,
-        orElse: () => World(id: -1, maxLevel: -1, colors: [], unlocked: false));
-    return world.maxLevel;
+        orElse: () => World(
+            id: -1,
+            maxLevel: -1,
+            colors: [],
+            unlocked: false,
+            anzahlLevels: -1));
+
+    return (world.maxLevel > world.anzahlLevels
+        ? world.anzahlLevels
+        : world.maxLevel);
   }
 
   void addMoves(int amount) {
@@ -385,6 +433,7 @@ class PuzzleModel with ChangeNotifier {
   }
 
   Map<String, int> getSizeAndMaxMoves(int level) {
+    //return {"size": getGridSize(level), "maxMoves": getMaxMoves(level)};
     getMaxLevelForWorld(currentWorld);
     int s = currentWorld == 1
         ? 1
@@ -454,7 +503,7 @@ class PuzzleModel with ChangeNotifier {
           break;
         case 18:
           s = 4;
-          m = 5;
+          m = 4;
           break;
         default:
           s = 2;
@@ -496,11 +545,11 @@ class PuzzleModel with ChangeNotifier {
 
     while (level < 37) {
       if (currentWorld == 1) {
-        int levelsForCurrentSize = ((s) * (s - 0.3)).floor();
+        int levelsForCurrentSize = ((s) * (s)).floor();
         int endLevel = startLevel + levelsForCurrentSize - 1;
 
         if (level <= endLevel) {
-          m = (1 + (log((level - startLevel) + 1) / log(1.6))).ceil();
+          m = (1 + (log((level - startLevel) + 1) / log(1.8))).ceil();
           int maxMovesForCurrentSize = (s * 1.8).floor();
           m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
           break;
@@ -546,6 +595,45 @@ class PuzzleModel with ChangeNotifier {
     }
 
     return {"size": s, "maxMoves": m};
+  }
+
+  // Berechnet die gridSize basierend auf dem aktuellen Level
+  int getGridSize(int level) {
+    switch (level) {
+      case 1:
+        return 1;
+      case < 7:
+        return 2;
+      case < 14:
+        return 3;
+      case < 25:
+        return 4;
+      default:
+        return 5;
+    }
+  }
+
+  // Berechnet die maxMoves basierend auf dem aktuellen Level
+  int getMaxMoves(int level) {
+    int m;
+    int s = getGridSize(level);
+    m = 1;
+    int tempLvl = level - 1;
+    int set = 0;
+    if (set == 2 || tempLvl >= 65) {
+      set = 0;
+      if (s > m - 5 && s > 4) {
+        s = s - 1;
+      } else {
+        s = 5;
+        m += 1;
+      }
+    } else {
+      set += 1;
+    }
+    tempLvl -= 1;
+
+    return m;
   }
 
   void refreshGrid(int newLevel, int newSize) {
@@ -947,12 +1035,14 @@ class PuzzleModel with ChangeNotifier {
 class World {
   final int id;
   int maxLevel;
+  int anzahlLevels;
   List<Color> colors;
   bool unlocked;
 
   World(
       {required this.id,
       required this.maxLevel,
+      required this.anzahlLevels,
       required this.colors,
       required this.unlocked});
 }

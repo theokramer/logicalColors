@@ -22,6 +22,10 @@ void main() async {
 
   int maxLevel = await loadWorldProgress(
       currentWorld); // Load progress for the current world
+  (maxLevel > worlds[currentWorld - 1].anzahlLevels
+      ? maxLevel = worlds[currentWorld - 1].anzahlLevels
+      : null);
+  maxLevel == -2 ? maxLevel = worlds[currentWorld - 1].anzahlLevels : null;
   tutorialActive = await loadTutorial();
   selectedLanguage = await loadSelectedLanguage();
   vibration = await loadVibration();
@@ -256,17 +260,14 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             primarySwatch: Colors.blue,
           ),
-          initialRoute: tutorialActive ? '/' : '/menu',
+          initialRoute: tutorialActive ? '/tutorial' : '/menu',
           routes: {
-            '/': (context) => const PuzzleScreen(),
+            '/': (context) =>
+                const MainMenuScreen(), // Default zu MainMenuScreen ändern
+            '/tutorial': (context) =>
+                const PuzzleScreen(), // Für Tutorial eine eigene Route
             '/roadmap': (context) => const MainMenuScreen(),
-            '/shop': (context) {
-              // Access PuzzleModel using Provider
-              final puzzle = Provider.of<PuzzleModel>(context, listen: false);
-
-              // Pass PuzzleModel to ShopScreen
-              return const ShopScreen();
-            },
+            '/shop': (context) => const ShopScreen(),
             '/menu': (context) => const MainMenuScreen(),
           },
         );

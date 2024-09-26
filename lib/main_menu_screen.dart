@@ -1,17 +1,22 @@
-import 'package:color_puzzle/level_selection.dart';
-import 'package:color_puzzle/main.dart';
-import 'package:color_puzzle/wallpaper_selection.dart';
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
-import 'puzzle_model.dart';
-import 'custom_info_button.dart';
+
+import 'package:color_puzzle/coin_manager.dart';
+import 'package:color_puzzle/level_selection.dart';
+import 'package:color_puzzle/main.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:color_puzzle/shop_screen.dart';
-import 'package:color_puzzle/coin_manager.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:color_puzzle/wallpaper_selection.dart';
+
+import 'custom_info_button.dart';
+import 'puzzle_model.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -26,7 +31,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   int selectedWallpaperIndex = 1; // Default wallpaper selection
   //bool available = true; // Track availability of in-app purchases
   late BannerAd _bannerAd;
-  bool _isBannerAdReady = false;
+  final bool _isBannerAdReady = false;
 
   // void _loadProduct() async {
   //   const Set<String> productIds = {
@@ -87,31 +92,37 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
   void initState() {
     //_loadProduct;
-    _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3263827122305139/4072388867',
-      request: const AdRequest(),
-      size: AdSize.banner,
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          setState(() {
-            _isBannerAdReady = true;
-          });
-        },
-        onAdFailedToLoad: (ad, err) {
-          print('Failed to load a banner ad: ${err.message}');
-          //ad.dispose();
-        },
-      ),
-    );
-    if (worlds[0].maxLevel > 10 && !noAds) {
-      _bannerAd.load();
-    }
+    // _bannerAd = BannerAd(
+    //   adUnitId: 'ca-app-pub-3263827122305139/4072388867',
+    //   request: const AdRequest(),
+    //   size: AdSize.banner,
+    //   listener: BannerAdListener(
+    //     onAdLoaded: (ad) {
+    //       setState(() {
+    //         _isBannerAdReady = true;
+    //       });
+    //     },
+    //     onAdFailedToLoad: (ad, err) {
+    //       print('Failed to load a banner ad: ${err.message}');
+    //       //ad.dispose();
+    //     },
+    //   ),
+    // );
+    // if (worlds[0].maxLevel > 10 && !noAds) {
+    //   _bannerAd.load();
+    // }
   }
 
   @override
   void dispose() {
     super.dispose();
     _bannerAd.dispose();
+  }
+
+  void _updateLevel(int newIndex) {
+    setState(() {
+      selectedLevel = newIndex;
+    });
   }
 
   void _updateWallpaper(int newIndex) {
@@ -214,11 +225,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     children: [
                       _buildTopRow(context, coinProvider, currentWorld,
                           puzzle.getMaxLevelForWorld(currentWorld), puzzle),
-                      const SizedBox(
-                        height: 20,
+                      // const SizedBox(
+                      //   height: 5,
+                      // ),
+                      const Divider(
+                        thickness: 1.5,
                       ),
 
-                      _buildTitleText(puzzle.getMaxLevelForWorld(currentWorld)),
                       const Spacer(),
 
                       _buildActionButton(
@@ -228,7 +241,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         });
                       }),
                       const SizedBox(height: 80),
-                      //_buildBottomRow(),
+                      const Divider(
+                        thickness: 1.5,
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      _buildBottomRow(puzzle),
                       //const SizedBox(height: 30),
                     ],
                   ),
@@ -237,21 +256,21 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   ),
                 ],
               ),
-              _buildSwipeGestureDetector(),
-              _buildNavigationArrows(),
-              if (_isBannerAdReady)
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SizedBox(
-                        width: constraints.maxWidth,
-                        height: _bannerAd.size.height.toDouble(),
-                        child: AdWidget(ad: _bannerAd),
-                      );
-                    },
-                  ),
-                ),
+              //_buildSwipeGestureDetector(),
+              //_buildNavigationArrows(),
+              // if (_isBannerAdReady)
+              //   Align(
+              //     alignment: Alignment.bottomCenter,
+              //     child: LayoutBuilder(
+              //       builder: (context, constraints) {
+              //         return SizedBox(
+              //           width: constraints.maxWidth,
+              //           height: _bannerAd.size.height.toDouble(),
+              //           child: AdWidget(ad: _bannerAd),
+              //         );
+              //       },
+              //     ),
+              //   ),
             ],
           ),
         ),
@@ -311,145 +330,198 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   Widget _buildTopRow(BuildContext context, CoinProvider coinProvider,
       int worldIndex, int maxLevel, PuzzleModel puzzle) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Column(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5),
+      child: Stack(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildIconButton(
-                    icon: Icons.shopping_cart,
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        FadePageRoute(
-                          page: const ShopScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 16),
-                  _buildIconButton(
-                    icon: Icons.grid_view,
-                    onPressed: () {
-                      if (puzzle.isWorldUnlocked(currentWorld)) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => LevelSelectionScreen(
-                              worldIndex: worldIndex,
-                              currentLevel: maxLevel,
-                            ),
-                          ),
-                        );
-                      }
+                  Row(
+                    children: [
+                      SunnysDisplay(
+                        puzzle: puzzle,
+                      ),
+                      // _buildIconButton(
+                      //   icon: Icons.shopping_cart,
+                      //   onPressed: () {
+                      //     Navigator.of(context).push(
+                      //       FadePageRoute(
+                      //         page: const ShopScreen(),
+                      //       ),
+                      //     );
+                      //   },
+                      // ),
+                      //const SizedBox(width: 16),
 
-                      // Handle grid view navigation
-                    },
+                      //     // Handle grid view navigation
+                      //   },
+                      // ),
+                      // const SizedBox(width: 16),
+                      // _buildIconButton(
+                      //   icon: Icons.palette,
+                      //   onPressed: () {
+                      //     showDialog(
+                      //       context: context,
+                      //       builder: (BuildContext context) =>
+                      //           WallpaperSelectionWidget(
+                      //         onWallpaperSelected: _updateWallpaper,
+                      //       ),
+                      //     );
+                      //   },
+                      // ),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  _buildIconButton(
-                    icon: Icons.palette,
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) =>
-                            WallpaperSelectionWidget(
-                          onWallpaperSelected: _updateWallpaper,
+                  Row(
+                    children: [
+                      //     Consumer<CoinProvider>(
+                      //       builder: (context, coinProvider, child) {
+                      //         return CustomInfoButton(
+                      //           value: '${coinProvider.Crystals}',
+                      //           targetColor: -1,
+                      //           movesLeft: -1,
+                      //           iconPath: 'images/Crystals.png',
+                      //           backgroundColor: Colors.black45,
+                      //           textColor: Colors.white,
+                      //           isLarge: 2,
+                      //         );
+                      //       },
+                      //     ),
+                      //     //const SizedBox(width: 16),
+                      // GestureDetector(
+                      //   onTap: () {
+                      //     if (puzzle.isWorldUnlocked(currentWorld)) {
+                      //       Navigator.of(context).push(
+                      //         MaterialPageRoute(
+                      //           builder: (context) => LevelSelectionScreen(
+                      //             worldIndex: worldIndex,
+                      //             currentLevel: maxLevel,
+                      //           ),
+                      //         ),
+                      //       );
+                      //     }
+                      //   },
+                      //   child: _buildIconButton2(
+                      //     icon: Icons.grid_view,
+                      //   ),
+                      // ),
+                      const SizedBox(
+                        width: 20,
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return SettingsScreen(
+                                puzzle: puzzle,
+                              ); // Hier wird die SettingsScreen als Modal geladen
+                            },
+                            isScrollControlled:
+                                true, // Optional: damit Modal den ganzen Bildschirm ausfüllt
+                          );
+                        },
+                        child: _buildIconButton2(
+                          icon: Icons.tune,
                         ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  Consumer<CoinProvider>(
-                    builder: (context, coinProvider, child) {
-                      return CustomInfoButton(
-                        value: '${coinProvider.Crystals}',
-                        targetColor: -1,
-                        movesLeft: -1,
-                        iconPath: 'images/Crystals.png',
-                        backgroundColor: Colors.black45,
-                        textColor: Colors.white,
-                        isLarge: 2,
-                      );
-                    },
-                  ),
-                  //const SizedBox(width: 16),
-                  /*_buildIconButton(
-                    icon: Icons.settings,
-                    onPressed: () {
-                      // Handle settings navigation
-                    },
-                  ),*/
-                ],
-              ),
+              if (!noAds && false)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 5.0, top: 5),
+                      child: GestureDetector(
+                        onTap: () {
+                          puzzle.saveNoAds(true);
+                          noAds = true;
+                          Navigator.of(context).pushReplacement(
+                            FadePageRoute(
+                              page: const MainMenuScreen(),
+                            ),
+                          );
+                        },
+                        child: Image.asset(
+                          "images/no_ads.png",
+                          height: 35,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
-          if (!noAds && false)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 5.0, top: 5),
-                  child: GestureDetector(
-                    onTap: () {
-                      puzzle.saveNoAds(true);
-                      noAds = true;
-                      Navigator.of(context).pushReplacement(
-                        FadePageRoute(
-                          page: const MainMenuScreen(),
-                        ),
+          Center(
+            child: GestureDetector(
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return LevelSelectionScreen(
+                        onLevelSelected: _updateLevel,
+                        worldIndex: worldIndex,
+                        currentLevel: maxLevel,
                       );
                     },
-                    child: Image.asset(
-                      "images/no_ads.png",
-                      height: 35,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                    isScrollControlled:
+                        true, // Optional: damit Modal den ganzen Bildschirm ausfüllt
+                  );
+                },
+                child: _buildTitleText(maxLevel)),
+          )
         ],
       ),
     );
   }
 
   Widget _buildTitleText(int maxLevel) {
-    return Text(
-      '${AppLocalizations.of(context)?.world ?? "World"} $currentWorld ${maxLevel > 1 ? ("– Level $maxLevel") : ""}',
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        color: Colors.white,
-        fontSize: 35,
-        fontWeight: FontWeight.bold,
-        fontFamily: 'Quicksand',
-        shadows: [
-          Shadow(
-            color: Colors.white.withOpacity(0.2),
-            offset: const Offset(2, 2),
-            blurRadius: 6,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'Level $selectedLevel',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Quicksand',
+            shadows: [
+              Shadow(
+                color: Colors.white.withOpacity(0.2),
+                offset: const Offset(2, 2),
+                blurRadius: 6,
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        const Icon(
+          Icons.keyboard_arrow_down,
+          color: Colors.white,
+          size: 35,
+        ),
+      ],
     );
   }
 
   Widget _buildActionButton(BuildContext context, bool isWorldUnlocked,
       CoinProvider coinProvider, PuzzleModel puzzle, Function onUnlock) {
-    return Center(
-      child: isWorldUnlocked
+    return Center(child: _buildPlayButton(context, currentWorld - 1)
+        /*isWorldUnlocked
           ? _buildPlayButton(context, currentWorld - 1)
           : _buildUnlockButton(
-              context, (currentWorld - 1), coinProvider, puzzle, onUnlock),
-    );
+              context, (currentWorld - 1), coinProvider, puzzle, onUnlock),*/
+        );
   }
 
   Widget _buildPlayButton(BuildContext context, int thisWorld) {
     final puzzle = Provider.of<PuzzleModel>(context, listen: false);
-
+    int maxLevel = puzzle.getMaxLevelForWorld(thisWorld + 1);
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -476,29 +548,29 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 16),
         ),
         onPressed: () {
-          int maxLevel = puzzle.getMaxLevelForWorld(thisWorld + 1);
-          if ((!worlds.last.unlocked && selectedLevel > 14) && false) {
-            _showUnlockOptionsDialog(context, thisWorld, puzzle, () {});
-          } else {
-            selectedLevel = maxLevel;
+          // if ((!worlds.last.unlocked && selectedLevel > 14) && false) {
+          //   _showUnlockOptionsDialog(context, thisWorld, puzzle, () {});
+          // } else {
+          //   selectedLevel = maxLevel;
 
-            Navigator.of(context).push(
-              FadePageRoute(
-                page: ChangeNotifierProvider(
-                  create: (_) => PuzzleModel(
-                    size: puzzle.getSizeAndMaxMoves(maxLevel)["size"] ?? 2,
-                    level: puzzle.getSizeAndMaxMoves(maxLevel)["maxMoves"] ?? 2,
-                    colorMapping: {
-                      1: worlds[thisWorld].colors[0],
-                      2: worlds[thisWorld].colors[1],
-                      3: worlds[thisWorld].colors[2],
-                    },
-                  ),
-                  child: const PuzzleScreen(),
+          Navigator.of(context).push(
+            FadePageRoute(
+              page: ChangeNotifierProvider(
+                create: (_) => PuzzleModel(
+                  size: puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2,
+                  level:
+                      puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2,
+                  colorMapping: {
+                    1: worlds[thisWorld].colors[0],
+                    2: worlds[thisWorld].colors[1],
+                    3: worlds[thisWorld].colors[2],
+                  },
                 ),
+                child: const PuzzleScreen(),
               ),
-            );
-          }
+            ),
+          );
+          //}
         },
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -506,7 +578,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             const Icon(Icons.play_arrow, color: Colors.white, size: 36),
             const SizedBox(width: 8),
             Text(
-              AppLocalizations.of(context)?.play ?? "Play",
+              "${AppLocalizations.of(context)?.play ?? "Play"} ${selectedLevel < maxLevel || maxLevel == -2 ? "Again" : ""}",
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 22,
@@ -566,28 +638,52 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     );
   }
 
-  Widget _buildBottomRow() {
+  Widget _buildBottomRow(PuzzleModel puzzle) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 30.0,
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _buildIconButton(
-            icon: Icons.map,
-            onPressed: () {
-              // Handle map navigation
-            },
+          Row(
+            children: [
+              _buildIconButton2(
+                icon: Icons.more_vert,
+              ),
+              const SizedBox(
+                width: 10,
+              ),
+              const Text(
+                "ANFÄNGER",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold),
+              )
+            ],
           ),
-          _buildIconButton(
-            icon: Icons.star,
-            onPressed: () {
-              // Handle star navigation
-            },
-          ),
-          _buildIconButton(
-            icon: Icons.calendar_today,
-            onPressed: () {
-              // Handle calendar navigation
+          Consumer<CoinProvider>(
+            builder: (context, coinProvider, child) {
+              return Row(
+                children: [
+                  Icon(
+                    currencyIcon,
+                    color: currencyColor,
+                    size: 25,
+                  ),
+                  const SizedBox(
+                    width: 8,
+                  ),
+                  Text(
+                    "${puzzle.getCurrencyAmount()}/${puzzle.getNeededCurrencyAmount(currentWorld)}",
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
+              );
             },
           ),
         ],
@@ -662,8 +758,66 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }) {
     return IconButton(
       icon: Icon(icon, size: 28),
-      color: Colors.white,
+      color: Colors.black,
       onPressed: onPressed,
+    );
+  }
+}
+
+class _buildIconButton2 extends StatelessWidget {
+  IconData icon;
+  _buildIconButton2({
+    super.key,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        height: 32,
+        width: 32,
+        decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 1.5)),
+        child: Icon(
+          icon,
+          color: Colors.white,
+          size: 25,
+        ));
+  }
+}
+
+class SunnysDisplay extends StatelessWidget {
+  PuzzleModel puzzle;
+  SunnysDisplay({
+    super.key,
+    required this.puzzle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<CoinProvider>(
+      builder: (context, coinProvider, child) {
+        return Row(
+          children: [
+            Icon(
+              currencyIcon,
+              color: currencyColor,
+              size: 33,
+            ),
+            const SizedBox(
+              width: 8,
+            ),
+            Text(
+              "${puzzle.getCurrencyAmount()}",
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -1,77 +1,107 @@
-import 'package:color_puzzle/puzzle_model.dart';
-import 'package:color_puzzle/puzzle_screen.dart';
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:color_puzzle/puzzle_model.dart';
+import 'package:color_puzzle/puzzle_screen.dart';
+
 // Assuming PuzzleModel and other dependencies are already defined.
 
-class LevelSelectionScreen extends StatelessWidget {
+class LevelSelectionScreen extends StatefulWidget {
   final int worldIndex;
   final int currentLevel;
+  final Function(int) onLevelSelected;
 
   const LevelSelectionScreen({
     super.key,
     required this.worldIndex,
     required this.currentLevel,
+    required this.onLevelSelected,
   });
 
   @override
+  State<LevelSelectionScreen> createState() => _LevelSelectionScreenState();
+}
+
+class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
+  @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
-    int worldStartLevel = (worldIndex - 1) * 75 + 1;
-    int worldEndLevel = worldIndex * 75;
+    int worldStartLevel =
+        (widget.worldIndex - 1) * worlds[widget.worldIndex - 1].anzahlLevels +
+            1;
+    int worldEndLevel =
+        widget.worldIndex * worlds[widget.worldIndex - 1].anzahlLevels;
     int totalLevels = worldEndLevel - worldStartLevel + 1;
 
-    // Calculate rows needed based on 3 items per row
-    int rows = (totalLevels / 3).ceil();
+    // Calculate rows needed based on 4 items per row
+    int rows = (totalLevels / 4).ceil();
 
-    return Scaffold(
-      appBar: AppBar(
-        foregroundColor: Colors.white,
-        title: Text(
-          'World $worldIndex',
-          style: const TextStyle(color: Colors.white),
-        ),
-        backgroundColor: worlds[worldIndex - 1].colors[1],
-      ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: CustomPaint(
-              // Wrap the Column with CustomPaint to draw lines.
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(rows, (rowIndex) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(3, (colIndex) {
-                        int levelNumber = rowIndex * 3 + colIndex + 1;
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      height: MediaQuery.of(context).size.height * 0.55 +
+          100, // Limit height to 50% of the screen
+      child: Column(
+        children: [
+          // A small "bar" to close the modal view
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Level Auswahl',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Closes the modal view
+                },
+              ),
+            ],
+          ),
+          const Divider(), // Separator line
+          Expanded(
+            child: ListView(
+              children: List.generate(rows, (rowIndex) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(4, (colIndex) {
+                      int levelNumber = rowIndex * 4 + colIndex + 1;
 
-                        if (levelNumber > totalLevels) return Container();
+                      if (levelNumber > totalLevels) return Container();
 
-                        bool isLevelUnlocked =
-                            levelNumber <= currentLevel || levelNumber == 1;
+                      bool isLevelUnlocked =
+                          levelNumber <= widget.currentLevel ||
+                              levelNumber == 1 ||
+                              widget.currentLevel == -2;
 
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: GestureDetector(
+                          onTap: isLevelUnlocked
+                              ? () {
+                                  selectedLevel = levelNumber;
+                                  Navigator.of(context).pop();
+                                  widget.onLevelSelected(levelNumber);
+                                }
+                              : null,
                           child: _buildLevelButton(
                             context,
                             levelNumber: levelNumber,
                             isLevelUnlocked: isLevelUnlocked,
                             puzzle: puzzle,
                           ),
-                        );
-                      }),
-                    ),
-                  );
-                }),
-              ),
+                        ),
+                      );
+                    }),
+                  ),
+                );
+              }),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -81,35 +111,13 @@ class LevelSelectionScreen extends StatelessWidget {
       required bool isLevelUnlocked,
       required PuzzleModel puzzle}) {
     return GestureDetector(
-      onTap: isLevelUnlocked
-          ? () {
-              selectedLevel = levelNumber;
-              Navigator.of(context).pushReplacement(
-                FadePageRoute(
-                  page: ChangeNotifierProvider(
-                    create: (_) => PuzzleModel(
-                      size: puzzle.getSizeAndMaxMoves(levelNumber)["size"] ?? 2,
-                      level:
-                          puzzle.getSizeAndMaxMoves(levelNumber)["maxMoves"] ??
-                              2,
-                      colorMapping: {
-                        1: worlds[currentWorld - 1].colors[0],
-                        2: worlds[currentWorld - 1].colors[1],
-                        3: worlds[currentWorld - 1].colors[2],
-                      },
-                    ),
-                    child: const PuzzleScreen(),
-                  ),
-                ),
-              );
-            }
-          : null,
       child: CircleAvatar(
-        radius: 40,
+        radius: 35,
         backgroundColor: isLevelUnlocked
-            ? (levelNumber == currentLevel
-                ? Colors.green
-                : worlds[worldIndex - 1].colors[1])
+            ? (levelNumber == widget.currentLevel &&
+                    levelNumber != worlds[currentWorld - 1].anzahlLevels
+                ? Colors.green.shade600
+                : worlds[widget.worldIndex - 1].colors[1])
             : Colors.grey,
         child: Center(
           child: Text(

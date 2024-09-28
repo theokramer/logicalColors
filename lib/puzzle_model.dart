@@ -22,28 +22,30 @@ Color currencyColor = Colors.amber ?? Colors.blue;
 
 Color getBackgroundColor(int index) {
   // Define colors for the 5 new solid-colored wallpapers
-  Color? color;
+  Color? color = Colors.blueGrey[800];
   if (index >= 0 && index < 5) {
     switch (index) {
       case 0:
         color = Colors.blueGrey[800];
         break;
       case 1:
-        color = Colors.red[200];
+        color = const Color(0xff1c1c1e);
         break;
       case 2:
-        color = Colors.green[200];
+        color = const Color(0xff121212);
         break;
       case 3:
-        color = Colors.blue[200];
+        color = const Color(0xff2e2e2e);
         break;
       case 4:
-        color = Colors.purple[200];
+        color = const Color(0xffdcd3c2);
         break;
+      default:
+        color = Colors.blueGrey[800];
     }
   }
 
-  return color ?? Colors.white;
+  return color ?? Colors.blue;
 }
 
 bool noAds = false;
@@ -63,11 +65,33 @@ TutorialStep currentTutorialStep = TutorialStep.step1;
 
 List<int> boughtWallpapers = [0];
 
+int countSpecificLevels(int targetWorldNr) {
+  // Replace with the path to your file
+  File file = File(
+      "/Users/theokramer/Documents/Colorize - Puzzle Game/logicalColors/lib/levels.json");
+  var fileContent = file.readAsStringSync();
+
+  // Decoding JSON file content into a List
+  List<dynamic> jsonData = jsonDecode(fileContent);
+
+  int count = 0;
+
+  // Looping through the JSON array
+  for (var item in jsonData) {
+    Level level = Level.fromJson(item);
+    if (level.worldNr == targetWorldNr) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
 List<World> worlds = [
   World(
       id: 1,
       maxLevel: 1,
-      anzahlLevels: 10,
+      anzahlLevels: countSpecificLevels(1),
       name: "Anfänger",
       colors: const [
         Color(0xff48cae4),
@@ -737,6 +761,17 @@ class PuzzleModel with ChangeNotifier {
   }
 
   List<Click> readJson(int index) {
+    var level = readLevel(index);
+
+    // Return the first click from the clicks list, if available
+    if (level.clicks != null && level.clicks!.isNotEmpty) {
+      return level.clicks!; // Return the first click
+    } else {
+      return [Click(x: 0, y: 0)]; // Return default click if no clicks found
+    }
+  }
+
+  Level readLevel(int index) {
     File file = File(
         "/Users/theokramer/Documents/Colorize - Puzzle Game/logicalColors/lib/levels.json");
     var fileContent = file.readAsStringSync();
@@ -748,11 +783,15 @@ class PuzzleModel with ChangeNotifier {
     Level level = Level.fromJson(jsonData[index]);
 
     // Return the first click from the clicks list, if available
-    if (level.clicks != null && level.clicks!.isNotEmpty) {
-      return level.clicks!; // Return the first click
-    } else {
-      return [Click(x: 0, y: 0)]; // Return default click if no clicks found
-    }
+    return level;
+  }
+
+  int readMoves(int index) {
+    return readLevel(index - 1).clicks?.length ?? 0;
+  }
+
+  int readSize(int index) {
+    return readLevel(index - 1).size ?? 0;
   }
 
   void _initializeGrid() {
@@ -789,16 +828,10 @@ class PuzzleModel with ChangeNotifier {
       for (int i = 0; i < _maxMoves; i++) {
         int x;
         int y;
-        if (size == 2 && maxMoves == 1) {
-          x = readJson(0)[i].x ?? 0;
-          y = readJson(0)[i].y ?? 0;
-          print(x);
-          print(y);
-        } else if (size == 2 && maxMoves == 2) {
-          x = readJson(1)[i].x ?? 0;
-          y = readJson(1)[i].y ?? 0;
-          print("i:");
-          print(i);
+        if (currentWorld == 1) {
+          print(selectedLevel);
+          x = readJson(selectedLevel - 1)[i].x ?? 0;
+          y = readJson(selectedLevel - 1)[i].y ?? 0;
           print("x:");
           print(x);
           print("y:");

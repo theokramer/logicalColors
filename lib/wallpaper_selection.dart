@@ -25,7 +25,16 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
     final coinProvider = Provider.of<CoinProvider>(context);
 
     return Container(
-      color: getBackgroundColor(selectedWallpaper),
+      decoration: selectedWallpaper < 5
+          ? BoxDecoration(
+              color: getBackgroundColor(selectedWallpaper),
+            )
+          : BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("images/w${selectedWallpaper - 5}.jpg"),
+                fit: BoxFit.cover,
+              ),
+            ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
 import 'package:color_puzzle/coin_manager.dart';
@@ -19,18 +20,24 @@ import 'package:color_puzzle/wallpaper_selection.dart';
 
 import 'custom_info_button.dart';
 import 'puzzle_model.dart';
-import 'package:path/path.dart' as p;
 
 class Level {
   int? worldNr;
   int? levelNr;
+  int? size;
   List<Click>? clicks;
 
-  Level({this.worldNr, this.levelNr, this.clicks});
+  Level({
+    this.worldNr,
+    this.levelNr,
+    this.size,
+    this.clicks,
+  });
 
   Level.fromJson(Map<String, dynamic> json) {
     worldNr = json['worldNr'];
     levelNr = json['levelNr'];
+    size = json['size'];
     if (json['clicks'] != null) {
       clicks = <Click>[];
       json['clicks'].forEach((v) {
@@ -643,9 +650,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             FadePageRoute(
               page: ChangeNotifierProvider(
                 create: (_) => PuzzleModel(
-                  size: puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2,
-                  level:
-                      puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2,
+                  size: currentWorld == 1
+                      ? puzzle.readSize(selectedLevel)
+                      : puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2,
+                  level: currentWorld == 1
+                      ? puzzle.readMoves(selectedLevel)
+                      : puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ??
+                          2,
                   colorMapping: {
                     1: worlds[thisWorld].colors[0],
                     2: worlds[thisWorld].colors[1],
@@ -1134,7 +1145,7 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
                                 )
                               : index == 7
                                   ? const SizedBox(
-                                      height: 100,
+                                      height: 150,
                                     )
                                   : null;
                     }),

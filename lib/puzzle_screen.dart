@@ -1699,13 +1699,20 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                         FadePageRoute(
                                           page: ChangeNotifierProvider(
                                             create: (_) => PuzzleModel(
-                                              size: puzzle.getSizeAndMaxMoves(
-                                                      selectedLevel)["size"] ??
-                                                  2,
-                                              level: puzzle.getSizeAndMaxMoves(
-                                                          selectedLevel)[
-                                                      "maxMoves"] ??
-                                                  2,
+                                              size: currentWorld == 1
+                                                  ? puzzle
+                                                      .readSize(selectedLevel)
+                                                  : puzzle.getSizeAndMaxMoves(
+                                                              selectedLevel)[
+                                                          "size"] ??
+                                                      2,
+                                              level: currentWorld == 1
+                                                  ? puzzle
+                                                      .readMoves(selectedLevel)
+                                                  : puzzle.getSizeAndMaxMoves(
+                                                              selectedLevel)[
+                                                          "maxMoves"] ??
+                                                      2,
                                               colorMapping: {
                                                 1: worlds[currentWorld - 1]
                                                     .colors[0],
@@ -1873,14 +1880,22 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                           ChangeNotifierProvider(
                                                         create: (_) =>
                                                             PuzzleModel(
-                                                          size: puzzle.getSizeAndMaxMoves(
-                                                                      selectedLevel)[
-                                                                  "size"] ??
-                                                              2,
-                                                          level: puzzle.getSizeAndMaxMoves(
-                                                                      selectedLevel)[
-                                                                  "maxMoves"] ??
-                                                              2,
+                                                          size: currentWorld ==
+                                                                  1
+                                                              ? puzzle.readSize(
+                                                                  selectedLevel)
+                                                              : puzzle.getSizeAndMaxMoves(
+                                                                          selectedLevel)[
+                                                                      "size"] ??
+                                                                  2,
+                                                          level: currentWorld ==
+                                                                  1
+                                                              ? puzzle.readMoves(
+                                                                  selectedLevel)
+                                                              : puzzle.getSizeAndMaxMoves(
+                                                                          selectedLevel)[
+                                                                      "maxMoves"] ??
+                                                                  2,
                                                           colorMapping: {
                                                             1: worlds[
                                                                     currentWorld -

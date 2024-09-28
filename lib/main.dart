@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
@@ -230,14 +231,41 @@ class MyApp extends StatelessWidget {
     }
   }
 
+  Level readLevel(int index) {
+    File file = File(
+        "/Users/theokramer/Documents/Colorize - Puzzle Game/logicalColors/lib/levels.json");
+    var fileContent = file.readAsStringSync();
+
+    // Decoding JSON file content into a Map
+    var jsonData = jsonDecode(fileContent);
+
+    // Deserializing into a Level object
+    Level level = Level.fromJson(jsonData[index]);
+
+    // Return the first click from the clicks list, if available
+    return level;
+  }
+
+  int readMoves(int index) {
+    return readLevel(index - 1).clicks?.length ?? 0;
+  }
+
+  int readSize(int index) {
+    return readLevel(index - 1).size ?? 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
           create: (_) => PuzzleModel(
-            size: getSizeAndMaxMoves(maxLevel)["size"] ?? 2,
-            level: getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2,
+            size: currentWorld == 1
+                ? readSize(selectedLevel)
+                : getSizeAndMaxMoves(selectedLevel)["size"] ?? 2,
+            level: currentWorld == 1
+                ? readMoves(selectedLevel)
+                : getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2,
             colorMapping: {
               1: worlds[currentWorld - 1].colors[0],
               2: worlds[currentWorld - 1].colors[1],

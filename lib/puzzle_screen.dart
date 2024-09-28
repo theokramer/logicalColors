@@ -301,7 +301,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     );
   }
 
-  DateTime? _startTime;
+  //DateTime? _startTime;
 
   @override
   void initState() {
@@ -311,7 +311,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
     timeElapsed = 0;
 
-    _startTime = DateTime.now();
+    //_startTime = DateTime.now();
 
     timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _onTick());
 
@@ -354,7 +354,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       ),
     );
 
-    if (worlds[0].maxLevel > 10 && !noAds) {
+    if (worlds[1].maxLevel > 1 && !noAds) {
       _bannerAd.load();
     }
     setState(() {
@@ -401,10 +401,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   }
 
   void _onTick() {
-    print(_startTime);
     setState(() {
-      timeElapsed =
-          DateTime.now().difference(_startTime ?? DateTime.now()).inSeconds;
+      timeElapsed += 1;
     });
   }
 
@@ -1066,9 +1064,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                       ],
                     ),
                   ),
-                  const SizedBox(
-                    height: 10,
-                  ),
+
                   Center(
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -1122,10 +1118,13 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                     ),
                   ),
 
-                  if (MediaQuery.of(context).size.height > 700)
-                    const SizedBox(
-                      height: 50,
-                    ),
+                  MediaQuery.of(context).size.height > 700
+                      ? const SizedBox(
+                          height: 50,
+                        )
+                      : const SizedBox(
+                          height: 20,
+                        ),
 
                   Expanded(
                     child: GridView.builder(
@@ -1205,7 +1204,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                   levelsSinceAd++;
 
                                   if (worlds[currentWorld - 1].maxLevel >
-                                      selectedLevel) {
+                                          selectedLevel ||
+                                      (worlds[currentWorld - 1].maxLevel ==
+                                          -2)) {
                                     getsLightBulb = -1;
                                   } else {
                                     setState(() {
@@ -2230,7 +2231,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "Anfänger $selectedLevel",
+                      "${worlds[currentWorld - 1].name} $selectedLevel",
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

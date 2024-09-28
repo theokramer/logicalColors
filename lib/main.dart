@@ -20,12 +20,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MobileAds.instance.initialize();
 
+  currentWorld = await maxWorld();
+
   int maxLevel = await loadWorldProgress(
       currentWorld); // Load progress for the current world
+
   (maxLevel > worlds[currentWorld - 1].anzahlLevels
       ? maxLevel = worlds[currentWorld - 1].anzahlLevels
       : null);
-  maxLevel == -2 ? maxLevel = worlds[currentWorld - 1].anzahlLevels : null;
+  //maxLevel == -2 ? maxLevel = worlds[currentWorld - 1].anzahlLevels : null;
   tutorialActive = await loadTutorial();
   selectedLanguage = await loadSelectedLanguage();
   vibration = await loadVibration();
@@ -39,9 +42,16 @@ void main() async {
   ));
 }
 
-int maxWorld() {
-  for (int i = worlds.length; i > 0; i--) {}
-  return 0;
+Future<int> maxWorld() async {
+  int worldMax;
+  for (int i = worlds.length; i > 0; i--) {
+    worldMax = await loadWorldProgress(i);
+
+    if (worldMax != 0 && worldMax != 1) {
+      return i;
+    }
+  }
+  return 1;
 }
 
 Future<bool> loadTutorial() async {
@@ -53,6 +63,7 @@ Future<bool> loadTutorial() async {
 // Load the progress of the specific world
 Future<int> loadWorldProgress(int worldId) async {
   final prefs = await SharedPreferences.getInstance();
+
   return prefs.getInt('world_$worldId') ?? 1;
 }
 
@@ -260,15 +271,11 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             primarySwatch: Colors.blue,
           ),
-          initialRoute: tutorialActive ? '/tutorial' : '/menu',
+          initialRoute: tutorialActive ? '/tutorial' : '/',
           routes: {
-            '/': (context) =>
-                const MainMenuScreen(), // Default zu MainMenuScreen ändern
-            '/tutorial': (context) =>
-                const PuzzleScreen(), // Für Tutorial eine eigene Route
-            '/roadmap': (context) => const MainMenuScreen(),
+            '/': (context) => const MainMenuScreen(),
+            '/tutorial': (context) => const PuzzleScreen(),
             '/shop': (context) => const ShopScreen(),
-            '/menu': (context) => const MainMenuScreen(),
           },
         );
       }),

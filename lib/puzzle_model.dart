@@ -1,21 +1,24 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:color_puzzle/coin_manager.dart';
 import 'package:color_puzzle/difficulty_bar.dart';
 import 'package:color_puzzle/hints_manager.dart';
+import 'package:color_puzzle/main_menu_screen.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-int currentWorld = 2;
+int currentWorld = 1;
 
 int timeElapsed = 0;
 
 int selectedWallpaper = 0;
 
-IconData currencyIcon = Icons.bedtime;
-Color currencyColor = Colors.blueGrey[800] ?? Colors.blue;
+IconData currencyIcon = Icons.star_border;
+Color currencyColor = Colors.amber ?? Colors.blue;
 
 Color getBackgroundColor(int index) {
   // Define colors for the 5 new solid-colored wallpapers
@@ -23,7 +26,7 @@ Color getBackgroundColor(int index) {
   if (index >= 0 && index < 5) {
     switch (index) {
       case 0:
-        color = Colors.blueGrey[300];
+        color = Colors.blueGrey[800];
         break;
       case 1:
         color = Colors.red[200];
@@ -64,7 +67,8 @@ List<World> worlds = [
   World(
       id: 1,
       maxLevel: 1,
-      anzahlLevels: 20,
+      anzahlLevels: 10,
+      name: "Anfänger",
       colors: const [
         Color(0xff48cae4),
         Color(0xff0077b6),
@@ -75,6 +79,7 @@ List<World> worlds = [
       id: 2,
       maxLevel: 0,
       anzahlLevels: 25,
+      name: "Lehrling",
       colors: const [
         Color(0xff9CDBA6),
         Color(0xff50B498),
@@ -85,6 +90,7 @@ List<World> worlds = [
       id: 3,
       maxLevel: 0,
       anzahlLevels: 25,
+      name: "Schüler",
       colors: const [
         Color(0xffdb222a),
         Color(0xff7c2e41),
@@ -95,6 +101,7 @@ List<World> worlds = [
       id: 4,
       maxLevel: 0,
       anzahlLevels: 25,
+      name: "Gelehrter",
       colors: const [
         Color(0xff720455),
         Color(0xff3C0753),
@@ -105,6 +112,7 @@ List<World> worlds = [
       id: 5,
       maxLevel: 0,
       anzahlLevels: 25,
+      name: "Mystiker",
       colors: const [
         Color(0xffFFBB5C),
         Color(0xffd25E3E),
@@ -115,6 +123,7 @@ List<World> worlds = [
       id: 6,
       maxLevel: 0,
       anzahlLevels: 25,
+      name: "Prophet",
       colors: const [
         Color(0xffFFBB5C),
         Color(0xffd25E3E),
@@ -201,10 +210,11 @@ class PuzzleModel with ChangeNotifier {
 
   // Methods
   void addWorld(int id, int maxLevel, List<Color> colors, bool unlocked,
-      int anzahlLevels) {
+      int anzahlLevels, String name) {
     worlds.add(World(
         id: id,
         maxLevel: maxLevel,
+        name: name,
         colors: colors,
         unlocked: unlocked,
         anzahlLevels: anzahlLevels));
@@ -215,7 +225,7 @@ class PuzzleModel with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     //return 100;
     return prefs.getInt('world_$worldId') ??
-        1; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+        0; // 0 ist der Standardwert, wenn nichts gespeichert wurde
   }
 
   int getCurrencyAmount() {
@@ -223,21 +233,29 @@ class PuzzleModel with ChangeNotifier {
     for (int i = 1; i <= worlds.length; i++) {
       int temp = (getMaxLevelForWorld(i) == -2
           ? worlds[i - 1].anzahlLevels
-          : getMaxLevelForWorld(i) - 1);
-      print("id: $i");
-      print(temp);
+          : getMaxLevelForWorld(i) == 0
+              ? 0
+              : getMaxLevelForWorld(i) - 1);
       currencyAmount += temp;
     }
 
     return currencyAmount;
   }
 
+  int getCurrencyAmountForWorld(int worldID) {
+    int currencyAmount = getMaxLevelForWorld(worldID);
+    return currencyAmount == -2
+        ? worlds[worldID - 1].anzahlLevels
+        : currencyAmount - 1;
+  }
+
   int getNeededCurrencyAmount(int world) {
-    int nCurrencyAmount = 0;
-    for (int i = 0; i < world; i++) {
-      nCurrencyAmount += worlds[i].anzahlLevels;
-    }
-    return nCurrencyAmount;
+    // int nCurrencyAmount = 0;
+    // for (int i = 0; i < world; i++) {
+    //   nCurrencyAmount += worlds[i].anzahlLevels;
+    // }
+    // return nCurrencyAmount;
+    return world * 10;
   }
 
   Future<bool> loadWorldUnlocked(int worldId) async {
@@ -365,9 +383,13 @@ class PuzzleModel with ChangeNotifier {
 
   void updateWorldLevel(int worldId, int newLevel) {
     var world = worlds.firstWhere((w) => w.id == worldId);
-    if (newLevel > world.maxLevel || newLevel == -2) {
+    if (newLevel > world.maxLevel &&
+        (worlds[currentWorld - 1].maxLevel != -2)) {
       world.maxLevel = newLevel;
       saveWorldProgress(worldId, newLevel); // Speichere den neuen Fortschritt
+    }
+    if ((worlds[currentWorld - 1].maxLevel == -2)) {
+      saveWorldProgress(worldId, -2);
     }
   }
 
@@ -407,6 +429,7 @@ class PuzzleModel with ChangeNotifier {
             orElse: () => World(
                 id: -1,
                 colors: [],
+                name: "",
                 maxLevel: 1,
                 unlocked: false,
                 anzahlLevels: -1))
@@ -418,6 +441,7 @@ class PuzzleModel with ChangeNotifier {
         orElse: () => World(
             id: -1,
             maxLevel: -1,
+            name: "",
             colors: [],
             unlocked: false,
             anzahlLevels: -1));
@@ -712,6 +736,25 @@ class PuzzleModel with ChangeNotifier {
     return CrystalsEarned;
   }
 
+  List<Click> readJson(int index) {
+    File file = File(
+        "/Users/theokramer/Documents/Colorize - Puzzle Game/logicalColors/lib/levels.json");
+    var fileContent = file.readAsStringSync();
+
+    // Decoding JSON file content into a Map
+    var jsonData = jsonDecode(fileContent);
+
+    // Deserializing into a Level object
+    Level level = Level.fromJson(jsonData[index]);
+
+    // Return the first click from the clicks list, if available
+    if (level.clicks != null && level.clicks!.isNotEmpty) {
+      return level.clicks!; // Return the first click
+    } else {
+      return [Click(x: 0, y: 0)]; // Return default click if no clicks found
+    }
+  }
+
   void _initializeGrid() {
     _targetColorNumber =
         _random.nextInt(3) + 1; // Target color number to achieve
@@ -744,8 +787,27 @@ class PuzzleModel with ChangeNotifier {
     } else {
 // Create random moves and store them in the clicks list
       for (int i = 0; i < _maxMoves; i++) {
-        var x = _randomPositionNumber();
-        var y = _randomPositionNumber();
+        int x;
+        int y;
+        if (size == 2 && maxMoves == 1) {
+          x = readJson(0)[i].x ?? 0;
+          y = readJson(0)[i].y ?? 0;
+          print(x);
+          print(y);
+        } else if (size == 2 && maxMoves == 2) {
+          x = readJson(1)[i].x ?? 0;
+          y = readJson(1)[i].y ?? 0;
+          print("i:");
+          print(i);
+          print("x:");
+          print(x);
+          print("y:");
+          print(y);
+        } else {
+          x = _randomPositionNumber();
+          y = _randomPositionNumber();
+        }
+
         int count = 0;
         bool works = false;
         while (works == false) {
@@ -1034,6 +1096,7 @@ class PuzzleModel with ChangeNotifier {
 
 class World {
   final int id;
+  String name;
   int maxLevel;
   int anzahlLevels;
   List<Color> colors;
@@ -1041,6 +1104,7 @@ class World {
 
   World(
       {required this.id,
+      required this.name,
       required this.maxLevel,
       required this.anzahlLevels,
       required this.colors,
@@ -1048,11 +1112,20 @@ class World {
 }
 
 class Click {
-  final int x;
-  final int y;
+  int? x;
+  int? y;
 
-  Click({
-    required this.x,
-    required this.y,
-  });
+  Click({this.x, this.y});
+
+  Click.fromJson(Map<String, dynamic> json) {
+    x = json['x'];
+    y = json['y'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['x'] = x;
+    data['y'] = y;
+    return data;
+  }
 }

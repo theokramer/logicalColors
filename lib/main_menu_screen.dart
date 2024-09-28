@@ -1,5 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -17,6 +19,36 @@ import 'package:color_puzzle/wallpaper_selection.dart';
 
 import 'custom_info_button.dart';
 import 'puzzle_model.dart';
+import 'package:path/path.dart' as p;
+
+class Level {
+  int? worldNr;
+  int? levelNr;
+  List<Click>? clicks;
+
+  Level({this.worldNr, this.levelNr, this.clicks});
+
+  Level.fromJson(Map<String, dynamic> json) {
+    worldNr = json['worldNr'];
+    levelNr = json['levelNr'];
+    if (json['clicks'] != null) {
+      clicks = <Click>[];
+      json['clicks'].forEach((v) {
+        clicks!.add(Click.fromJson(v));
+      });
+    }
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['worldNr'] = worldNr;
+    data['levelNr'] = levelNr;
+    if (clicks != null) {
+      data['clicks'] = clicks!.map((v) => v.toJson()).toList();
+    }
+    return data;
+  }
+}
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -26,71 +58,15 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
-  // final InAppPurchase inAppPurchase = InAppPurchase.instance;
-  // final List<ProductDetails> products = [];
   int selectedWallpaperIndex = 1; // Default wallpaper selection
-  //bool available = true; // Track availability of in-app purchases
   late BannerAd _bannerAd;
-  final bool _isBannerAdReady = false;
+  //final bool _isBannerAdReady = false;
 
-  // void _loadProduct() async {
-  //   const Set<String> productIds = {
-  //     'de.tk.no.ads',
-  //   };
-
-  //   final ProductDetailsResponse response =
-  //       await inAppPurchase.queryProductDetails(productIds);
-  //   if (response.error == null && response.productDetails.isNotEmpty) {
-  //     products.addAll(response.productDetails);
-  //   }
-  // }
-
-  // void _buyProduct(ProductDetails productDetails, PuzzleModel puzzle) {
-  //   final PurchaseParam purchaseParam =
-  //       PurchaseParam(productDetails: productDetails);
-  //   InAppPurchase.instance.buyNonConsumable(purchaseParam: purchaseParam);
-  // }
-
-  // // Handle the purchase updates
-  // void _handlePurchaseUpdates(List<PurchaseDetails> purchaseDetailsList) {
-  //   for (var purchaseDetails in purchaseDetailsList) {
-  //     if (purchaseDetails.status == PurchaseStatus.purchased) {
-  //       // If the purchase is successful
-  //       bool isVerified = _verifyPurchase(purchaseDetails);
-  //       if (isVerified) {
-  //         // Call your custom function after successful purchase
-  //         _onPurchaseSuccess(purchaseDetails);
-  //       }
-  //     } else if (purchaseDetails.status == PurchaseStatus.canceled) {
-  //       // Handle purchase failure
-  //       print('Purchase failed: ${purchaseDetails.error}');
-  //     }
-
-  //     // Complete the purchase if necessary
-  //     if (purchaseDetails.pendingCompletePurchase) {
-  //       InAppPurchase.instance.completePurchase(purchaseDetails);
-  //     }
-  //   }
-  // }
-
-  // bool _verifyPurchase(PurchaseDetails purchaseDetails) {
-  //   // Perform your verification logic (server-side verification is recommended)
-  //   return true; // For demo purposes, assuming all purchases are verified.
-  // }
-
-  // void _onPurchaseSuccess(PurchaseDetails purchaseDetails) {
-  //   puzzle.saveNoAds(true);
-  //   noAds = true;
-  //   _showPurchaseDialog(
-  //       context,
-  //       AppLocalizations.of(context)?.noAdsTitle ?? "Play",
-  //       0,
-  //       widget.puzzle,
-  //       false);
-  // }
+  bool showWorldSelection = false;
 
   @override
   void initState() {
+    super.initState();
     //_loadProduct;
     // _bannerAd = BannerAd(
     //   adUnitId: 'ca-app-pub-3263827122305139/4072388867',
@@ -199,6 +175,15 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       Colors.grey
     ],
   ];
+  void closeWorldSelection(bool test) {
+    setState(() {
+      selectedLevel = worlds[currentWorld - 1].maxLevel == -2
+          ? worlds[currentWorld - 1].anzahlLevels
+          : worlds[currentWorld - 1].maxLevel;
+      showWorldSelection = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
@@ -216,10 +201,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   fit: BoxFit.cover,
                 ),
               ),
-        child: SafeArea(
-          child: Stack(
-            children: [
-              Stack(
+        child: Stack(
+          children: [
+            SafeArea(
+              child: Stack(
                 children: [
                   Column(
                     children: [
@@ -230,99 +215,206 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       // ),
                       const Divider(
                         thickness: 1.5,
+                        height: 1,
                       ),
 
-                      const Spacer(),
-
-                      _buildActionButton(
-                          context, isWorldUnlocked, coinProvider, puzzle, () {
-                        setState(() {
-                          isWorldUnlocked = true;
-                        });
-                      }),
-                      const SizedBox(height: 80),
-                      const Divider(
-                        thickness: 1.5,
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      _buildBottomRow(puzzle),
-                      //const SizedBox(height: 30),
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            Column(
+                              children: [
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                LevelSelectionWidget(puzzle: puzzle),
+                                const SizedBox(
+                                  height: 100,
+                                ),
+                                _buildGrid(),
+                                _buildActionButton(context, isWorldUnlocked,
+                                    coinProvider, puzzle, () {
+                                  setState(() {
+                                    isWorldUnlocked = true;
+                                  });
+                                }),
+                                const SizedBox(height: 30),
+                                const Divider(
+                                  thickness: 1.5,
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 30.0,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            showWorldSelection = true;
+                                          });
+                                        },
+                                        child: Row(
+                                          children: [
+                                            _buildIconButton2(
+                                              icon: Icons.more_vert,
+                                            ),
+                                            const SizedBox(
+                                              width: 10,
+                                            ),
+                                            Text(
+                                              worlds[currentWorld - 1].name,
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                      Consumer<CoinProvider>(
+                                        builder:
+                                            (context, coinProvider, child) {
+                                          return Row(
+                                            children: [
+                                              Icon(
+                                                currencyIcon,
+                                                color: currencyColor,
+                                                size: 25,
+                                              ),
+                                              const SizedBox(
+                                                width: 8,
+                                              ),
+                                              Text(
+                                                "${puzzle.getCurrencyAmountForWorld(currentWorld)}/${worlds[currentWorld - 1].anzahlLevels}",
+                                                style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 18,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                )
+                              ],
+                            ),
+                            if (showWorldSelection)
+                              WorldSelectionScreen(
+                                  puzzle: puzzle,
+                                  onWorldSelected: closeWorldSelection),
+                          ],
+                        ),
+                      )
                     ],
-                  ),
-                  Column(
-                    children: [const Spacer(), _buildGrid(), const Spacer()],
                   ),
                 ],
               ),
-              //_buildSwipeGestureDetector(),
-              //_buildNavigationArrows(),
-              // if (_isBannerAdReady)
-              //   Align(
-              //     alignment: Alignment.bottomCenter,
-              //     child: LayoutBuilder(
-              //       builder: (context, constraints) {
-              //         return SizedBox(
-              //           width: constraints.maxWidth,
-              //           height: _bannerAd.size.height.toDouble(),
-              //           child: AdWidget(ad: _bannerAd),
-              //         );
-              //       },
-              //     ),
-              //   ),
-            ],
-          ),
+            ),
+            // _buildSwipeGestureDetector(),
+            // _buildNavigationArrows(),
+            // if (_isBannerAdReady)
+            //   Align(
+            //     alignment: Alignment.bottomCenter,
+            //     child: LayoutBuilder(
+            //       builder: (context, constraints) {
+            //         return SizedBox(
+            //           width: constraints.maxWidth,
+            //           height: _bannerAd.size.height.toDouble(),
+            //           child: AdWidget(ad: _bannerAd),
+            //         );
+            //       },
+            //     ),
+            //   ),
+          ],
         ),
       ),
     );
   }
 
+  Widget _buildSelectedLevelDisplay() {
+    return Column(
+      children: [
+        Text(
+          'Selected Level',
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.8),
+            fontSize: 24,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          selectedLevel == -2
+              ? (worlds[currentWorld - 1].anzahlLevels).toString()
+              : selectedLevel.toString(),
+          style: const TextStyle(
+            fontSize: 60,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildGrid() {
     return Expanded(
-      child: GridView.builder(
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 8.0,
-          mainAxisSpacing: 8.0,
-        ),
-        padding: EdgeInsets.symmetric(
-            horizontal: (MediaQuery.of(context).size.width < 500) ? 95.0 : 300),
-        itemCount: 9,
-        itemBuilder: (context, index) {
-          int x = index ~/ 3;
-          int y = index % 3;
-          Color tileColor = colors[currentWorld - 1][index];
-          Color borderColor = currentWorld == 6 || currentWorld == 5
-              ? index == 0
-                  ? Colors.red
-                  : Colors.transparent
-              : index == 4
-                  ? Colors.red
-                  : Colors.transparent;
+      child: SizedBox(
+        child: GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 8.0,
+            mainAxisSpacing: 8.0,
+          ),
+          padding: EdgeInsets.symmetric(
+              horizontal:
+                  (MediaQuery.of(context).size.width < 500) ? 95.0 : 300),
+          itemCount: 9,
+          itemBuilder: (context, index) {
+            int x = index ~/ 3;
+            int y = index % 3;
+            Color tileColor = colors[currentWorld - 1][index];
+            Color borderColor = currentWorld == 6 || currentWorld == 5
+                ? index == 0
+                    ? Colors.red
+                    : Colors.transparent
+                : index == 4
+                    ? Colors.red
+                    : Colors.transparent;
 
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [tileColor.withOpacity(0.8), tileColor],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: Border.all(color: borderColor, width: 4),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  spreadRadius: 2,
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 400),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [tileColor.withOpacity(0.8), tileColor],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ],
-            ),
-            child: const Text(""),
-          );
-        },
+                border: Border.all(color: borderColor, width: 4),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: const Text(""),
+            );
+          },
+        ),
       ),
     );
   }
@@ -330,7 +422,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   Widget _buildTopRow(BuildContext context, CoinProvider coinProvider,
       int worldIndex, int maxLevel, PuzzleModel puzzle) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
       child: Stack(
         children: [
           Column(
@@ -454,26 +546,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     ),
                   ],
                 ),
+              const SizedBox(
+                height: 5,
+              )
             ],
           ),
-          Center(
-            child: GestureDetector(
-                onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return LevelSelectionScreen(
-                        onLevelSelected: _updateLevel,
-                        worldIndex: worldIndex,
-                        currentLevel: maxLevel,
-                      );
-                    },
-                    isScrollControlled:
-                        true, // Optional: damit Modal den ganzen Bildschirm ausfüllt
-                  );
-                },
-                child: _buildTitleText(maxLevel)),
-          )
         ],
       ),
     );
@@ -484,11 +561,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Level $selectedLevel',
+          '${worlds[currentWorld - 1].name} $selectedLevel',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: 25,
             fontWeight: FontWeight.bold,
             fontFamily: 'Quicksand',
             shadows: [
@@ -500,10 +577,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             ],
           ),
         ),
+        const SizedBox(
+          width: 5,
+        ),
         const Icon(
           Icons.keyboard_arrow_down,
           color: Colors.white,
-          size: 35,
+          size: 45,
         ),
       ],
     );
@@ -525,17 +605,23 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF4CAF50), Color(0xFF388E3C)],
+          colors: [Color(0xFF66BB6A), Color(0xFF1B5E20)], // Brighter green
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            offset: Offset(0, 6),
-            blurRadius: 12,
+        borderRadius: BorderRadius.circular(50), // More rounded corners
+        boxShadow: [
+          const BoxShadow(
+            color: Colors.black45, // Darker shadow
+            offset: Offset(0, 8),
+            blurRadius: 15,
+            spreadRadius: 3, // More spread for depth
           ),
+          BoxShadow(
+            color: Colors.green.withOpacity(0.4), // Green inner glow
+            blurRadius: 12,
+            spreadRadius: -4,
+          )
         ],
       ),
       child: ElevatedButton(
@@ -543,16 +629,16 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(50),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 70, vertical: 18),
         ),
         onPressed: () {
           // if ((!worlds.last.unlocked && selectedLevel > 14) && false) {
           //   _showUnlockOptionsDialog(context, thisWorld, puzzle, () {});
           // } else {
           //   selectedLevel = maxLevel;
-
+          print("HIER");
           Navigator.of(context).push(
             FadePageRoute(
               page: ChangeNotifierProvider(
@@ -575,14 +661,20 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.play_arrow, color: Colors.white, size: 36),
-            const SizedBox(width: 8),
-            Text(
-              "${AppLocalizations.of(context)?.play ?? "Play"} ${selectedLevel < maxLevel || maxLevel == -2 ? "Again" : ""}",
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+            const Icon(Icons.play_arrow,
+                color: Colors.white, size: 38), // Slightly larger icon
+            const SizedBox(width: 10),
+            ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [Colors.white, Colors.lightGreenAccent],
+              ).createShader(bounds),
+              child: Text(
+                "${AppLocalizations.of(context)?.play ?? "Play"} ${selectedLevel < maxLevel || maxLevel == -2 ? "Again" : ""}",
+                style: const TextStyle(
+                  fontSize: 24, // Larger font
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -638,78 +730,28 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     );
   }
 
-  Widget _buildBottomRow(PuzzleModel puzzle) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 30.0,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              _buildIconButton2(
-                icon: Icons.more_vert,
-              ),
-              const SizedBox(
-                width: 10,
-              ),
-              const Text(
-                "ANFÄNGER",
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold),
-              )
-            ],
-          ),
-          Consumer<CoinProvider>(
-            builder: (context, coinProvider, child) {
-              return Row(
-                children: [
-                  Icon(
-                    currencyIcon,
-                    color: currencyColor,
-                    size: 25,
-                  ),
-                  const SizedBox(
-                    width: 8,
-                  ),
-                  Text(
-                    "${puzzle.getCurrencyAmount()}/${puzzle.getNeededCurrencyAmount(currentWorld)}",
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildSwipeGestureDetector() {
     return GestureDetector(
       onHorizontalDragEnd: (details) {
         if (details.primaryVelocity != null) {
           setState(() {
             if (details.primaryVelocity! < 0) {
-              // Swipe Left
-              if (currentWorld < worlds.length) {
-                currentWorld++;
-              }
+              currentWorld++;
             } else if (details.primaryVelocity! > 0) {
-              // Swipe Right
-              if (currentWorld > 1) {
-                currentWorld--;
-              }
+              currentWorld--;
             }
           });
         }
       },
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.grey.withOpacity(0.3), Colors.transparent],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+        ),
+      ),
     );
   }
 
@@ -744,10 +786,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           }
         });
       },
-      child: Icon(
-        icon,
-        size: 36,
-        color: Colors.white,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        child: Icon(
+          icon,
+          size: 48, // Larger icon
+          color: Colors.white.withOpacity(0.9),
+        ),
       ),
     );
   }
@@ -760,6 +806,465 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       icon: Icon(icon, size: 28),
       color: Colors.black,
       onPressed: onPressed,
+    );
+  }
+}
+
+class LevelSelectionWidget extends StatefulWidget {
+  final PuzzleModel puzzle; // Make sure this is final to be properly used
+  const LevelSelectionWidget({
+    super.key,
+    required this.puzzle,
+  });
+
+  @override
+  State<LevelSelectionWidget> createState() => _LevelSelectionWidgetState();
+}
+
+class _LevelSelectionWidgetState extends State<LevelSelectionWidget> {
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    // Automatically scroll to the selected level after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToSelectedLevel();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose(); // Dispose of the ScrollController
+    super.dispose();
+  }
+
+  void _scrollToSelectedLevel() {
+    int updatedSelectedLevel = selectedLevel == -2
+        ? worlds[currentWorld - 1].anzahlLevels
+        : selectedLevel;
+    // Calculate the position to scroll to
+    double offset = ((updatedSelectedLevel - 1) * (75) +
+        20); // Width of the item (75) + horizontal margin (20)
+    _scrollController.animateTo(
+      offset,
+      duration: const Duration(milliseconds: 1000),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    int totalLevels =
+        worlds[currentWorld - 1].anzahlLevels; // Ensure worlds is defined
+    int maxLevel = widget.puzzle
+        .getMaxLevelForWorld(currentWorld); // The last unlocked level
+
+    return SizedBox(
+      height: 70, // Increased height for more space
+      child: ListView.builder(
+        controller: _scrollController, // Assign the ScrollController
+        scrollDirection: Axis.horizontal,
+        itemCount: totalLevels,
+        itemBuilder: (context, index) {
+          int levelNumber = index + 1;
+          bool isLevelUnlocked = levelNumber <= maxLevel;
+          bool isCurrentLevel = selectedLevel == -2
+              ? worlds[currentWorld - 1].anzahlLevels == levelNumber
+              : selectedLevel == levelNumber;
+          bool isLastLevel =
+              levelNumber == maxLevel; // Only the last level gives a bonus
+
+          return GestureDetector(
+            onTap: isLevelUnlocked || maxLevel == -2
+                ? () {
+                    setState(() {
+                      selectedLevel = levelNumber;
+                    });
+                  }
+                : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: isCurrentLevel ? 100 : 75,
+              height: isCurrentLevel ? 80 : 60,
+              margin:
+                  const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: isCurrentLevel ? Colors.white : Colors.transparent,
+                  width: 3.0,
+                ),
+                borderRadius: BorderRadius.circular(20), // Rounded corners
+                gradient: LinearGradient(
+                  colors: isLevelUnlocked || maxLevel == -2
+                      ? isLastLevel
+                          ? [
+                              Colors.orange,
+                              Colors.deepOrangeAccent
+                            ] // Different color for last level
+                          : [
+                              Colors.blueAccent,
+                              Colors.lightBlue
+                            ] // Bright colors for finished levels
+                      : [Colors.grey, Colors.black],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  if (isLevelUnlocked || maxLevel == -2)
+                    BoxShadow(
+                      color: isCurrentLevel
+                          ? Colors.white.withOpacity(0.15)
+                          : Colors.black26,
+                      blurRadius: isCurrentLevel ? 3 : 3,
+                      offset: const Offset(3, 3),
+                    ),
+                ],
+              ),
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "$levelNumber",
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20),
+                    ),
+                    SizedBox(
+                      width: isCurrentLevel ? 10 : 5,
+                    ),
+                    Icon(
+                      isLevelUnlocked || maxLevel == -2
+                          ? isLastLevel
+                              ? Icons
+                                  .star // Icon for the last level with a bonus
+                              : Icons.check_circle // Icon for finished levels
+                          : Icons.lock, // Icon for locked levels
+                      color: isLevelUnlocked || maxLevel == -2
+                          ? isLastLevel
+                              ? Colors
+                                  .yellowAccent // Color for the last level icon
+                              : Colors.white // Color for completed levels
+                          : Colors.white70, // Color for locked levels
+                      size: isCurrentLevel
+                          ? 30
+                          : 25, // Size changes based on current level
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class WorldSelectionScreen extends StatefulWidget {
+  final Function(bool) onWorldSelected;
+  PuzzleModel puzzle;
+  WorldSelectionScreen({
+    super.key,
+    required this.onWorldSelected,
+    required this.puzzle,
+  });
+
+  @override
+  State<WorldSelectionScreen> createState() => _WorldSelectionScreenState();
+}
+
+class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
+  int _currentPage = 0;
+  final PageController _pageController = PageController(initialPage: 0);
+
+  void _onPageChanged(int page) {
+    setState(() {
+      _currentPage = page;
+    });
+  }
+
+  void _onButtonPressed(int page) {
+    _pageController.animateToPage(page,
+        duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+  }
+
+  void _updateWallpaper(int newIndex) {
+    setState(() {
+      selectedWallpaper = newIndex;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        color: getBackgroundColor(selectedWallpaper),
+        child: Column(
+          children: [
+            const SizedBox(
+              height: 10,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                GestureDetector(
+                  onTap: () => _onButtonPressed(0),
+                  child: Text(
+                    'Stufe',
+                    style: TextStyle(
+                      fontSize: 25,
+                      color: _currentPage == 0 ? Colors.white : Colors.white30,
+                      fontWeight: _currentPage == 0
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => _onButtonPressed(1),
+                  child: Text(
+                    'Wallpaper',
+                    style: TextStyle(
+                      fontSize: 25,
+                      color: _currentPage == 1 ? Colors.white : Colors.white30,
+                      fontWeight: _currentPage == 1
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            const Divider(
+              height: 1,
+              thickness: 1.5,
+            ),
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: _onPageChanged,
+                children: [
+                  _buildWorldSelectionScreen(),
+                  WallpaperSelectionWidget(
+                      onWallpaperSelected: _updateWallpaper)
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWorldSelectionScreen() {
+    return SafeArea(
+      bottom: false,
+      top: false,
+      child: SizedBox(
+        child: Scaffold(
+          backgroundColor: getBackgroundColor(selectedWallpaper),
+          body: Container(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height,
+                    child: ListView.builder(itemBuilder: (context, index) {
+                      return index == 0
+                          ? const Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          left: 30.0, top: 30, bottom: 8),
+                                      child: Text(
+                                        "Entdecke dein geistiges Auge",
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 19),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                      left: 30.0, bottom: 50, right: 30),
+                                  child: Text(
+                                    "Eine friedvolle Reise durch immer komplexer werdende Spektren",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w300),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : index < 7
+                              ? GestureDetector(
+                                  onTap: () {
+                                    if (widget.puzzle.getCurrencyAmount() >=
+                                        widget.puzzle.getNeededCurrencyAmount(
+                                            index - 1)) {
+                                      currentWorld = index;
+                                      widget.onWorldSelected(true);
+                                      if (widget.puzzle
+                                              .getMaxLevelForWorld(index) ==
+                                          0) {
+                                        widget.puzzle
+                                            .updateWorldLevel(index, 1);
+                                        selectedLevel = 1;
+                                      }
+                                    }
+                                  },
+                                  child: WorldItem(
+                                    puzzle: widget.puzzle,
+                                    worldID: index,
+                                  ),
+                                )
+                              : index == 7
+                                  ? const SizedBox(
+                                      height: 100,
+                                    )
+                                  : null;
+                    }),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class WorldItem extends StatelessWidget {
+  const WorldItem({
+    super.key,
+    required this.puzzle,
+    required this.worldID,
+  });
+
+  final PuzzleModel puzzle;
+  final int worldID;
+
+  @override
+  Widget build(BuildContext context) {
+    bool unlocked = puzzle.getMaxLevelForWorld(worldID) != 0;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 90.0),
+      child: SizedBox(
+        height: 150,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 30.0,
+          ),
+          child: Row(
+            children: [
+              Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 70,
+                    backgroundColor: unlocked ||
+                            (puzzle.getCurrencyAmount() >=
+                                puzzle.getNeededCurrencyAmount(worldID - 1))
+                        ? worlds[worldID - 1].colors[1]
+                        : Colors.grey,
+                    child: Center(
+                      child: worlds[worldID - 1].maxLevel == -2
+                          ? const Icon(
+                              Icons.where_to_vote,
+                              color: Colors.white,
+                              size: 60,
+                            )
+                          : !unlocked &&
+                                  !(puzzle.getCurrencyAmount() >=
+                                      puzzle
+                                          .getNeededCurrencyAmount(worldID - 1))
+                              ? Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      currencyIcon,
+                                      color: Colors.white,
+                                      size: 25,
+                                    ),
+                                    const SizedBox(
+                                      height: 5,
+                                    ),
+                                    Text(
+                                      "${puzzle.getNeededCurrencyAmount(worldID - 1)}",
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                )
+                              : null,
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 30.0, top: 20),
+                child: Column(
+                  children: [
+                    Text(
+                      worlds[worldID - 1].name,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 19,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    if (unlocked)
+                      Row(
+                        children: [
+                          Icon(
+                            currencyIcon,
+                            color: currencyColor,
+                            size: 25,
+                          ),
+                          const SizedBox(
+                            width: 8,
+                          ),
+                          Text(
+                            "${puzzle.getCurrencyAmountForWorld(worldID)}/${worlds[worldID - 1].anzahlLevels}",
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    if (puzzle.getCurrencyAmount() >=
+                            puzzle.getNeededCurrencyAmount(worldID - 1) &&
+                        !unlocked)
+                      const Text(
+                        "Du hast genügend\nSterne gesammelt,\num zu diesem Rätsel\nvoranzuschreiten.",
+                        style: TextStyle(color: Colors.white),
+                      )
+                  ],
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

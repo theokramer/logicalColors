@@ -31,7 +31,7 @@ Widget _buildUnlockButton(
     child: ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
-        foregroundColor: Colors.white,
+        foregroundColor: primaryColor,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
@@ -117,7 +117,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
           ),
           content: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: primaryColor,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
@@ -187,7 +187,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                   ),
                   child: Text(
                     AppLocalizations.of(context)?.great ?? "Great",
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: primaryColor),
                   ),
                 ),
               ],
@@ -307,13 +307,14 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   void initState() {
     super.initState();
 
-    print("HIER");
-
     timeElapsed = 0;
 
     //_startTime = DateTime.now();
 
-    timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _onTick());
+    if (timer == null || !timer!.isActive) {
+      timer =
+          Timer.periodic(const Duration(seconds: 1), (Timer t) => _onTick());
+    }
 
     if (((selectedLevel > 40 && levelsSinceAd > 4) || levelsSinceAd > 7) &&
         worlds[0].maxLevel > 10 &&
@@ -455,8 +456,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
                   AppLocalizations.of(context)?.unlockTitle ?? "Unlock",
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: primaryColor,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
@@ -663,7 +664,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
   @override
   void dispose() {
-    timer?.cancel();
+    print("HIER");
+    timer?.cancel(); // Timer stoppen, wenn der Screen verlassen wird
     _confettiController.dispose();
     _animationController.dispose();
     _bannerAd.dispose();
@@ -712,7 +714,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         //       'Anfänger $selectedLevel',
                         //       textAlign: TextAlign.center,
                         //       style: const TextStyle(
-                        //         color: Colors.white70,
+                        //         color: primaryColor70,
                         //         fontSize: 18,
                         //         fontWeight: FontWeight.bold,
                         //         fontFamily: 'Quicksand',
@@ -732,9 +734,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                       onPressed: () {
                                         showPauseMenu(context, puzzle);
                                       },
-                                      icon: const Icon(
+                                      icon: Icon(
                                         Icons.pause,
-                                        color: Colors.white,
+                                        color: primaryColor,
                                         size: 30,
                                       ),
                                     )
@@ -746,7 +748,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                         enabled: !denyClick,
                                         icon: const Icon(
                                             Icons.arrow_back_rounded,
-                                            color: Colors.white),
+                                            color: primaryColor),
                                         onSelected: (String value) {
                                           switch (value) {
                                             case 'home':
@@ -1086,9 +1088,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.timer, // Timer icon
-                            color: Colors.white,
+                            color: primaryColor,
                             size: 24.0,
                           ),
                           const SizedBox(
@@ -1096,14 +1098,14 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           Text(
                             _formatTime(
                                 timeElapsed), // Format time based on elapsed seconds
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: primaryColor,
                               fontSize: 20,
                               fontWeight: FontWeight
                                   .w600, // Semi-bold for game-like style
                               letterSpacing:
                                   1.2, // Slightly spaced out text for clarity
-                              shadows: [
+                              shadows: const [
                                 Shadow(
                                   color: Colors
                                       .black54, // Adds a slight shadow to the text
@@ -1246,6 +1248,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                               if (selectedLevel >=
                                                   worlds[currentWorld - 1]
                                                       .anzahlLevels) {
+                                                selectedLevel = -2;
                                                 worlds[currentWorld - 1]
                                                     .maxLevel = -2;
                                                 puzzle.updateWorldLevel(
@@ -1331,7 +1334,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                 child: Text(
                                   colorNumber.toString(),
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: primaryColor,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 26,
                                     shadows: [
@@ -1372,40 +1375,12 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           if (currentTutorialStep == TutorialStep.step5) {
                             changeTextStep5 = true;
                           }
-                          if (hintsProvider.hints > 0) {
-                            bool temp = await puzzle.getHint();
-                            setState(() {
-                              resettedGrid = temp;
-                            });
-                            if (resettedGrid) {
-                              Future.delayed(const Duration(milliseconds: 2000),
-                                  () {
-                                setState(() {
-                                  resettedGrid = false;
-                                });
-                              });
-                            } else {
-                              /*Future.delayed(Duration(milliseconds: 500), () {
-                    puzzle.clearHint();
-                  });*/
-                            }
-                          } else {
-                            showGadgetPopup(context,
-                                AppLocalizations.of(context)?.hints ?? "Hints",
-                                () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const ShopScreen(),
-                                ),
-                              );
-                            }, handleWatchAdForHints,
-                                [Colors.amber, Colors.orange], false);
-                          }
-                          //}
+
+                          showHintDialog(context, hintsProvider.hints, puzzle);
                         },
                         count: hintsProvider.hints, // Number of hints available
                         gradientColors: const [Colors.amber, Colors.orange],
-                        iconColor: Colors.white,
+                        iconColor: primaryColor,
                         blink: currentTutorialStep == TutorialStep.step5 &&
                             !changeTextStep5,
                         borderColor: Colors.transparent,
@@ -1455,7 +1430,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           Color.fromARGB(255, 176, 2, 124),
                           Color.fromARGB(255, 255, 0, 81)
                         ],
-                        iconColor: Colors.white,
+                        iconColor: primaryColor,
                         blink: currentTutorialStep == TutorialStep.completed &&
                             !isRemoveTileMode,
                         borderColor: isRemoveTileMode
@@ -1479,7 +1454,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         Colors.orangeAccent
                       ],
 
-                      iconColor: Colors.white,
+                      iconColor: primaryColor,
                       blink: puzzle.maxMoves == puzzle.moves &&
                           showResetGadgetHint &&
                           selectedLevel < 12,
@@ -1507,7 +1482,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         Color.fromARGB(255, 63, 3, 165),
                         Colors.deepPurpleAccent
                       ],
-                      iconColor: Colors.white,
+                      iconColor: primaryColor,
                       blink: puzzle.maxMoves == puzzle.moves &&
                           showResetGadgetHint &&
                           selectedLevel < 12,
@@ -1745,7 +1720,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                         // LevelCompletionScreen container
                                         Container(
                                           decoration: BoxDecoration(
-                                            color: Colors.white,
+                                            color: primaryColor,
                                             borderRadius:
                                                 BorderRadius.circular(20),
                                             boxShadow: [
@@ -1768,7 +1743,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                   animationStarted = true;
                                                   showCoinAnimation = true;
                                                   if (selectedLevel <
-                                                      worlds[currentWorld]
+                                                      worlds[currentWorld - 1]
                                                           .anzahlLevels) {
                                                     puzzle.updateWorldLevel(
                                                         currentWorld,
@@ -1937,12 +1912,12 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                   color: currencyColor,
                                                   shape: BoxShape.circle,
                                                   // border: Border.all(
-                                                  //     color: Colors.white,
+                                                  //     color: primaryColor,
                                                   //     width: 1.5)
                                                 ),
                                                 child: Icon(
                                                   currencyIcon,
-                                                  color: Colors.white,
+                                                  color: primaryColor,
                                                   size: 90,
                                                 ))),
                                       ],
@@ -2010,7 +1985,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           : null,
                       child: Center(
                         child: AlertDialog(
-                          backgroundColor: Colors.white,
+                          backgroundColor: primaryColor,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15)),
                           contentPadding: const EdgeInsets.all(20),
@@ -2089,6 +2064,147 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     );
   }
 
+  void buyHintDialog(BuildContext context, int hintCount, PuzzleModel puzzle) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                height: 500,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.lightbulb, size: 50, color: Colors.grey),
+                    SizedBox(height: 10),
+                    Text(
+                      'HINWEISE: 0',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    // const SizedBox(height: 8),
+                    // const Text(
+                    //   'Fehler beim Kaufvorgang',
+                    //   style: TextStyle(
+                    //     color: Colors.red,
+                    //     fontSize: 16,
+                    //   ),
+                    // ),
+                    SizedBox(height: 20),
+
+                    SizedBox(height: 10),
+                    OptionButton(text: 'VIDEO SCHAUEN FÜR 1 HINWEIS'),
+                    SizedBox(height: 10),
+                    OptionButton(text: '3 HINWEISE'),
+                    SizedBox(height: 10),
+                    OptionButton(text: '10 HINWEISE', isPopular: true),
+                    SizedBox(height: 10),
+                    OptionButton(text: '30 HINWEISE'),
+                    SizedBox(height: 10),
+                    OptionButton(text: '75 HINWEISE'),
+                    SizedBox(height: 10),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void showHintDialog(BuildContext context, int hintCount, PuzzleModel puzzle) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          contentPadding: const EdgeInsets.all(0),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                child: Column(
+                  children: [
+                    Text(
+                      'Brauchst du einen Hinweis:',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+
+                    // Horizontal scroll view with centered hint
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      height: 200, // Fixed height for the hint display
+                      child: HintScrollView(
+                        hintCount: 10,
+                        puzzle: puzzle,
+                      ),
+                    ),
+
+                    // Display the count of hints below the scroll view
+                    const SizedBox(height: 15),
+                    Text(
+                      'Hinweise: $hintCount',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              TextButton(
+                onPressed: () {
+                  // Action for getting more hints, possibly navigate to shop
+                  buyHintDialog(context, hintCount, puzzle);
+                },
+                child: const Text(
+                  'MEHR HINWEISE ERHALTEN',
+                  style: TextStyle(
+                    color: Colors.blueAccent,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _showInfoDialogStart(BuildContext contex) {
     showDialog(
       context: context,
@@ -2157,7 +2273,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: primaryColor,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           contentPadding: const EdgeInsets.all(20),
@@ -2217,7 +2333,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                 ),
                 child: Text(
                   AppLocalizations.of(context)?.start ?? "Start",
-                  style: const TextStyle(fontSize: 20, color: Colors.white),
+                  style: TextStyle(fontSize: 20, color: primaryColor),
                 ),
               ),
             ],
@@ -2232,7 +2348,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: Colors.white,
+          backgroundColor: primaryColor,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Container(
@@ -2266,6 +2382,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                 ),
                 GestureDetector(
                   onTap: () {
+                    dispose();
                     Navigator.of(context).pushReplacement(
                       FadePageRoute(page: const MainMenuScreen()),
                     );
@@ -2333,8 +2450,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                   sale
                       ? "${AppLocalizations.of(context)?.getMore ?? "Play"} $gadgetName with a 200 Crystals discount"
                       : '${AppLocalizations.of(context)?.getMore ?? "Play"} $gadgetName',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: primaryColor,
                     fontFamily: 'Quicksand',
                     fontWeight: FontWeight.bold,
                     fontSize: 22,
@@ -2350,8 +2467,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                               (AppLocalizations.of(context)?.hints ?? "Play")
                           ? "${AppLocalizations.of(context)?.chooseHowTo ?? "Play"} ${AppLocalizations.of(context)?.hints ?? "Play"} ${AppLocalizations.of(context)?.getChoose ?? "Play"}"
                           : "${AppLocalizations.of(context)?.chooseHowTo ?? "Play"} ${AppLocalizations.of(context)?.moves ?? "Play"} ${AppLocalizations.of(context)?.getChoose ?? "Play"}",
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: primaryColor,
                     fontFamily: 'Quicksand',
                     fontWeight: FontWeight.normal,
                     fontSize: 15,
@@ -2427,7 +2544,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                         backgroundColor: gradientColors.first,
-                        foregroundColor: Colors.white,
+                        foregroundColor: primaryColor,
                       ),
                     ),
                     const SizedBox(
@@ -2479,7 +2596,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
                           backgroundColor: gradientColors.first,
-                          foregroundColor: Colors.white,
+                          foregroundColor: primaryColor,
                         ),
                       );
                     }),
@@ -2595,7 +2712,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             ],
           ),
           child: IconButton(
-            icon: Icon(icon, color: Colors.white),
+            icon: Icon(icon, color: primaryColor),
             onPressed: onPressed,
           ),
         ),
@@ -2607,6 +2724,58 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             fontWeight: FontWeight.bold,
           ),
         ),
+      ],
+    );
+  }
+}
+
+class OptionButton extends StatelessWidget {
+  final String text;
+  final bool isPopular;
+
+  const OptionButton({super.key, required this.text, this.isPopular = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.centerRight,
+      children: [
+        ElevatedButton(
+          onPressed: () {
+            // Handle button press
+          },
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.black,
+            backgroundColor: Colors.grey[200],
+          ),
+          child: Container(
+            width: double.infinity,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 16),
+            ),
+          ),
+        ),
+        if (isPopular)
+          Positioned(
+            right: 10,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
+                'AM BELIEBTESTEN',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -2640,7 +2809,7 @@ class PausedButton extends StatelessWidget {
             child: Icon(
               icon,
               size: 40,
-              color: Colors.white,
+              color: primaryColor,
             ),
           ),
           const SizedBox(
@@ -2648,7 +2817,7 @@ class PausedButton extends StatelessWidget {
           ),
           Text(
             text,
-            style: const TextStyle(color: Colors.white, fontSize: 28),
+            style: TextStyle(color: primaryColor, fontSize: 28),
           )
         ],
       ),
@@ -2673,7 +2842,7 @@ Widget _buildIconButton(
       ],
     ),
     child: IconButton(
-      icon: Icon(icon, color: Colors.white),
+      icon: Icon(icon, color: primaryColor),
       onPressed: onPressed,
     ),
   );
@@ -2698,7 +2867,7 @@ Widget _buildTargetColorBox(Color targetColor, int targetColorNumber) {
       child: Text(
         targetColorNumber.toString(),
         style: TextStyle(
-          color: Colors.white,
+          color: primaryColor,
           fontWeight: FontWeight.bold,
           fontSize: 22,
           shadows: [
@@ -2712,6 +2881,129 @@ Widget _buildTargetColorBox(Color targetColor, int targetColorNumber) {
       ),
     ),
   );
+}
+
+class HintScrollView extends StatefulWidget {
+  final int hintCount;
+  final PuzzleModel puzzle;
+
+  const HintScrollView({
+    super.key,
+    required this.hintCount,
+    required this.puzzle,
+  });
+
+  @override
+  _HintScrollViewState createState() => _HintScrollViewState();
+}
+
+class _HintScrollViewState extends State<HintScrollView> {
+  late PageController _pageController;
+  int _currentHintIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(viewportFraction: 0.4);
+    _pageController.addListener(() {
+      setState(() {
+        _currentHintIndex = _pageController.page?.round() ?? 0;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: PageView.builder(
+        controller: _pageController,
+        itemCount: widget.hintCount,
+        onPageChanged: (index) {
+          setState(() {
+            _currentHintIndex = index;
+          });
+        },
+        itemBuilder: (context, index) {
+          // Scaling animation for the active hint
+          bool isActive = index == _currentHintIndex;
+          double scale = isActive ? 1.3 : 0.6;
+
+          return AnimatedScale(
+            scale: scale,
+            duration: const Duration(milliseconds: 300),
+            child: GestureDetector(
+              onTap: () async {
+                if (anzHintsGot >= index) {
+                  if (widget.puzzle.moves >= 1) {
+                    print("You have to reset the grid first");
+                  } else {
+                    anzHintsGot += 1;
+                    bool temp = await widget.puzzle.getHint();
+                    Navigator.of(context).pop();
+                  }
+                }
+
+                // Action for selecting the hint
+                print("Hint $index selected");
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  //color: isActive ? Colors.blueGrey[800] : Colors.black45,
+                  color: const Color(0xffA3C5C4).withOpacity(0.8),
+                  boxShadow: [
+                    if (index <= anzHintsGot)
+                      BoxShadow(
+                        color: Colors.black26.withOpacity(0.2),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Stack(
+                      children: [
+                        Center(
+                          child: Icon(Icons.lightbulb,
+                              size: 70,
+                              color: index <= anzHintsGot
+                                  ? const Color(0xff404D52)
+                                  : Colors.black26),
+                        ),
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 14.0),
+                            child: Text(
+                              "${index + 1}",
+                              style: TextStyle(
+                                  color: index <= anzHintsGot
+                                      ? Colors.white
+                                      : Colors.black26,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w400),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 }
 
 class LevelCompletionScreen extends StatelessWidget {
@@ -2728,7 +3020,7 @@ class LevelCompletionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool lastLevel = selectedLevel >= worlds[currentWorld - 1].anzahlLevels;
+    bool lastLevel = selectedLevel == -2;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -2817,7 +3109,7 @@ class LevelCompletionScreen extends StatelessWidget {
             child: Icon(
               lastLevel ? Icons.home : Icons.skip_next,
               size: 60,
-              color: Colors.white,
+              color: primaryColor,
             ),
           ),
         ),
@@ -2894,7 +3186,7 @@ class LevelCompletionScreen extends StatelessWidget {
           child: Icon(
             icon,
             size: 35,
-            color: Colors.white,
+            color: primaryColor,
           ),
         ),
       ),

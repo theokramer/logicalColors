@@ -177,9 +177,9 @@ class _CustomActionButtonState extends State<CustomActionButton>
                                               ),
                                             ],
                                           ),
-                                          child: const Icon(
+                                          child: Icon(
                                             Icons.add,
-                                            color: Colors.white,
+                                            color: primaryColor,
                                             size: 18,
                                           ),
                                         ),

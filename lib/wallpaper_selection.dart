@@ -65,6 +65,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                       setState(() {
                         selectedWallpaper = index;
                         puzzle.saveSelectedWallpaper(selectedWallpaper);
+                        primaryColor = getPrimaryColor(selectedWallpaper);
                       });
                       widget.onWallpaperSelected(index);
                     }
@@ -83,7 +84,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                           width: 5,
                         ),
                         color: getBackgroundColor(index),
-                        image: index < 17
+                        image: index >= 5
                             ? DecorationImage(
                                 image: AssetImage("images/w${index - 5}.jpg"),
                                 fit: BoxFit.cover,
@@ -110,12 +111,12 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                           : !isLocked
                               ? null
                               : isUnlockable
-                                  ? const Center(
+                                  ? Center(
                                       child: Text(
-                                        'Unlock for free',
+                                        'Unlock now',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
-                                          color: Colors.white,
+                                          color: primaryColor,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -184,6 +185,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                           onPressed: () {
                             setState(() {
                               selectedWallpaper = index;
+                              primaryColor = getPrimaryColor(selectedWallpaper);
                             });
                             puzzle.saveSelectedWallpaper(selectedWallpaper);
                             Navigator.pop(context);
@@ -248,6 +250,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
     //   );
     // }
     selectedWallpaper = index;
+    primaryColor = getPrimaryColor(selectedWallpaper);
     puzzle.saveBoughtWallpaper(selectedWallpaper);
     puzzle.saveSelectedWallpaper(selectedWallpaper);
     if (!boughtWallpapers.contains(selectedWallpaper)) {

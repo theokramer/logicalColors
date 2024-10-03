@@ -61,17 +61,17 @@ class _ShopScreenState extends State<ShopScreen> {
       barrierDismissible:
           false, // Prevent closing the dialog by tapping outside
       builder: (BuildContext context) {
-        return const Dialog(
+        return Dialog(
           backgroundColor: Colors.transparent,
           child: Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 10),
+                const CircularProgressIndicator(),
+                const SizedBox(height: 10),
                 Text(
                   'Processing...',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: primaryColor),
                 ),
               ],
             ),
@@ -390,10 +390,10 @@ class _ShopScreenState extends State<ShopScreen> {
       appBar: AppBar(
         title: Text(
           AppLocalizations.of(context)?.shop ?? "World",
-          style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30),
+          style: TextStyle(
+              color: primaryColor, fontWeight: FontWeight.bold, fontSize: 30),
         ),
-        foregroundColor: Colors.white,
+        foregroundColor: primaryColor,
         actions: [
           SizedBox(
             height: 65,
@@ -411,7 +411,7 @@ class _ShopScreenState extends State<ShopScreen> {
                         movesLeft: -1,
                         iconPath: 'images/Crystals.png',
                         backgroundColor: Colors.black45,
-                        textColor: Colors.white,
+                        textColor: primaryColor,
                         isLarge: 2,
                         originShop: true,
                       );
@@ -493,7 +493,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 //         const SizedBox(height: 10),
                 //         Text(
                 //           '${AppLocalizations.of(context)?.pleaseWait ?? "World"} ',
-                //           style: const TextStyle(color: Colors.white),
+                //           style: const TextStyle(color: primaryColor),
                 //         ),
                 //       ],
                 //     ),
@@ -509,7 +509,7 @@ class _ShopScreenState extends State<ShopScreen> {
                             ? "${AppLocalizations.of(context)?.freeWallpaper ?? "World"} "
                             : ""
                         : "${AppLocalizations.of(context)?.unlockWorldsShop ?? "World"} ",
-                    style: const TextStyle(color: Colors.white, fontSize: 15),
+                    style: TextStyle(color: primaryColor, fontSize: 15),
                   ),
                   const SizedBox(
                     height: 7,
@@ -520,11 +520,11 @@ class _ShopScreenState extends State<ShopScreen> {
                     },
                     child: Text(
                       "${AppLocalizations.of(context)?.restorePurchases ?? "World"} ",
-                      style: const TextStyle(
-                          color: Colors.white,
+                      style: TextStyle(
+                          color: primaryColor,
                           decoration: TextDecoration
                               .underline, // Add this line to underline the text
-                          decorationColor: Colors.white),
+                          decorationColor: primaryColor),
                     ),
                   ),
                 ],
@@ -595,10 +595,10 @@ class _ShopScreenState extends State<ShopScreen> {
         const SizedBox(height: 8),
         Text(
           quantity,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20.0,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: primaryColor,
           ),
         ),
       ],
@@ -726,8 +726,8 @@ class _ShopScreenState extends State<ShopScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.white.withOpacity(0.9),
-                        Colors.white.withOpacity(0.5),
+                        primaryColor.withOpacity(0.9),
+                        primaryColor.withOpacity(0.5),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -779,10 +779,10 @@ class _ShopScreenState extends State<ShopScreen> {
                 children: [
                   Text(
                     price,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16.0,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: primaryColor,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -859,16 +859,16 @@ class _ShopScreenState extends State<ShopScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
             child: Row(
               children: [
                 Icon(
                   Icons.lock_open,
                   size: 35, // Larger icon size
-                  color: Colors.white, // Updated icon color
+                  color: primaryColor, // Updated icon color
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 12,
                 ),
                 Column(
@@ -880,10 +880,10 @@ class _ShopScreenState extends State<ShopScreen> {
                       style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: primaryColor,
                       ),
                     ),
-                    Text(
+                    const Text(
                       'Unlocks all worlds in the app.',
                       style: TextStyle(
                         fontSize: 10,
@@ -919,12 +919,12 @@ class _ShopScreenState extends State<ShopScreen> {
                   borderRadius: BorderRadius.circular(12.0), // Rounded corners
                 ),
               ),
-              child: const Text(
+              child: Text(
                 'EUR 1,99',
                 style: TextStyle(
                   fontSize: 16.0, // Larger font size
                   fontWeight: FontWeight.bold,
-                  color: Colors.white, // Text color matching button border
+                  color: primaryColor, // Text color matching button border
                 ),
               ),
             ),
@@ -970,10 +970,10 @@ class _ShopScreenState extends State<ShopScreen> {
                       children: [
                         Text(
                           product.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16.0,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: primaryColor,
                           ),
                         ),
                         Text(
@@ -1008,10 +1008,10 @@ class _ShopScreenState extends State<ShopScreen> {
                   ),
                   child: Text(
                     '${product.rawPrice} ${product.currencySymbol}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16.0, // Larger font size
                       fontWeight: FontWeight.bold,
-                      color: Colors.white, // Text color matching button border
+                      color: primaryColor, // Text color matching button border
                     ),
                   ),
                 ),
@@ -1072,8 +1072,8 @@ class _ShopScreenState extends State<ShopScreen> {
         dotHeight: 12.0,
         dotWidth: 12.0,
         spacing: 8.0,
-        dotColor: Colors.white.withOpacity(0.3), // Inactive dot color
-        activeDotColor: Colors.white, // Active dot color
+        dotColor: primaryColor.withOpacity(0.3), // Inactive dot color
+        activeDotColor: primaryColor, // Active dot color
       ),
     );
   }
@@ -1158,7 +1158,7 @@ class _ShopScreenState extends State<ShopScreen> {
             // Makes the content scrollable
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: primaryColor,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -1385,7 +1385,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     ),
                     child: Text(
                       AppLocalizations.of(context)?.great ?? "World",
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: primaryColor),
                     ),
                   ),
                 ],
@@ -1420,8 +1420,8 @@ class _ShopScreenState extends State<ShopScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.9),
-                  Colors.white.withOpacity(0.5)
+                  primaryColor.withOpacity(0.9),
+                  primaryColor.withOpacity(0.5)
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -1522,10 +1522,10 @@ class _ShopScreenState extends State<ShopScreen> {
           padding: const EdgeInsets.only(left: 8.0),
           child: Text(
             product.title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16.0, // Larger font size
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: primaryColor,
             ),
           ),
         ),
@@ -1546,10 +1546,10 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
             child: Text(
               "${product.rawPrice} ${product.currencySymbol}",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16.0, // Larger font size
                 fontWeight: FontWeight.bold,
-                color: Colors.white, // Text color matching button border
+                color: primaryColor, // Text color matching button border
               ),
             ),
           ),

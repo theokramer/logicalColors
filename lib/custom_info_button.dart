@@ -181,7 +181,7 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
                         "${widget.targetColor}",
                         style: TextStyle(
                             fontSize: widget.isLarge == 0 ? 15 : 10,
-                            color: Colors.white,
+                            color: primaryColor,
                             fontWeight: FontWeight.bold),
                       )),
                     ),

@@ -1,3 +1,4 @@
+import 'package:color_puzzle/puzzle_model.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui'; // For the BackdropFilter
 
@@ -96,8 +97,8 @@ class _AnimatedCustomOverlayState extends State<AnimatedCustomOverlay>
                     children: [
                       Text(
                         widget.message,
-                        style: const TextStyle(
-                          color: Colors.white, // Matches light or dark theme
+                        style: TextStyle(
+                          color: primaryColor, // Matches light or dark theme
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),

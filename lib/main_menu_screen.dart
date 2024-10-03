@@ -5,7 +5,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:path/path.dart' as p;
@@ -20,6 +19,7 @@ import 'package:color_puzzle/wallpaper_selection.dart';
 
 import 'custom_info_button.dart';
 import 'puzzle_model.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class Level {
   int? worldNr;
@@ -66,7 +66,7 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
   int selectedWallpaperIndex = 1; // Default wallpaper selection
-  late BannerAd _bannerAd;
+  //late BannerAd _bannerAd;
   //final bool _isBannerAdReady = false;
 
   bool showWorldSelection = false;
@@ -74,6 +74,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
   void initState() {
     super.initState();
+
     //_loadProduct;
     // _bannerAd = BannerAd(
     //   adUnitId: 'ca-app-pub-3263827122305139/4072388867',
@@ -99,7 +100,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
   void dispose() {
     super.dispose();
-    _bannerAd.dispose();
+    //_bannerAd.dispose();
   }
 
   void _updateLevel(int newIndex) {
@@ -275,8 +276,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                             ),
                                             Text(
                                               worlds[currentWorld - 1].name,
-                                              style: const TextStyle(
-                                                  color: Colors.white,
+                                              style: TextStyle(
+                                                  color: primaryColor,
                                                   fontSize: 20,
                                                   fontWeight: FontWeight.bold),
                                             )
@@ -298,8 +299,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                               ),
                                               Text(
                                                 "${puzzle.getCurrencyAmountForWorld(currentWorld)}/${worlds[currentWorld - 1].anzahlLevels}",
-                                                style: const TextStyle(
-                                                    color: Colors.white,
+                                                style: TextStyle(
+                                                    color: primaryColor,
                                                     fontSize: 18,
                                                     fontWeight:
                                                         FontWeight.bold),
@@ -317,9 +318,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                               ],
                             ),
                             if (showWorldSelection)
-                              WorldSelectionScreen(
-                                  puzzle: puzzle,
-                                  onWorldSelected: closeWorldSelection),
+                              Column(
+                                children: [
+                                  WorldSelectionScreen(
+                                      puzzle: puzzle,
+                                      onWorldSelected: closeWorldSelection),
+                                ],
+                              ),
                           ],
                         ),
                       )
@@ -355,7 +360,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         Text(
           'Selected Level',
           style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
+            color: primaryColor.withOpacity(0.8),
             fontSize: 24,
           ),
         ),
@@ -364,10 +369,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           selectedLevel == -2
               ? (worlds[currentWorld - 1].anzahlLevels).toString()
               : selectedLevel.toString(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 60,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: primaryColor,
           ),
         ),
       ],
@@ -482,7 +487,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       //           movesLeft: -1,
                       //           iconPath: 'images/Crystals.png',
                       //           backgroundColor: Colors.black45,
-                      //           textColor: Colors.white,
+                      //           textColor: primaryColor,
                       //           isLarge: 2,
                       //         );
                       //       },
@@ -571,13 +576,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           '${worlds[currentWorld - 1].name} $selectedLevel',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.white,
+            color: primaryColor,
             fontSize: 25,
             fontWeight: FontWeight.bold,
             fontFamily: 'Quicksand',
             shadows: [
               Shadow(
-                color: Colors.white.withOpacity(0.2),
+                color: primaryColor.withOpacity(0.2),
                 offset: const Offset(2, 2),
                 blurRadius: 6,
               ),
@@ -587,9 +592,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         const SizedBox(
           width: 5,
         ),
-        const Icon(
+        Icon(
           Icons.keyboard_arrow_down,
-          color: Colors.white,
+          color: primaryColor,
           size: 45,
         ),
       ],
@@ -645,8 +650,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           //   _showUnlockOptionsDialog(context, thisWorld, puzzle, () {});
           // } else {
           //   selectedLevel = maxLevel;
-          print("HIER");
-          Navigator.of(context).push(
+          Navigator.of(context).pushReplacement(
             FadePageRoute(
               page: ChangeNotifierProvider(
                 create: (_) => PuzzleModel(
@@ -667,6 +671,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               ),
             ),
           );
+
           //}
         },
         child: Row(
@@ -725,12 +730,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.lock_open, color: Colors.white, size: 36),
+            Icon(Icons.lock_open, color: primaryColor, size: 36),
             const SizedBox(width: 8),
             Text(
               AppLocalizations.of(context)?.unlock ?? "Unlock",
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: primaryColor,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
@@ -803,7 +808,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         child: Icon(
           icon,
           size: 48, // Larger icon
-          color: Colors.white.withOpacity(0.9),
+          color: primaryColor.withOpacity(0.9),
         ),
       ),
     );
@@ -911,14 +916,14 @@ class _LevelSelectionWidgetState extends State<LevelSelectionWidget> {
                   colors: isLevelUnlocked || maxLevel == -2
                       ? isLastLevel
                           ? [
-                              Colors.orange,
-                              Colors.deepOrangeAccent
+                              currencyColor,
+                              currencyColor,
                             ] // Different color for last level
                           : [
                               Colors.blueAccent,
-                              Colors.lightBlue
+                              Colors.blue
                             ] // Bright colors for finished levels
-                      : [Colors.grey, Colors.black],
+                      : [Colors.black26, Colors.black],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -926,7 +931,7 @@ class _LevelSelectionWidgetState extends State<LevelSelectionWidget> {
                   if (isLevelUnlocked || maxLevel == -2)
                     BoxShadow(
                       color: isCurrentLevel
-                          ? Colors.white.withOpacity(0.15)
+                          ? primaryColor.withOpacity(0.15)
                           : Colors.black26,
                       blurRadius: isCurrentLevel ? 3 : 3,
                       offset: const Offset(3, 3),
@@ -950,14 +955,12 @@ class _LevelSelectionWidgetState extends State<LevelSelectionWidget> {
                     Icon(
                       isLevelUnlocked || maxLevel == -2
                           ? isLastLevel
-                              ? Icons
-                                  .star // Icon for the last level with a bonus
+                              ? currencyIcon // Icon for the last level with a bonus
                               : Icons.check_circle // Icon for finished levels
                           : Icons.lock, // Icon for locked levels
                       color: isLevelUnlocked || maxLevel == -2
                           ? isLastLevel
-                              ? Colors
-                                  .yellowAccent // Color for the last level icon
+                              ? Colors.white // Color for the last level icon
                               : Colors.white // Color for completed levels
                           : Colors.white70, // Color for locked levels
                       size: isCurrentLevel
@@ -1028,7 +1031,9 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
                     'Stufe',
                     style: TextStyle(
                       fontSize: 25,
-                      color: _currentPage == 0 ? Colors.white : Colors.white30,
+                      color: _currentPage == 0
+                          ? primaryColor
+                          : primaryColor.withAlpha(80),
                       fontWeight: _currentPage == 0
                           ? FontWeight.bold
                           : FontWeight.normal,
@@ -1041,7 +1046,9 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
                     'Wallpaper',
                     style: TextStyle(
                       fontSize: 25,
-                      color: _currentPage == 1 ? Colors.white : Colors.white30,
+                      color: _currentPage == 1
+                          ? primaryColor
+                          : primaryColor.withAlpha(80),
                       fontWeight: _currentPage == 1
                           ? FontWeight.bold
                           : FontWeight.normal,
@@ -1090,18 +1097,18 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
                     height: MediaQuery.of(context).size.height,
                     child: ListView.builder(itemBuilder: (context, index) {
                       return index == 0
-                          ? const Column(
+                          ? Column(
                               children: [
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
                                     Padding(
-                                      padding: EdgeInsets.only(
+                                      padding: const EdgeInsets.only(
                                           left: 30.0, top: 30, bottom: 8),
                                       child: Text(
                                         "Entdecke dein geistiges Auge",
                                         style: TextStyle(
-                                            color: Colors.white,
+                                            color: primaryColor,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 19),
                                       ),
@@ -1109,12 +1116,12 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
                                   ],
                                 ),
                                 Padding(
-                                  padding: EdgeInsets.only(
+                                  padding: const EdgeInsets.only(
                                       left: 30.0, bottom: 50, right: 30),
                                   child: Text(
                                     "Eine friedvolle Reise durch immer komplexer werdende Spektren",
                                     style: TextStyle(
-                                        color: Colors.white,
+                                        color: primaryColor,
                                         fontSize: 16,
                                         fontWeight: FontWeight.w300),
                                   ),
@@ -1194,9 +1201,9 @@ class WorldItem extends StatelessWidget {
                         : Colors.grey,
                     child: Center(
                       child: worlds[worldID - 1].maxLevel == -2
-                          ? const Icon(
+                          ? Icon(
                               Icons.where_to_vote,
-                              color: Colors.white,
+                              color: primaryColor,
                               size: 60,
                             )
                           : !unlocked &&
@@ -1208,7 +1215,7 @@ class WorldItem extends StatelessWidget {
                                   children: [
                                     Icon(
                                       currencyIcon,
-                                      color: Colors.white,
+                                      color: primaryColor,
                                       size: 25,
                                     ),
                                     const SizedBox(
@@ -1216,8 +1223,8 @@ class WorldItem extends StatelessWidget {
                                     ),
                                     Text(
                                       "${puzzle.getNeededCurrencyAmount(worldID - 1)}",
-                                      style: const TextStyle(
-                                          color: Colors.white,
+                                      style: TextStyle(
+                                          color: primaryColor,
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold),
                                     ),
@@ -1234,8 +1241,8 @@ class WorldItem extends StatelessWidget {
                   children: [
                     Text(
                       worlds[worldID - 1].name,
-                      style: const TextStyle(
-                          color: Colors.white,
+                      style: TextStyle(
+                          color: primaryColor,
                           fontSize: 19,
                           fontWeight: FontWeight.bold),
                     ),
@@ -1255,8 +1262,8 @@ class WorldItem extends StatelessWidget {
                           ),
                           Text(
                             "${puzzle.getCurrencyAmountForWorld(worldID)}/${worlds[worldID - 1].anzahlLevels}",
-                            style: const TextStyle(
-                                color: Colors.white,
+                            style: TextStyle(
+                                color: primaryColor,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold),
                           ),
@@ -1265,9 +1272,9 @@ class WorldItem extends StatelessWidget {
                     if (puzzle.getCurrencyAmount() >=
                             puzzle.getNeededCurrencyAmount(worldID - 1) &&
                         !unlocked)
-                      const Text(
+                      Text(
                         "Du hast genügend\nSterne gesammelt,\num zu diesem Rätsel\nvoranzuschreiten.",
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: primaryColor),
                       )
                   ],
                 ),
@@ -1294,10 +1301,10 @@ class _buildIconButton2 extends StatelessWidget {
         width: 32,
         decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 1.5)),
+            border: Border.all(color: primaryColor, width: 1.5)),
         child: Icon(
           icon,
-          color: Colors.white,
+          color: primaryColor,
           size: 25,
         ));
   }
@@ -1326,8 +1333,8 @@ class SunnysDisplay extends StatelessWidget {
             ),
             Text(
               "${puzzle.getCurrencyAmount()}",
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: primaryColor,
                   fontSize: 20,
                   fontWeight: FontWeight.bold),
             ),
@@ -1345,7 +1352,7 @@ Widget _buildUnlockButton(
     child: ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
-        foregroundColor: Colors.white,
+        foregroundColor: primaryColor,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
@@ -1386,8 +1393,8 @@ void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 AppLocalizations.of(context)?.unlockTitle ?? "",
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: primaryColor,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),

@@ -90,7 +90,7 @@ class RemsManager {
 
 // Provider für Hints
 class HintsProvider extends ChangeNotifier {
-  int _hints = 5;
+  int _hints = 2;
 
   int get hints => _hints;
 

@@ -1,4 +1,4 @@
-package de.tk.color_puzzle
+package de.tk.tone_twister
 
 import io.flutter.embedding.android.FlutterActivity
 

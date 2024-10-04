@@ -10,12 +10,12 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
-import 'package:color_puzzle/coin_manager.dart';
-import 'package:color_puzzle/level_selection.dart';
-import 'package:color_puzzle/main.dart';
-import 'package:color_puzzle/puzzle_screen.dart';
-import 'package:color_puzzle/shop_screen.dart';
-import 'package:color_puzzle/wallpaper_selection.dart';
+import 'package:tone_twister/coin_manager.dart';
+import 'package:tone_twister/level_selection.dart';
+import 'package:tone_twister/main.dart';
+import 'package:tone_twister/puzzle_screen.dart';
+import 'package:tone_twister/shop_screen.dart';
+import 'package:tone_twister/wallpaper_selection.dart';
 
 import 'custom_info_button.dart';
 import 'puzzle_model.dart';

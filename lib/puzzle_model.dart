@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'package:color_puzzle/coin_manager.dart';
-import 'package:color_puzzle/difficulty_bar.dart';
-import 'package:color_puzzle/hints_manager.dart';
-import 'package:color_puzzle/main_menu_screen.dart';
-import 'package:color_puzzle/puzzle_screen.dart';
+import 'package:tone_twister/coin_manager.dart';
+import 'package:tone_twister/difficulty_bar.dart';
+import 'package:tone_twister/hints_manager.dart';
+import 'package:tone_twister/main_menu_screen.dart';
+import 'package:tone_twister/puzzle_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -822,39 +822,41 @@ class PuzzleModel with ChangeNotifier {
       if (selectedLevel == -2) {
         selectedLevel = worlds[currentWorld - 1].anzahlLevels;
       }
-      List<Click> clicks = await readJson(selectedLevel - 1);
+      List<Click> clicks2 = await readJson(selectedLevel - 1);
 // Create random moves and store them in the clicks list
       for (int i = 0; i < _maxMoves; i++) {
         int x;
         int y;
         if (currentWorld == 1) {
-          x = clicks[i].x ?? 0;
-          y = clicks[i].y ?? 0;
+          x = clicks2[i].x ?? 0;
+          y = clicks2[i].y ?? 0;
         } else {
           x = _randomPositionNumber();
           y = _randomPositionNumber();
         }
 
-        int count = 0;
-        bool works = false;
-        while (works == false) {
-          count = 0;
-          for (int i = 0; i < positions.length; i++) {
-            if (positions[i].x == x && positions[i].y == y) {
-              count++;
+        if (currentWorld != 1) {
+          int count = 0;
+          bool works = false;
+          while (works == false) {
+            count = 0;
+            for (int i = 0; i < positions.length; i++) {
+              if (positions[i].x == x && positions[i].y == y) {
+                count++;
+              }
             }
-          }
-          if (count < 2) {
-            works = true;
-          } else {
-            x = _randomPositionNumber();
-            y = _randomPositionNumber();
+            if (count < 2) {
+              works = true;
+            } else {
+              x = _randomPositionNumber();
+              y = _randomPositionNumber();
+            }
           }
         }
         positions.add(Click(x: x, y: y));
 
         clickTile(x, y, true, false);
-        clicks[i] = Click(x: x, y: y);
+        clicks[i] = [x, y];
         savedClicks[i] = [x, y]; // Deep copy the individual list
         if (tutorialActive &&
             currentTutorialStep != TutorialStep.step4 &&

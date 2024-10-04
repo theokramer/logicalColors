@@ -12,14 +12,14 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:color_puzzle/action_Button.dart';
-import 'package:color_puzzle/coin_manager.dart';
-import 'package:color_puzzle/custom_info_button.dart';
-import 'package:color_puzzle/difficulty_bar.dart';
-import 'package:color_puzzle/hints_manager.dart';
-import 'package:color_puzzle/main.dart';
-import 'package:color_puzzle/main_menu_screen.dart';
-import 'package:color_puzzle/tutorial_overlay.dart';
+import 'package:tone_twister/action_Button.dart';
+import 'package:tone_twister/coin_manager.dart';
+import 'package:tone_twister/custom_info_button.dart';
+import 'package:tone_twister/difficulty_bar.dart';
+import 'package:tone_twister/hints_manager.dart';
+import 'package:tone_twister/main.dart';
+import 'package:tone_twister/main_menu_screen.dart';
+import 'package:tone_twister/tutorial_overlay.dart';
 
 import 'puzzle_model.dart';
 import 'shop_screen.dart';

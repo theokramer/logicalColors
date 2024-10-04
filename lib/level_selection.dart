@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:color_puzzle/puzzle_model.dart';
-import 'package:color_puzzle/puzzle_screen.dart';
+import 'package:tone_twister/puzzle_model.dart';
+import 'package:tone_twister/puzzle_screen.dart';
 
 // Assuming PuzzleModel and other dependencies are already defined.
 

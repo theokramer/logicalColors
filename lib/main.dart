@@ -4,10 +4,10 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:color_puzzle/coin_manager.dart';
-import 'package:color_puzzle/hints_manager.dart';
-import 'package:color_puzzle/main_menu_screen.dart';
-import 'package:color_puzzle/shop_screen.dart';
+import 'package:tone_twister/coin_manager.dart';
+import 'package:tone_twister/hints_manager.dart';
+import 'package:tone_twister/main_menu_screen.dart';
+import 'package:tone_twister/shop_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';

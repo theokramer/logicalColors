@@ -23,7 +23,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<string>4</string>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-3263827122305139~6319420477</string>
 	<key>LSRequiresIPhoneOS</key>

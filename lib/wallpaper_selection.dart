@@ -1,6 +1,6 @@
 import 'dart:math';
-import 'package:color_puzzle/puzzle_screen.dart';
-import 'package:color_puzzle/shop_screen.dart';
+import 'package:tone_twister/puzzle_screen.dart';
+import 'package:tone_twister/shop_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'coin_manager.dart';

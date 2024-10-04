@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:color_puzzle/hints_manager.dart';
-import 'package:color_puzzle/puzzle_model.dart';
+import 'package:tone_twister/hints_manager.dart';
+import 'package:tone_twister/puzzle_model.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';

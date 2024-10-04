@@ -614,6 +614,31 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   Widget _buildPlayButton(BuildContext context, int thisWorld) {
     final puzzle = Provider.of<PuzzleModel>(context, listen: false);
     int maxLevel = puzzle.getMaxLevelForWorld(thisWorld + 1);
+    void playGame() async {
+      int size = currentWorld == 1
+          ? await puzzle.readSize(selectedLevel)
+          : puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2;
+      int level = currentWorld == 1
+          ? await puzzle.readMoves(selectedLevel)
+          : puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2;
+      Navigator.of(context).pushReplacement(
+        FadePageRoute(
+          page: ChangeNotifierProvider(
+            create: (_) => PuzzleModel(
+              size: size,
+              level: level,
+              colorMapping: {
+                1: worlds[thisWorld].colors[0],
+                2: worlds[thisWorld].colors[1],
+                3: worlds[thisWorld].colors[2],
+              },
+            ),
+            child: const PuzzleScreen(),
+          ),
+        ),
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -650,27 +675,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           //   _showUnlockOptionsDialog(context, thisWorld, puzzle, () {});
           // } else {
           //   selectedLevel = maxLevel;
-          Navigator.of(context).pushReplacement(
-            FadePageRoute(
-              page: ChangeNotifierProvider(
-                create: (_) => PuzzleModel(
-                  size: currentWorld == 1
-                      ? puzzle.readSize(selectedLevel)
-                      : puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2,
-                  level: currentWorld == 1
-                      ? puzzle.readMoves(selectedLevel)
-                      : puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ??
-                          2,
-                  colorMapping: {
-                    1: worlds[thisWorld].colors[0],
-                    2: worlds[thisWorld].colors[1],
-                    3: worlds[thisWorld].colors[2],
-                  },
-                ),
-                child: const PuzzleScreen(),
-              ),
-            ),
-          );
+          playGame();
 
           //}
         },

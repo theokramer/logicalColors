@@ -675,6 +675,33 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
   bool resettedGrid = false;
 
+  void playGame(PuzzleModel puzzle) async {
+    int size = currentWorld == 1
+        ? await puzzle.readSize(selectedLevel)
+        : puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2;
+    int level = currentWorld == 1
+        ? await puzzle.readMoves(selectedLevel)
+        : puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2;
+    Navigator.of(context).pushReplacement(
+      FadePageRoute(
+        page: ChangeNotifierProvider(
+          create: (_) => PuzzleModel(
+            size: size,
+            level: level,
+            colorMapping: {
+              1: worlds[currentWorld].colors[0],
+              2: worlds[currentWorld].colors[1],
+              3: worlds[currentWorld].colors[2],
+            },
+          ),
+          child: selectedLevel < worlds[currentWorld].anzahlLevels
+              ? const PuzzleScreen()
+              : const MainMenuScreen(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
@@ -1670,41 +1697,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                       }
                                       denyClick = false;
 
-                                      Navigator.of(context).pushReplacement(
-                                        FadePageRoute(
-                                          page: ChangeNotifierProvider(
-                                            create: (_) => PuzzleModel(
-                                              size: currentWorld == 1
-                                                  ? puzzle
-                                                      .readSize(selectedLevel)
-                                                  : puzzle.getSizeAndMaxMoves(
-                                                              selectedLevel)[
-                                                          "size"] ??
-                                                      2,
-                                              level: currentWorld == 1
-                                                  ? puzzle
-                                                      .readMoves(selectedLevel)
-                                                  : puzzle.getSizeAndMaxMoves(
-                                                              selectedLevel)[
-                                                          "maxMoves"] ??
-                                                      2,
-                                              colorMapping: {
-                                                1: worlds[currentWorld - 1]
-                                                    .colors[0],
-                                                2: worlds[currentWorld - 1]
-                                                    .colors[1],
-                                                3: worlds[currentWorld - 1]
-                                                    .colors[2],
-                                              },
-                                            ),
-                                            child: selectedLevel <
-                                                    worlds[currentWorld]
-                                                        .anzahlLevels
-                                                ? const PuzzleScreen()
-                                                : const MainMenuScreen(),
-                                          ),
-                                        ),
-                                      );
+                                      playGame(puzzle);
                                     });
                                   }
                                 },
@@ -1848,51 +1841,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                   }
                                                   denyClick = false;
 
-                                                  Navigator.of(context)
-                                                      .pushReplacement(
-                                                    FadePageRoute(
-                                                      page:
-                                                          ChangeNotifierProvider(
-                                                        create: (_) =>
-                                                            PuzzleModel(
-                                                          size: currentWorld ==
-                                                                  1
-                                                              ? puzzle.readSize(
-                                                                  selectedLevel)
-                                                              : puzzle.getSizeAndMaxMoves(
-                                                                          selectedLevel)[
-                                                                      "size"] ??
-                                                                  2,
-                                                          level: currentWorld ==
-                                                                  1
-                                                              ? puzzle.readMoves(
-                                                                  selectedLevel)
-                                                              : puzzle.getSizeAndMaxMoves(
-                                                                          selectedLevel)[
-                                                                      "maxMoves"] ??
-                                                                  2,
-                                                          colorMapping: {
-                                                            1: worlds[
-                                                                    currentWorld -
-                                                                        1]
-                                                                .colors[0],
-                                                            2: worlds[
-                                                                    currentWorld -
-                                                                        1]
-                                                                .colors[1],
-                                                            3: worlds[
-                                                                    currentWorld -
-                                                                        1]
-                                                                .colors[2],
-                                                          },
-                                                        ),
-                                                        child: selectedLevel <
-                                                                50
-                                                            ? const PuzzleScreen()
-                                                            : const MainMenuScreen(),
-                                                      ),
-                                                    ),
-                                                  );
+                                                  playGame(puzzle);
                                                 });
                                               }
                                             },

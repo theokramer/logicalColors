@@ -8,6 +8,7 @@ import 'package:color_puzzle/hints_manager.dart';
 import 'package:color_puzzle/main_menu_screen.dart';
 import 'package:color_puzzle/puzzle_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,10 +16,22 @@ int currentWorld = 1;
 
 int timeElapsed = 0;
 
+int anzHintsGot = 0;
+
 int selectedWallpaper = 0;
 
 IconData currencyIcon = Icons.star_border;
-Color currencyColor = Colors.amber ?? Colors.blue;
+Color currencyColor = Colors.amber;
+
+Color primaryColor = Colors.black;
+
+Color getPrimaryColor(int index) {
+  // Define colors for the 5 new solid-colored wallpapers
+  Color? color = Colors.white;
+  if (index == 2 || index == 4) return Colors.black;
+
+  return color;
+}
 
 Color getBackgroundColor(int index) {
   // Define colors for the 5 new solid-colored wallpapers
@@ -32,13 +45,13 @@ Color getBackgroundColor(int index) {
         color = const Color(0xff1c1c1e);
         break;
       case 2:
-        color = const Color(0xff121212);
+        color = const Color(0xffb0e0e6);
         break;
       case 3:
-        color = const Color(0xff2e2e2e);
+        color = const Color(0xff483d8b);
         break;
       case 4:
-        color = const Color(0xffdcd3c2);
+        color = const Color(0xffe0d9c9);
         break;
       default:
         color = Colors.blueGrey[800];
@@ -65,33 +78,11 @@ TutorialStep currentTutorialStep = TutorialStep.step1;
 
 List<int> boughtWallpapers = [0];
 
-int countSpecificLevels(int targetWorldNr) {
-  // Replace with the path to your file
-  File file = File(
-      "/Users/theokramer/Documents/Colorize - Puzzle Game/logicalColors/lib/levels.json");
-  var fileContent = file.readAsStringSync();
-
-  // Decoding JSON file content into a List
-  List<dynamic> jsonData = jsonDecode(fileContent);
-
-  int count = 0;
-
-  // Looping through the JSON array
-  for (var item in jsonData) {
-    Level level = Level.fromJson(item);
-    if (level.worldNr == targetWorldNr) {
-      count++;
-    }
-  }
-
-  return count;
-}
-
 List<World> worlds = [
   World(
       id: 1,
       maxLevel: 1,
-      anzahlLevels: countSpecificLevels(1),
+      anzahlLevels: 0,
       name: "Anfänger",
       colors: const [
         Color(0xff48cae4),
@@ -310,7 +301,6 @@ class PuzzleModel with ChangeNotifier {
 
   Future<void> saveTutorialStep(TutorialStep step) async {
     int stepInt = -1;
-    print(step);
     switch (step) {
       case TutorialStep.none:
         stepInt = 0;
@@ -432,7 +422,7 @@ class PuzzleModel with ChangeNotifier {
         }
       }
     }
-
+    primaryColor = getPrimaryColor(selectedWallpaper);
     _initializeGrid();
   }
 
@@ -760,8 +750,8 @@ class PuzzleModel with ChangeNotifier {
     return CrystalsEarned;
   }
 
-  List<Click> readJson(int index) {
-    var level = readLevel(index);
+  Future<List<Click>> readJson(int index) async {
+    Level level = await readLevel(index);
 
     // Return the first click from the clicks list, if available
     if (level.clicks != null && level.clicks!.isNotEmpty) {
@@ -771,30 +761,35 @@ class PuzzleModel with ChangeNotifier {
     }
   }
 
-  Level readLevel(int index) {
-    File file = File(
-        "/Users/theokramer/Documents/Colorize - Puzzle Game/logicalColors/lib/levels.json");
-    var fileContent = file.readAsStringSync();
+  Future<String> loadJsonFromAssets(String filePath) async {
+    String jsonString = await rootBundle.loadString(filePath);
+    return jsonString;
+  }
+
+  Future<Level> readLevel(int index) async {
+    String fileContent = await loadJsonFromAssets("assets/levels.json");
 
     // Decoding JSON file content into a Map
     var jsonData = jsonDecode(fileContent);
 
     // Deserializing into a Level object
     Level level = Level.fromJson(jsonData[index]);
-
+    //Level level = Level();
     // Return the first click from the clicks list, if available
     return level;
   }
 
-  int readMoves(int index) {
-    return readLevel(index - 1).clicks?.length ?? 0;
+  Future<int> readMoves(int index) async {
+    Level level = await readLevel(index - 1);
+    return level.clicks?.length ?? 0;
   }
 
-  int readSize(int index) {
-    return readLevel(index - 1).size ?? 0;
+  Future<int> readSize(int index) async {
+    Level level = await readLevel(index - 1);
+    return level.size ?? 0;
   }
 
-  void _initializeGrid() {
+  Future<void> _initializeGrid() async {
     _targetColorNumber =
         _random.nextInt(3) + 1; // Target color number to achieve
     setTargetColor(_targetColorNumber);
@@ -824,18 +819,17 @@ class PuzzleModel with ChangeNotifier {
       }
       _maxMoves = 0;
     } else {
+      if (selectedLevel == -2) {
+        selectedLevel = worlds[currentWorld - 1].anzahlLevels;
+      }
+      List<Click> clicks = await readJson(selectedLevel - 1);
 // Create random moves and store them in the clicks list
       for (int i = 0; i < _maxMoves; i++) {
         int x;
         int y;
         if (currentWorld == 1) {
-          print(selectedLevel);
-          x = readJson(selectedLevel - 1)[i].x ?? 0;
-          y = readJson(selectedLevel - 1)[i].y ?? 0;
-          print("x:");
-          print(x);
-          print("y:");
-          print(y);
+          x = clicks[i].x ?? 0;
+          y = clicks[i].y ?? 0;
         } else {
           x = _randomPositionNumber();
           y = _randomPositionNumber();
@@ -860,7 +854,7 @@ class PuzzleModel with ChangeNotifier {
         positions.add(Click(x: x, y: y));
 
         clickTile(x, y, true, false);
-        clicks[i] = [x, y];
+        clicks[i] = Click(x: x, y: y);
         savedClicks[i] = [x, y]; // Deep copy the individual list
         if (tutorialActive &&
             currentTutorialStep != TutorialStep.step4 &&

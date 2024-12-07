@@ -14,6 +14,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 int currentWorld = 1;
 
+String userID = "";
+
 int timeElapsed = 0;
 
 int anzHintsGot = 0;
@@ -93,7 +95,7 @@ List<World> worlds = [
   World(
       id: 2,
       maxLevel: 0,
-      anzahlLevels: 25,
+      anzahlLevels: 15,
       name: "Lehrling",
       colors: const [
         Color(0xff9CDBA6),
@@ -104,7 +106,7 @@ List<World> worlds = [
   World(
       id: 3,
       maxLevel: 0,
-      anzahlLevels: 25,
+      anzahlLevels: 40,
       name: "Schüler",
       colors: const [
         Color(0xffdb222a),

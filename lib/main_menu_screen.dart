@@ -192,6 +192,21 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     });
   }
 
+  bool displayIndicator(PuzzleModel puzzle) {
+    for (int i = 0; i < worlds.length + 1; i++) {
+      print(puzzle.getNeededCurrencyAmount(i - 1));
+      print(puzzle.getCurrencyAmount());
+      print(puzzle.getMaxLevelForWorld(i));
+      var unlocked = puzzle.getMaxLevelForWorld(i) != 0;
+      if (puzzle.getCurrencyAmount() >= puzzle.getNeededCurrencyAmount(i - 1) &&
+          !unlocked) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
@@ -257,8 +272,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                     horizontal: 30.0,
                                   ),
                                   child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       GestureDetector(
                                         onTap: () {
@@ -284,6 +297,23 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                           ],
                                         ),
                                       ),
+                                      if (displayIndicator(puzzle))
+                                        Row(
+                                          children: [
+                                            const SizedBox(
+                                              width: 8,
+                                            ),
+                                            Column(
+                                              children: [
+                                                _BlinkingIndicator(),
+                                                const SizedBox(
+                                                  height: 10,
+                                                )
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      const Spacer(),
                                       Consumer<CoinProvider>(
                                         builder:
                                             (context, coinProvider, child) {
@@ -827,6 +857,63 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       icon: Icon(icon, size: 28),
       color: Colors.black,
       onPressed: onPressed,
+    );
+  }
+}
+
+class _BlinkingIndicator extends StatefulWidget {
+  @override
+  __BlinkingIndicatorState createState() => __BlinkingIndicatorState();
+}
+
+class __BlinkingIndicatorState extends State<_BlinkingIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    // Map the animation values from 0.6 to 1.0
+    _opacityAnimation =
+        Tween<double>(begin: 0.8, end: 1.0).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _opacityAnimation,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _opacityAnimation.value,
+          child: Container(
+            padding: const EdgeInsets.all(5),
+            decoration: const BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
+            ),
+            child: const Text(
+              '!',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

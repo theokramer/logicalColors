@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
-
+import 'package:firebase_database/firebase_database.dart';
+import 'package:uuid/uuid.dart';
 import 'package:tone_twister/coin_manager.dart';
 import 'package:tone_twister/hints_manager.dart';
 import 'package:tone_twister/main_menu_screen.dart';
@@ -17,6 +18,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'puzzle_model.dart'; // Import your PuzzleModel
 import 'puzzle_screen.dart'; // Import your screen
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+FirebaseDatabase database = FirebaseDatabase.instance;
 
 Future<String> loadJsonFromAssets(String filePath) async {
   //print("Trying to load file from path: $filePath"); // Debugging
@@ -187,6 +190,20 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MobileAds.instance.initialize();
 
+  //Initialize Firebase-App first!
+  // userID = await loadUserID();
+  // if (userID == "") {
+  //   userID = const Uuid().v4();
+  //   saveUserID(userID);
+  // }
+
+  // final snapshot = await database.ref("users/$userID").get();
+  // if (snapshot.exists) {
+  //   print(snapshot.value);
+  // } else {
+  //   print('No data available.');
+  // }
+
   currentWorld = await maxWorld();
 
   worlds[0].anzahlLevels = await countSpecificLevels(1);
@@ -229,6 +246,16 @@ Future<bool> loadTutorial() async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getBool('tutorialActive') ??
       true; // 0 ist der Standardwert, wenn nichts gespeichert wurde
+}
+
+Future<String> loadUserID() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('userID') ?? "";
+}
+
+Future<void> saveUserID(String userID) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('userID', userID);
 }
 
 // Load the progress of the specific world

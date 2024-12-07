@@ -8,10 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import 'package:tone_twister/action_Button.dart';
 import 'package:tone_twister/coin_manager.dart';
 import 'package:tone_twister/custom_info_button.dart';
@@ -20,6 +19,7 @@ import 'package:tone_twister/hints_manager.dart';
 import 'package:tone_twister/main.dart';
 import 'package:tone_twister/main_menu_screen.dart';
 import 'package:tone_twister/tutorial_overlay.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'puzzle_model.dart';
 import 'shop_screen.dart';
@@ -301,6 +301,34 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     );
   }
 
+  final InAppPurchase inAppPurchase = InAppPurchase.instance;
+  final List<ProductDetails> products = [];
+  var _subscription;
+  bool available = true; // Track availability of in-app purchases
+
+  void _loadProducts() async {
+    const Set<String> productIds = {
+      'de.tk.noAds.bundle',
+      'de.tk.noAds',
+      'de.tk.colorizer1',
+      'de.tk.hints1',
+      'de.tk.hints2',
+      'de.tk.hints3',
+      'de.tk.hints4',
+      'de.tk.crystals1',
+      'de.tk.crystals2',
+      'de.tk.crystals3',
+      'de.tk.crystals4',
+      'de.tk.crystals5',
+    };
+
+    final ProductDetailsResponse response =
+        await inAppPurchase.queryProductDetails(productIds);
+    if (response.error == null && response.productDetails.isNotEmpty) {
+      products.addAll(response.productDetails);
+    }
+  }
+
   //DateTime? _startTime;
 
   @override
@@ -386,6 +414,27 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       /*if ((!worlds.last.unlocked && selectedLevel > 14) && false) {
         showUnlockWorldsDialog(puzzle);
       }*/
+    });
+
+    // Access PuzzleModel via Provider here
+    PuzzleModel puzzle = Provider.of<PuzzleModel>(context, listen: false);
+
+    // Now you can safely use puzzle in your initState logic
+    // For example, loading some data or calling a method on the PuzzleModel
+    // You can call other methods on puzzle as needed
+
+    _loadProducts();
+
+    // Listen to the purchaseUpdatedStream
+    final Stream<List<PurchaseDetails>> purchaseUpdated =
+        InAppPurchase.instance.purchaseStream;
+    _subscription = purchaseUpdated.listen((purchases) {
+      _handlePurchaseUpdates(purchases, puzzle);
+    }, onDone: () {
+      _subscription.cancel();
+    }, onError: (error) {
+      // Handle errors here if necessary
+      print('Error in purchase stream: $error');
     });
     _confettiController =
         ConfettiController(duration: const Duration(milliseconds: 500));
@@ -620,6 +669,14 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     Navigator.pop(context);
   }
 
+  void buyHints(int index) {
+    if (products.isNotEmpty) {
+      for (int i = 0; i < products.length; i++) {
+        if (products[i].id == "hints.$index") {}
+      }
+    }
+  }
+
   void handleWatchAdForHints() {
     _rewardedAdHints?.show(
       onUserEarnedReward: (_, reward) {
@@ -629,6 +686,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             3,
             true,
             0);
+        Navigator.of(context).pop();
       },
     );
     _loadRewardedAdHints();
@@ -664,7 +722,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
   @override
   void dispose() {
-    print("HIER");
+    if (_subscription != null) {
+      _subscription.cancel();
+    }
     timer?.cancel(); // Timer stoppen, wenn der Screen verlassen wird
     _confettiController.dispose();
     _animationController.dispose();
@@ -759,7 +819,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                       .shrink() // Hide when tutorial is active
                                   : IconButton(
                                       onPressed: () {
-                                        showPauseMenu(context, puzzle);
+                                        showPauseMenuDialog(context, puzzle);
                                       },
                                       icon: Icon(
                                         Icons.pause,
@@ -1000,19 +1060,20 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                   ),*/
                               ),
                         ),
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Row(
-                              children: [
-                                const Spacer(),
-                                SunnysDisplay(
-                                  puzzle: puzzle,
-                                ),
-                              ],
+                        if (tutorialActive == false)
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Row(
+                                children: [
+                                  const Spacer(),
+                                  SunnysDisplay(
+                                    puzzle: puzzle,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -1093,59 +1154,59 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                       ],
                     ),
                   ),
-
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8.0, horizontal: 16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.black
-                            .withOpacity(0.6), // Semi-transparent background
-                        borderRadius:
-                            BorderRadius.circular(12.0), // Rounded corners
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.4),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                            offset: const Offset(0, 3), // Shadow position
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.timer, // Timer icon
-                            color: primaryColor,
-                            size: 24.0,
-                          ),
-                          const SizedBox(
-                              width: 8.0), // Space between icon and text
-                          Text(
-                            _formatTime(
-                                timeElapsed), // Format time based on elapsed seconds
-                            style: TextStyle(
-                              color: primaryColor,
-                              fontSize: 20,
-                              fontWeight: FontWeight
-                                  .w600, // Semi-bold for game-like style
-                              letterSpacing:
-                                  1.2, // Slightly spaced out text for clarity
-                              shadows: const [
-                                Shadow(
-                                  color: Colors
-                                      .black54, // Adds a slight shadow to the text
-                                  blurRadius: 3,
-                                  offset: Offset(1, 2),
-                                ),
-                              ],
+                  if (currentWorld != 1)
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8.0, horizontal: 16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.black
+                              .withOpacity(0.6), // Semi-transparent background
+                          borderRadius:
+                              BorderRadius.circular(12.0), // Rounded corners
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.4),
+                              spreadRadius: 2,
+                              blurRadius: 5,
+                              offset: const Offset(0, 3), // Shadow position
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.timer, // Timer icon
+                              color: primaryColor,
+                              size: 24.0,
+                            ),
+                            const SizedBox(
+                                width: 8.0), // Space between icon and text
+                            Text(
+                              _formatTime(
+                                  timeElapsed), // Format time based on elapsed seconds
+                              style: TextStyle(
+                                color: primaryColor,
+                                fontSize: 20,
+                                fontWeight: FontWeight
+                                    .w600, // Semi-bold for game-like style
+                                letterSpacing:
+                                    1.2, // Slightly spaced out text for clarity
+                                shadows: const [
+                                  Shadow(
+                                    color: Colors
+                                        .black54, // Adds a slight shadow to the text
+                                    blurRadius: 3,
+                                    offset: Offset(1, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
 
                   MediaQuery.of(context).size.height > 700
                       ? const SizedBox(
@@ -1384,142 +1445,176 @@ class _PuzzleScreenState extends State<PuzzleScreen>
               ),
             ),
 
-            Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Consumer<HintsProvider>(
-                        builder: (context, hintsProvider, child) {
-                      return CustomActionButton(
-                        icon: Icons.lightbulb,
-                        onPressed: () async {
-                          // if ((!worlds.last.unlocked && selectedLevel > 14) &&
-                          //     false) {
-                          //   showUnlockWorldsDialog();
-                          // } else {
-                          if (currentTutorialStep == TutorialStep.step5) {
-                            changeTextStep5 = true;
-                          }
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  // if (currentTutorialStep == TutorialStep.step5 ||
+                  //     tutorialActive == false)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Consumer<HintsProvider>(
+                          builder: (context, hintsProvider, child) {
+                        return CustomActionButton(
+                          icon: Icons.lightbulb,
+                          onPressed: () async {
+                            // if ((!worlds.last.unlocked && selectedLevel > 14) &&
+                            //     false) {
+                            //   showUnlockWorldsDialog();
+                            // } else {
+                            // if (currentTutorialStep == TutorialStep.step5) {
+                            //   changeTextStep5 = true;
+                            // }
 
-                          showHintDialog(context, hintsProvider.hints, puzzle);
-                        },
-                        count: hintsProvider.hints, // Number of hints available
-                        gradientColors: const [Colors.amber, Colors.orange],
-                        iconColor: primaryColor,
-                        blink: currentTutorialStep == TutorialStep.step5 &&
-                            !changeTextStep5,
-                        borderColor: Colors.transparent,
-                      );
-                    }),
-                    Consumer<RemsProvider>(
-                        builder: (context, remsProvider, child) {
-                      return CustomActionButton(
-                        icon: Icons.colorize,
-                        onPressed: () {
-                          // if ((!worlds.last.unlocked && selectedLevel > 14) &&
-                          //     false) {
-                          //   showUnlockWorldsDialog();
-                          // } else {
-                          if (!denyClick) {
-                            if (remsProvider.rems > 0) {
-                              setState(() {
-                                if (isRemoveTileMode) {
-                                  isRemoveTileMode = false;
-                                } else {
-                                  isRemoveTileMode = true;
-                                }
-                              });
-                            } else {
-                              showGadgetPopup(
-                                  context,
-                                  AppLocalizations.of(context)?.colorizer ??
-                                      "Colorizer'", () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => const ShopScreen(),
-                                  ),
-                                );
-                              },
-                                  handleWatchAdForRems,
-                                  [
-                                    const Color.fromARGB(255, 176, 2, 124),
-                                    const Color.fromARGB(255, 255, 0, 81)
-                                  ],
-                                  false);
-                              //}
+                            // showHintDialog(context, hintsProvider.hints, puzzle);
+                            if (currentTutorialStep == TutorialStep.step5) {
+                              changeTextStep5 = true;
                             }
+                            if (hintsProvider.hints > 0) {
+                              bool hintUsed = await puzzle.getHint();
+                              if (hintUsed) {
+                                // Your hint used logic here
+                              } else {
+                                /*Future.delayed(Duration(milliseconds: 500), () {
+                        puzzle.clearHint();
+                      });*/
+                              }
+                            } else {
+                              buyHintDialog(
+                                  context, hintsProvider.hints, puzzle, true);
+                              // showGadgetPopup(
+                              //     context,
+                              //     AppLocalizations.of(context)?.hints ??
+                              //         "Hints",
+                              //     handleBuyHint,
+                              //     handleWatchAdForHints,
+                              //     [Colors.amber, Colors.orange],
+                              //     false);
+                            }
+                          },
+                          count:
+                              hintsProvider.hints, // Number of hints available
+                          gradientColors: const [Colors.amber, Colors.orange],
+                          iconColor: primaryColor,
+                          blink: currentTutorialStep == TutorialStep.step5 &&
+                              !changeTextStep5,
+                          borderColor: Colors.transparent,
+                        );
+                      }),
+                      Consumer<RemsProvider>(
+                          builder: (context, remsProvider, child) {
+                        return CustomActionButton(
+                          icon: Icons.colorize,
+                          onPressed: () {
+                            // if ((!worlds.last.unlocked && selectedLevel > 14) &&
+                            //     false) {
+                            //   showUnlockWorldsDialog();
+                            // } else {
+                            if (!denyClick) {
+                              if (remsProvider.rems > 0) {
+                                setState(() {
+                                  if (isRemoveTileMode) {
+                                    isRemoveTileMode = false;
+                                  } else {
+                                    isRemoveTileMode = true;
+                                  }
+                                });
+                              } else {
+                                buyHintDialog(
+                                    context, remsProvider.rems, puzzle, false);
+                                // showGadgetPopup(
+                                //     context,
+                                //     AppLocalizations.of(context)?.colorizer ??
+                                //         "Colorizer'", () {
+                                //   Navigator.of(context).push(
+                                //     MaterialPageRoute(
+                                //       builder: (context) => const ShopScreen(),
+                                //     ),
+                                //   );
+                                // },
+                                //     handleWatchAdForRems,
+                                //     [
+                                //       const Color.fromARGB(255, 176, 2, 124),
+                                //       const Color.fromARGB(255, 255, 0, 81)
+                                //     ],
+                                //     false);
+                                //}
+                              }
+                            }
+                          },
+                          count:
+                              remsProvider.rems, // Number of removes available
+                          gradientColors: const [
+                            Color.fromARGB(255, 176, 2, 124),
+                            Color.fromARGB(255, 255, 0, 81)
+                          ],
+                          iconColor: primaryColor,
+                          blink:
+                              currentTutorialStep == TutorialStep.completed &&
+                                  !isRemoveTileMode,
+                          borderColor: isRemoveTileMode
+                              ? Colors.amber
+                              : Colors.transparent,
+                        );
+                      }),
+                      CustomActionButton(
+                        icon: Icons.undo,
+                        onPressed: () {
+                          if (!denyClick) {
+                            puzzle.undoMove();
+                            setState(() {
+                              showResetGadgetHint = false;
+                            });
                           }
                         },
-                        count: remsProvider.rems, // Number of removes available
+                        count: -1, // Infinite undo available
                         gradientColors: const [
-                          Color.fromARGB(255, 176, 2, 124),
-                          Color.fromARGB(255, 255, 0, 81)
+                          Color.fromARGB(255, 255, 68, 0),
+                          Colors.orangeAccent
+                        ],
+
+                        iconColor: primaryColor,
+                        blink: puzzle.maxMoves == puzzle.moves &&
+                            showResetGadgetHint &&
+                            selectedLevel < 12,
+                      ),
+                      CustomActionButton(
+                        icon: Icons.refresh,
+                        onPressed: () {
+                          if (!denyClick) {
+                            puzzle.grid = puzzle.savedGrid
+                                .map((row) => List<int>.from(row))
+                                .toList();
+                            puzzle.resetMoves();
+                            puzzle.moveWhereError = -1;
+                            puzzle.clicks = puzzle.savedClicks
+                                .map((click) => List<int>.from(click))
+                                .toList();
+                            puzzle.undoStack.clear();
+                            setState(() {
+                              showResetGadgetHint = false;
+                            });
+                          }
+                        },
+                        count: -1, // Infinite refresh available
+                        gradientColors: const [
+                          Color.fromARGB(255, 63, 3, 165),
+                          Colors.deepPurpleAccent
                         ],
                         iconColor: primaryColor,
-                        blink: currentTutorialStep == TutorialStep.completed &&
-                            !isRemoveTileMode,
-                        borderColor: isRemoveTileMode
-                            ? Colors.amber
-                            : Colors.transparent,
-                      );
-                    }),
-                    CustomActionButton(
-                      icon: Icons.undo,
-                      onPressed: () {
-                        if (!denyClick) {
-                          puzzle.undoMove();
-                          setState(() {
-                            showResetGadgetHint = false;
-                          });
-                        }
-                      },
-                      count: -1, // Infinite undo available
-                      gradientColors: const [
-                        Color.fromARGB(255, 255, 68, 0),
-                        Colors.orangeAccent
-                      ],
-
-                      iconColor: primaryColor,
-                      blink: puzzle.maxMoves == puzzle.moves &&
-                          showResetGadgetHint &&
-                          selectedLevel < 12,
-                    ),
-                    CustomActionButton(
-                      icon: Icons.refresh,
-                      onPressed: () {
-                        if (!denyClick) {
-                          puzzle.grid = puzzle.savedGrid
-                              .map((row) => List<int>.from(row))
-                              .toList();
-                          puzzle.resetMoves();
-                          puzzle.moveWhereError = -1;
-                          puzzle.clicks = puzzle.savedClicks
-                              .map((click) => List<int>.from(click))
-                              .toList();
-                          puzzle.undoStack.clear();
-                          setState(() {
-                            showResetGadgetHint = false;
-                          });
-                        }
-                      },
-                      count: -1, // Infinite refresh available
-                      gradientColors: const [
-                        Color.fromARGB(255, 63, 3, 165),
-                        Colors.deepPurpleAccent
-                      ],
-                      iconColor: primaryColor,
-                      blink: puzzle.maxMoves == puzzle.moves &&
-                          showResetGadgetHint &&
-                          selectedLevel < 12,
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: !noAds && _isBannerAdReady ? 55 : 0,
-                )
-              ],
+                        blink: puzzle.maxMoves == puzzle.moves &&
+                            showResetGadgetHint &&
+                            selectedLevel < 12,
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: !noAds && _isBannerAdReady ? 55 : 0,
+                  )
+                ],
+              ),
             ),
 
             if (_isBannerAdReady && !noAds)
@@ -1539,56 +1634,58 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             tutorialActive && currentTutorialStep != TutorialStep.none ||
                     isRemoveTileMode ||
                     resettedGrid
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      AnimatedCustomOverlay(
-                        blink: currentTutorialStep == TutorialStep.step2 &&
-                            tutorialActive &&
-                            !resettedGrid,
-                        message: resettedGrid
-                            ? AppLocalizations.of(context)?.resettedGrid ??
-                                "removeTile"
-                            : isRemoveTileMode
-                                ? AppLocalizations.of(context)?.tRemoveTile ??
-                                    "removeTile"
-                                : showResetGadgetHint
-                                    ? AppLocalizations.of(context)?.tResetGadget ??
-                                        "reset Gadget"
-                                    : currentTutorialStep == TutorialStep.step2 &&
-                                            tutorialActive
-                                        ? AppLocalizations.of(context)?.tStep2 ??
-                                            "Step 2"
-                                        : currentTutorialStep ==
-                                                    TutorialStep.step3 &&
-                                                tutorialActive
-                                            ? AppLocalizations.of(context)
-                                                    ?.tStep3 ??
-                                                "Step 3"
-                                            : currentTutorialStep ==
-                                                        TutorialStep.step4 &&
-                                                    tutorialActive
-                                                ? AppLocalizations.of(context)
-                                                        ?.tStep4 ??
-                                                    "Step 4"
-                                                : currentTutorialStep ==
-                                                            TutorialStep
-                                                                .step5 &&
-                                                        tutorialActive
-                                                    ? (changeTextStep5
-                                                        ? AppLocalizations.of(context)
-                                                                ?.tStep52 ??
-                                                            "Step 52"
-                                                        : AppLocalizations.of(
-                                                                    context)
-                                                                ?.tStep51 ??
-                                                            "Step 51")
-                                                    : AppLocalizations.of(context)
-                                                            ?.tStepCompleted ??
-                                                        "Step Completed",
-                        onClose: () {},
-                      ),
-                    ],
+                ? Padding(
+                    padding: const EdgeInsets.only(bottom: 65.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        AnimatedCustomOverlay(
+                          blink: currentTutorialStep == TutorialStep.step2 &&
+                              tutorialActive &&
+                              !resettedGrid,
+                          message: resettedGrid
+                              ? AppLocalizations.of(context)?.resettedGrid ??
+                                  "removeTile"
+                              : isRemoveTileMode
+                                  ? AppLocalizations.of(context)?.tRemoveTile ??
+                                      "removeTile"
+                                  : showResetGadgetHint
+                                      ? AppLocalizations.of(context)?.tResetGadget ??
+                                          "reset Gadget"
+                                      : currentTutorialStep == TutorialStep.step2 &&
+                                              tutorialActive
+                                          ? AppLocalizations.of(context)?.tStep2 ??
+                                              "Step 2"
+                                          : currentTutorialStep ==
+                                                      TutorialStep.step3 &&
+                                                  tutorialActive
+                                              ? AppLocalizations.of(context)
+                                                      ?.tStep3 ??
+                                                  "Step 3"
+                                              : currentTutorialStep ==
+                                                          TutorialStep.step4 &&
+                                                      tutorialActive
+                                                  ? AppLocalizations.of(context)
+                                                          ?.tStep4 ??
+                                                      "Step 4"
+                                                  : currentTutorialStep ==
+                                                              TutorialStep
+                                                                  .step5 &&
+                                                          tutorialActive
+                                                      ? (changeTextStep5
+                                                          ? AppLocalizations.of(context)
+                                                                  ?.tStep52 ??
+                                                              "Step 52"
+                                                          : AppLocalizations.of(context)
+                                                                  ?.tStep51 ??
+                                                              "Step 51")
+                                                      : AppLocalizations.of(context)
+                                                              ?.tStepCompleted ??
+                                                          "Step Completed",
+                          onClose: () {},
+                        ),
+                      ],
+                    ),
                   )
                 : const SizedBox(),
 
@@ -1652,8 +1749,10 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                               break;
                                             case TutorialStep.step5:
                                               setState(() {
+                                                tutorialActive = false;
                                                 currentTutorialStep =
-                                                    TutorialStep.completed;
+                                                    TutorialStep.none;
+                                                saveTutorial(tutorialActive);
                                               });
                                               break;
 
@@ -1845,8 +1944,10 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                 });
                                               }
                                             },
+                                            puzzle: puzzle,
                                           ),
                                         ),
+
                                         Positioned(
                                             top:
                                                 -75, // 30px above the LevelCompletionScreen
@@ -2013,7 +2114,181 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     );
   }
 
-  void buyHintDialog(BuildContext context, int hintCount, PuzzleModel puzzle) {
+  void buy(Map<String, dynamic> item, PuzzleModel puzzle) async {
+    int type = item['type'] as int;
+
+    if (type == 0) {
+      _rewardedAdHints?.show(
+        onUserEarnedReward: (_, reward) {
+          _showPurchaseDialog(
+              context,
+              '${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.earned ?? "World"}',
+              150,
+              true,
+              type); // Zeige Pop-Up an
+        },
+      );
+      _loadRewardedAdHints();
+    }
+    if (type == 1) {
+      _rewardedAdRems?.show(
+        onUserEarnedReward: (_, reward) {
+          _showPurchaseDialog(
+              context,
+              '${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.earned ?? "World"}',
+              150,
+              true,
+              type); // Zeige Pop-Up an
+        },
+      );
+      _loadRewardedAdRems();
+    }
+    if (type == 2) {
+      _rewardedAdMoves?.show(
+        onUserEarnedReward: (_, reward) {
+          _showPurchaseDialog(
+              context,
+              '${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.earned ?? "World"}',
+              150,
+              true,
+              type); // Zeige Pop-Up an
+        },
+      );
+      _loadRewardedAdMoves();
+    }
+  }
+
+  void _buyProduct(ProductDetails productDetails, PuzzleModel puzzle) async {
+    try {
+      final PurchaseParam purchaseParam =
+          PurchaseParam(productDetails: productDetails);
+      await InAppPurchase.instance
+          .buyNonConsumable(purchaseParam: purchaseParam);
+    } catch (e) {
+      print('Purchase error: $e');
+    }
+  }
+
+  void _restorePurchases(PuzzleModel puzzle) async {
+    if (!(await puzzle.loadHasRestoredPurchases())) {
+      try {
+        await inAppPurchase.restorePurchases();
+      } catch (e) {
+        print('Restoration error: $e');
+      }
+    }
+  }
+
+  // Handle the purchase updates
+// Handle the purchase updates, including restored purchases
+  void _handlePurchaseUpdates(
+      List<PurchaseDetails> purchaseDetailsList, PuzzleModel puzzle) {
+    for (var purchaseDetails in purchaseDetailsList) {
+      if (purchaseDetails.status == PurchaseStatus.restored) {
+        puzzle.saveHasRestoredPurchases(true);
+      }
+      if (purchaseDetails.status == PurchaseStatus.purchased ||
+          purchaseDetails.status == PurchaseStatus.restored) {
+        bool isVerified = _verifyPurchase(purchaseDetails);
+        if (purchaseDetails.status == PurchaseStatus.restored) {}
+        if (isVerified) {
+          _onPurchaseSuccess(purchaseDetails, puzzle);
+        }
+      } else if (purchaseDetails.status == PurchaseStatus.error ||
+          purchaseDetails.status == PurchaseStatus.canceled) {
+        print('Purchase failed: ${purchaseDetails.error}');
+      }
+
+      if (purchaseDetails.pendingCompletePurchase) {
+        InAppPurchase.instance.completePurchase(purchaseDetails);
+      }
+    }
+  }
+
+  void _onPurchaseSuccess(PurchaseDetails purchaseDetails, PuzzleModel puzzle) {
+    // Call your desired function after purchase success
+    print('Purchase successful: ${purchaseDetails.productID}');
+
+    // For example, unlock content or remove ads
+
+    switch (purchaseDetails.productID) {
+      case 'de.tk.colorizer1':
+        addRems(10);
+        _showPurchaseDialog(
+            context,
+            "${AppLocalizations.of(context)?.colorizer ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
+            10,
+            false,
+            1);
+        break;
+      case 'de.tk.hints1':
+        addHints(15);
+        _showPurchaseDialog(
+            context,
+            "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
+            15,
+            false,
+            0);
+        break;
+      case 'de.tk.hints2':
+        addHints(40);
+        _showPurchaseDialog(
+            context,
+            "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
+            40,
+            false,
+            0);
+        break;
+      default:
+        addHints(40);
+        _showPurchaseDialog(
+            context,
+            "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
+            40,
+            false,
+            0);
+        break;
+    }
+
+    // Add more product logic as needed
+  }
+
+  bool _verifyPurchase(PurchaseDetails purchaseDetails) {
+    // Perform your verification logic (server-side verification is recommended)
+    return true; // For demo purposes, assuming all purchases are verified.
+  }
+
+  void buyHintDialog(
+      BuildContext context, int hintCount, PuzzleModel puzzle, bool hints) {
+    String name = hints ? "Hinweise" : "Colorizer";
+    final filteredAndSortedProducts = products
+        .where((p) =>
+            p.id != 'de.tk.noAds' &&
+            p.id != 'de.tk.noAds.bundle' &&
+            !p.id.contains('crystals'))
+        .toList()
+      ..sort((a, b) {
+        // Erstes Kriterium: Kategorie
+        int getCategoryOrder(ProductDetails item) {
+          if (item.id == 'de.tk.colorizer1') return 0; // Colorizer kommt zuerst
+          if (item.id == 'de.tk.hints1' ||
+              item.id == 'de.tk.hints2' ||
+              item.id == 'de.tk.hints3' ||
+              item.id == 'de.tk.hints4') {
+            return 1; // Hints kommen danach
+          }
+          return 2; // Crystals kommen zuletzt
+        }
+
+        final categoryComparison =
+            getCategoryOrder(a).compareTo(getCategoryOrder(b));
+
+        // Wenn beide Produkte in der gleichen Kategorie sind, sortiere nach Preis
+        if (categoryComparison == 0) {
+          return a.rawPrice.compareTo(b.rawPrice);
+        }
+        return categoryComparison;
+      });
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -2030,14 +2305,14 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10.0),
                 ),
-                child: const Column(
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.lightbulb, size: 50, color: Colors.grey),
-                    SizedBox(height: 10),
+                    const Icon(Icons.lightbulb, size: 50, color: Colors.grey),
+                    const SizedBox(height: 10),
                     Text(
-                      'HINWEISE: 0',
-                      style: TextStyle(
+                      '$name erhalten',
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
@@ -2050,19 +2325,49 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                     //     fontSize: 16,
                     //   ),
                     // ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                    SizedBox(height: 10),
-                    OptionButton(text: 'VIDEO SCHAUEN FÜR 1 HINWEIS'),
-                    SizedBox(height: 10),
-                    OptionButton(text: '3 HINWEISE'),
-                    SizedBox(height: 10),
-                    OptionButton(text: '10 HINWEISE', isPopular: true),
-                    SizedBox(height: 10),
-                    OptionButton(text: '30 HINWEISE'),
-                    SizedBox(height: 10),
-                    OptionButton(text: '75 HINWEISE'),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
+                    OptionButton(
+                      product: ProductDetails(
+                        id: "de.tk.watchAd",
+                        title: 'Video schauen\nfür 3 $name',
+                        description: '',
+                        price: "-1",
+                        rawPrice: 0,
+                        currencyCode: '',
+                      ),
+                      onPressed:
+                          hints ? handleWatchAdForHints : handleWatchAdForRems,
+                    ),
+                    const SizedBox(height: 10),
+                    for (var i in filteredAndSortedProducts)
+                      if (i.id
+                          .contains(hints ? "de.tk.hints" : "de.tk.colorizer"))
+                        Column(
+                          children: [
+                            OptionButton(
+                              product: i,
+                              onPressed: () {
+                                _buyProduct(i, puzzle);
+                              },
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                        ),
+                    GestureDetector(
+                      onTap: () {
+                        _restorePurchases(puzzle);
+                      },
+                      child: Text(
+                        "${AppLocalizations.of(context)?.restorePurchases ?? "World"} ",
+                        style: const TextStyle(
+                            color: Colors.black,
+                            decoration: TextDecoration
+                                .underline, // Add this line to underline the text
+                            decorationColor: Colors.black),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -2115,7 +2420,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                       width: MediaQuery.of(context).size.width,
                       height: 200, // Fixed height for the hint display
                       child: HintScrollView(
-                        hintCount: 10,
+                        hintCount: puzzle.maxMoves,
                         puzzle: puzzle,
                       ),
                     ),
@@ -2137,7 +2442,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
               TextButton(
                 onPressed: () {
                   // Action for getting more hints, possibly navigate to shop
-                  buyHintDialog(context, hintCount, puzzle);
+                  buyHintDialog(context, hintCount, puzzle, true);
                 },
                 child: const Text(
                   'MEHR HINWEISE ERHALTEN',
@@ -2292,6 +2597,19 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     );
   }
 
+// Function to show the pause dialog
+  void showPauseMenuDialog(BuildContext context, PuzzleModel puzzle) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevents closing on outside tap
+      builder: (BuildContext context) {
+        return PauseMenuDialog(
+          puzzle: puzzle,
+        );
+      },
+    );
+  }
+
   void showPauseMenu(BuildContext context, PuzzleModel puzzle) {
     showDialog(
       context: context,
@@ -2390,7 +2708,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Container(
             padding: const EdgeInsets.all(25),
-            height: 450, // Adjust height
+            height: 250, // Adjust height
             width: MediaQuery.of(context).size.width * 0.75,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -2407,23 +2725,23 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  gadgetName ==
-                          (AppLocalizations.of(context)?.colorizer ?? "Play")
-                      ? "${AppLocalizations.of(context)?.chooseHowTo ?? "Play"} ${AppLocalizations.of(context)?.colorizer ?? "Play"} ${AppLocalizations.of(context)?.getChoose ?? "Play"}"
-                      : gadgetName ==
-                              (AppLocalizations.of(context)?.hints ?? "Play")
-                          ? "${AppLocalizations.of(context)?.chooseHowTo ?? "Play"} ${AppLocalizations.of(context)?.hints ?? "Play"} ${AppLocalizations.of(context)?.getChoose ?? "Play"}"
-                          : "${AppLocalizations.of(context)?.chooseHowTo ?? "Play"} ${AppLocalizations.of(context)?.moves ?? "Play"} ${AppLocalizations.of(context)?.getChoose ?? "Play"}",
-                  style: TextStyle(
-                    color: primaryColor,
-                    fontFamily: 'Quicksand',
-                    fontWeight: FontWeight.normal,
-                    fontSize: 15,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                // const SizedBox(height: 10),
+                // Text(
+                //   gadgetName ==
+                //           (AppLocalizations.of(context)?.colorizer ?? "Play")
+                //       ? "${AppLocalizations.of(context)?.chooseHowTo ?? "Play"} ${AppLocalizations.of(context)?.colorizer ?? "Play"} ${AppLocalizations.of(context)?.getChoose ?? "Play"}"
+                //       : gadgetName ==
+                //               (AppLocalizations.of(context)?.hints ?? "Play")
+                //           ? "${AppLocalizations.of(context)?.chooseHowTo ?? "Play"} ${AppLocalizations.of(context)?.hints ?? "Play"} ${AppLocalizations.of(context)?.getChoose ?? "Play"}"
+                //           : "${AppLocalizations.of(context)?.chooseHowTo ?? "Play"} ${AppLocalizations.of(context)?.moves ?? "Play"} ${AppLocalizations.of(context)?.getChoose ?? "Play"}",
+                //   style: TextStyle(
+                //     color: primaryColor,
+                //     fontFamily: 'Quicksand',
+                //     fontWeight: FontWeight.normal,
+                //     fontSize: 15,
+                //   ),
+                //   textAlign: TextAlign.center,
+                // ),
                 const SizedBox(height: 15),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -2499,56 +2817,56 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                     const SizedBox(
                       height: 15,
                     ),
-                    Consumer<CoinProvider>(
-                        builder: (context, coinProvider, child) {
-                      return ElevatedButton.icon(
-                        onPressed: () {
-                          /*coinProvider.Crystals >= 200
-                              ? onBuyPressed()
-                              : Navigator.of(context).popAndPushNamed("/shop");*/
-                          if (gadgetName ==
-                              (AppLocalizations.of(context)?.moves ?? "Play")) {
-                            coinProvider.Crystals >= 150
-                                ? onBuyPressed()
-                                : Navigator.of(context)
-                                    .popAndPushNamed("/shop");
-                          } else {
-                            onBuyPressed();
-                          }
-                        },
-                        icon: const Icon(Icons.monetization_on),
-                        label: Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: Text(
-                            gadgetName ==
-                                    (AppLocalizations.of(context)?.colorizer ??
-                                        "Play")
-                                ? (sale
-                                    ? '100 ${AppLocalizations.of(context)?.crystals ?? "Play"} ${AppLocalizations.of(context)?.forName ?? "Play"} 10 ${AppLocalizations.of(context)?.colorizer ?? "Play"}'
-                                    : 'EUR 0,49 ${AppLocalizations.of(context)?.forName ?? "Play"}\n10 ${AppLocalizations.of(context)?.colorizer ?? "Play"}')
-                                : gadgetName ==
-                                        (AppLocalizations.of(context)?.hints ??
-                                            "Play")
-                                    ? (sale
-                                        ? '100 ${AppLocalizations.of(context)?.crystals ?? "Play"} ${AppLocalizations.of(context)?.forName ?? "Play"} 15 ${AppLocalizations.of(context)?.hints ?? "Play"}'
-                                        : 'EUR 0,49 ${AppLocalizations.of(context)?.forName ?? "Play"}\n15 ${AppLocalizations.of(context)?.hints ?? "Play"}')
-                                    : "150 ${AppLocalizations.of(context)?.crystals ?? "Play"}",
-                            style: const TextStyle(
-                              fontFamily: 'Quicksand',
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 20),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          backgroundColor: gradientColors.first,
-                          foregroundColor: primaryColor,
-                        ),
-                      );
-                    }),
+                    // Consumer<CoinProvider>(
+                    //     builder: (context, coinProvider, child) {
+                    //   return ElevatedButton.icon(
+                    //     onPressed: () {
+                    //       /*coinProvider.Crystals >= 200
+                    //           ? onBuyPressed()
+                    //           : Navigator.of(context).popAndPushNamed("/shop");*/
+                    //       if (gadgetName ==
+                    //           (AppLocalizations.of(context)?.moves ?? "Play")) {
+                    //         coinProvider.Crystals >= 150
+                    //             ? onBuyPressed()
+                    //             : Navigator.of(context)
+                    //                 .popAndPushNamed("/shop");
+                    //       } else {
+                    //         onBuyPressed();
+                    //       }
+                    //     },
+                    //     icon: const Icon(Icons.monetization_on),
+                    //     label: Padding(
+                    //       padding: const EdgeInsets.only(left: 8.0),
+                    //       child: Text(
+                    //         gadgetName ==
+                    //                 (AppLocalizations.of(context)?.colorizer ??
+                    //                     "Play")
+                    //             ? (sale
+                    //                 ? '100 ${AppLocalizations.of(context)?.crystals ?? "Play"} ${AppLocalizations.of(context)?.forName ?? "Play"} 10 ${AppLocalizations.of(context)?.colorizer ?? "Play"}'
+                    //                 : 'EUR 0,49 ${AppLocalizations.of(context)?.forName ?? "Play"}\n10 ${AppLocalizations.of(context)?.colorizer ?? "Play"}')
+                    //             : gadgetName ==
+                    //                     (AppLocalizations.of(context)?.hints ??
+                    //                         "Play")
+                    //                 ? (sale
+                    //                     ? '100 ${AppLocalizations.of(context)?.crystals ?? "Play"} ${AppLocalizations.of(context)?.forName ?? "Play"} 15 ${AppLocalizations.of(context)?.hints ?? "Play"}'
+                    //                     : 'EUR 0,49 ${AppLocalizations.of(context)?.forName ?? "Play"}\n15 ${AppLocalizations.of(context)?.hints ?? "Play"}')
+                    //                 : "150 ${AppLocalizations.of(context)?.crystals ?? "Play"}",
+                    //         style: const TextStyle(
+                    //           fontFamily: 'Quicksand',
+                    //           fontSize: 16,
+                    //         ),
+                    //       ),
+                    //     ),
+                    //     style: ElevatedButton.styleFrom(
+                    //       padding: const EdgeInsets.symmetric(
+                    //           vertical: 10, horizontal: 20),
+                    //       shape: RoundedRectangleBorder(
+                    //           borderRadius: BorderRadius.circular(10)),
+                    //       backgroundColor: gradientColors.first,
+                    //       foregroundColor: primaryColor,
+                    //     ),
+                    //   );
+                    // }),
                   ],
                 ),
               ],
@@ -2678,54 +2996,172 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   }
 }
 
-class OptionButton extends StatelessWidget {
-  final String text;
-  final bool isPopular;
-
-  const OptionButton({super.key, required this.text, this.isPopular = false});
+class PauseMenuDialog extends StatelessWidget {
+  PuzzleModel puzzle;
+  PauseMenuDialog({
+    super.key,
+    required this.puzzle,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.centerRight,
-      children: [
-        ElevatedButton(
-          onPressed: () {
-            // Handle button press
-          },
-          style: ElevatedButton.styleFrom(
-            foregroundColor: Colors.black,
-            backgroundColor: Colors.grey[200],
-          ),
-          child: Container(
-            width: double.infinity,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 16),
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      backgroundColor: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Title
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "${worlds[currentWorld - 1].name} $selectedLevel",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Closes the modal view
+                  },
+                ),
+              ],
             ),
-          ),
-        ),
-        if (isPopular)
-          Positioned(
-            right: 10,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Text(
-                'AM BELIEBTESTEN',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
+            const Divider(),
+            const SizedBox(
+              height: 30,
+            ),
+
+            // Continue Button
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.green.shade700,
+                side: BorderSide(color: Colors.green.shade700),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
+              icon: const Icon(Icons.play_arrow, size: 24),
+              label: const Text(
+                'Continue',
+                style: TextStyle(fontSize: 18),
+              ),
             ),
-          ),
-      ],
+            const SizedBox(height: 25),
+
+            // Home Button
+            OutlinedButton.icon(
+              onPressed: () {
+                //! Maybe Problem dispose();
+                Navigator.of(context).pushReplacement(
+                  FadePageRoute(page: const MainMenuScreen()),
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.blue.shade700,
+                side: BorderSide(color: Colors.blue.shade700),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.home, size: 24),
+              label: const Text(
+                'Home',
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
+            const SizedBox(height: 25),
+
+            // Settings Button
+            OutlinedButton.icon(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return SettingsScreen(
+                      puzzle: puzzle,
+                    ); // Hier wird die SettingsScreen als Modal geladen
+                  },
+                  isScrollControlled:
+                      true, // Optional: damit Modal den ganzen Bildschirm ausfüllt
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.orange.shade700,
+                side: BorderSide(color: Colors.orange.shade700),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.settings, size: 24),
+              label: const Text(
+                'Settings',
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class OptionButton extends StatelessWidget {
+  final ProductDetails product;
+  final bool isPopular;
+  final void Function() onPressed;
+
+  const OptionButton({
+    super.key,
+    required this.product,
+    this.isPopular = false,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        foregroundColor: Colors.black,
+        backgroundColor: Colors.grey[200],
+      ),
+      child: Container(
+        width: double.infinity,
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              product.title,
+              style: const TextStyle(fontSize: 16),
+            ),
+            (product.price != "-1")
+                ? Text(
+                    product.price,
+                    style: const TextStyle(fontSize: 16),
+                  )
+                : const Icon(Icons.movie_creation, size: 40),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -2959,13 +3395,20 @@ class LevelCompletionScreen extends StatelessWidget {
   final int selectedLevel;
   final int timeElapsed;
   final Function onContinue;
+  final PuzzleModel puzzle;
 
-  const LevelCompletionScreen({
-    super.key,
-    required this.selectedLevel,
-    required this.timeElapsed,
-    required this.onContinue,
-  });
+  final texts = [
+    "Yeah! Du hast dein erstes Level abgeschlossen.",
+    "So langsam verstehst du es!",
+    "Gar nicht so schwer, oder?",
+  ];
+
+  LevelCompletionScreen(
+      {super.key,
+      required this.selectedLevel,
+      required this.timeElapsed,
+      required this.onContinue,
+      required this.puzzle});
 
   @override
   Widget build(BuildContext context) {
@@ -3009,31 +3452,33 @@ class LevelCompletionScreen extends StatelessWidget {
         //     fontWeight: FontWeight.w500,
         //   ),
         // ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.timer, size: 45),
-            const SizedBox(
-              width: 10,
-            ),
-            Text(
-              _formatTime2(timeElapsed),
-              style: TextStyle(
-                fontSize: 45,
-                color: Colors.blueGrey[800],
-                fontWeight: FontWeight.bold,
+        if (currentTutorialStep == TutorialStep.none)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.timer, size: 45),
+              const SizedBox(
+                width: 10,
               ),
-            ),
-          ],
-        ),
+              Text(
+                _formatTime2(timeElapsed),
+                style: TextStyle(
+                  fontSize: 45,
+                  color: Colors.blueGrey[800],
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+
+        if (currentTutorialStep != TutorialStep.none)
+          const SizedBox(height: 50),
 
         const SizedBox(height: 45),
 
         // Navigation Buttons (Home, Stats, Share)
-        _buildNavigationRow(
-          context,
-          lastLevel,
-        ),
+        if (currentTutorialStep == TutorialStep.none)
+          _buildNavigationRow(context, lastLevel, puzzle),
         const SizedBox(
           height: 3,
         ),
@@ -3066,8 +3511,31 @@ class LevelCompletionScreen extends StatelessWidget {
     );
   }
 
-  // Reusable widget for navigation buttons
-  Widget _buildNavigationRow(BuildContext context, bool lastLevel) {
+  String _formatTime2(int timeElapsed) {
+    final minutes = timeElapsed ~/ 60;
+    final seconds = timeElapsed % 60;
+
+    return "$minutes:${seconds < 10 ? 0 : ""}$seconds";
+  }
+
+  bool displayIndicator(PuzzleModel puzzle) {
+    for (int i = 0; i < worlds.length + 1; i++) {
+      print(puzzle.getNeededCurrencyAmount(i - 1));
+      print(puzzle.getCurrencyAmount());
+      print(puzzle.getMaxLevelForWorld(i));
+      var unlocked = puzzle.getMaxLevelForWorld(i) != 0;
+      if (puzzle.getCurrencyAmount() >= puzzle.getNeededCurrencyAmount(i - 1) &&
+          !unlocked) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // Updated _buildNavigationRow method to pass the showIndicator parameter
+  Widget _buildNavigationRow(
+      BuildContext context, bool lastLevel, PuzzleModel puzzle) {
     return Row(
       children: [
         if (!lastLevel)
@@ -3081,6 +3549,8 @@ class LevelCompletionScreen extends StatelessWidget {
                 FadePageRoute(page: const MainMenuScreen()),
               );
             },
+            showIndicator: displayIndicator(
+                puzzle), // Set to true when there’s something to claim
           ),
         const SizedBox(
           width: 3,
@@ -3093,6 +3563,7 @@ class LevelCompletionScreen extends StatelessWidget {
           onTap: () {
             // Handle stats action
           },
+          showIndicator: false, // No indicator for stats button
         ),
         const SizedBox(
           width: 3,
@@ -3105,24 +3576,19 @@ class LevelCompletionScreen extends StatelessWidget {
           onTap: () {
             // Handle share action
           },
+          showIndicator: false, // No indicator for share button
         ),
       ],
     );
   }
 
-  String _formatTime2(int timeElapsed) {
-    final minutes = timeElapsed ~/ 60;
-    final seconds = timeElapsed % 60;
-
-    return "$minutes:${seconds < 10 ? 0 : ""}$seconds";
-  }
-
-  // Reusable widget for each individual button
+// Updated _buildNavButton method to include a larger, blinking indicator
   Widget _buildNavButton(BuildContext context,
       {required Color color,
       required IconData icon,
       required Function onTap,
-      required bool lastLevel}) {
+      required bool lastLevel,
+      required bool showIndicator}) {
     return Expanded(
       child: GestureDetector(
         onTap: () => onTap(),
@@ -3132,13 +3598,82 @@ class LevelCompletionScreen extends StatelessWidget {
             color: color,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
           ),
-          child: Icon(
-            icon,
-            size: 35,
-            color: primaryColor,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 35,
+                color: primaryColor,
+              ),
+              if (showIndicator)
+                Positioned(
+                  top: 3,
+                  right: 15,
+                  child: _BlinkingIndicator(),
+                ),
+            ],
           ),
         ),
       ),
+    );
+  }
+}
+
+// Create a separate widget for the blinking indicator
+class _BlinkingIndicator extends StatefulWidget {
+  @override
+  __BlinkingIndicatorState createState() => __BlinkingIndicatorState();
+}
+
+class __BlinkingIndicatorState extends State<_BlinkingIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    // Map the animation values from 0.6 to 1.0
+    _opacityAnimation =
+        Tween<double>(begin: 0.8, end: 1.0).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _opacityAnimation,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _opacityAnimation.value,
+          child: Container(
+            padding: const EdgeInsets.all(5),
+            decoration: const BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
+            ),
+            child: const Text(
+              '!',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -3152,40 +3687,40 @@ class AnimatedText extends StatefulWidget {
 
 class _AnimatedTextState extends State<AnimatedText>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<Color?> _colorAnimation;
-  late Animation<double> _sizeAnimation;
+  late AnimationController controller;
+  late Animation<Color?> colorAnimation;
+  late Animation<double> sizeAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
+    controller = AnimationController(
       duration: const Duration(milliseconds: 700),
       vsync: this,
     )..repeat(reverse: true);
 
-    _colorAnimation = ColorTween(
+    colorAnimation = ColorTween(
       begin: Colors.indigo[300],
       end: Colors.indigo[500],
-    ).animate(_controller);
+    ).animate(controller);
 
-    _sizeAnimation = Tween<double>(
+    sizeAnimation = Tween<double>(
       begin: 25,
       end: 28,
-    ).animate(_controller);
+    ).animate(controller);
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _controller,
+      animation: controller,
       builder: (context, child) {
         return Text(
           AppLocalizations.of(context)?.tapToClaim ?? "Play",
           style: TextStyle(
-            color: animations ? _colorAnimation.value : Colors.indigo,
-            fontSize: animations ? _sizeAnimation.value : 26,
+            color: animations ? colorAnimation.value : Colors.indigo,
+            fontSize: animations ? sizeAnimation.value : 26,
             fontWeight: FontWeight.bold,
             fontFamily: 'Quicksand',
           ),
@@ -3196,7 +3731,7 @@ class _AnimatedTextState extends State<AnimatedText>
 
   @override
   void dispose() {
-    _controller.dispose();
+    controller.dispose();
     super.dispose();
   }
 }
@@ -3239,35 +3774,35 @@ class CoinAnimation extends StatefulWidget {
 
 class _CoinAnimationState extends State<CoinAnimation>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _positionAnimation;
-  late List<Widget> _Crystals;
+  late AnimationController controller;
+  late Animation<double> scaleAnimation;
+  late Animation<double> positionAnimation;
+  late List<Widget> Crystals;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    controller = AnimationController(
       duration: const Duration(
           milliseconds: 1500), // Duration for the entire animation
       vsync: this,
     )..forward();
 
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.2).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+    scaleAnimation = Tween<double>(begin: 1.0, end: 0.2).animate(
+      CurvedAnimation(parent: controller, curve: Curves.easeIn),
     );
 
-    _positionAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    positionAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: controller, curve: Curves.easeOut),
     );
 
-    _Crystals = List.generate(
+    Crystals = List.generate(
       widget.numberOfCrystals,
       (index) => AnimatedBuilder(
-        animation: _controller,
+        animation: controller,
         builder: (context, child) {
-          final double scale = _scaleAnimation.value;
-          final double progress = _positionAnimation.value;
+          final double scale = scaleAnimation.value;
+          final double progress = positionAnimation.value;
           final double dx =
               widget.start.dx + progress * (widget.end.dx - widget.start.dx);
           final double dy =
@@ -3294,14 +3829,14 @@ class _CoinAnimationState extends State<CoinAnimation>
   Widget build(BuildContext context) {
     return Positioned.fill(
       child: Stack(
-        children: _Crystals,
+        children: Crystals,
       ),
     );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    controller.dispose();
     super.dispose();
   }
 }
@@ -3316,7 +3851,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   // Function to open a URL
-  void _launchPrivacyPolicy(BuildContext context) async {
+  void launchPrivacyPolicy(BuildContext context) async {
     final Uri uri = Uri.parse('https://694764.8b.io/privacy.html');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
@@ -3440,7 +3975,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           const TextStyle(color: Colors.indigo, fontSize: 15),
                     ),
                   ),
-                  onTap: () => _launchPrivacyPolicy(context), // Open URL on tap
+                  onTap: () => launchPrivacyPolicy(context), // Open URL on tap
                 ),
               ],
             ),

@@ -151,7 +151,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                             color: Colors.amber,
                           )
                         : type == 1
-                            ? const Icon(Icons.colorize,
+                            ? const Icon(Icons.double_arrow,
                                 size: 50, color: Colors.redAccent)
                             : const Icon(Icons.bolt,
                                 size: 50, color: Colors.indigo),
@@ -339,10 +339,10 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
     //_startTime = DateTime.now();
 
-    if (timer == null || !timer!.isActive) {
-      timer =
-          Timer.periodic(const Duration(seconds: 1), (Timer t) => _onTick());
-    }
+    // if (timer == null || !timer!.isActive) {
+    //   timer =
+    //       Timer.periodic(const Duration(seconds: 1), (Timer t) => _onTick());
+    // }
 
     if (((selectedLevel > 40 && levelsSinceAd > 4) || levelsSinceAd > 7) &&
         worlds[0].maxLevel > 10 &&
@@ -697,8 +697,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       onUserEarnedReward: (_, reward) {
         _showPurchaseDialog(
             context,
-            "${AppLocalizations.of(context)?.colorizer ?? "Colorizer'"} ${AppLocalizations.of(context)?.earned ?? "earned'"}",
-            2,
+            "Skip Level ${AppLocalizations.of(context)?.earned ?? "earned'"}",
+            1,
             true,
             1);
       },
@@ -725,7 +725,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     if (_subscription != null) {
       _subscription.cancel();
     }
-    timer?.cancel(); // Timer stoppen, wenn der Screen verlassen wird
+    //timer?.cancel(); // Timer stoppen, wenn der Screen verlassen wird
     _confettiController.dispose();
     _animationController.dispose();
     _bannerAd.dispose();
@@ -760,6 +760,133 @@ class _PuzzleScreenState extends State<PuzzleScreen>
         ),
       ),
     );
+  }
+
+  void showErrorDialog(BuildContext context, PuzzleModel puzzle) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15.0),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.red),
+              SizedBox(width: 8),
+              Text("Action Required"),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "You made an error! To proceed, please reset the grid before attempting to use a hint.",
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                ),
+                child: GestureDetector(
+                  onTap: () {
+                    puzzle.grid = puzzle.savedGrid
+                        .map((row) => List<int>.from(row))
+                        .toList();
+                    puzzle.resetMoves();
+                    puzzle.moveWhereError = -1;
+                    puzzle.clicks = puzzle.savedClicks
+                        .map((click) => List<int>.from(click))
+                        .toList();
+                    puzzle.undoStack.clear();
+                    setState(() {
+                      showResetGadgetHint = false;
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text(
+                    "Reset Grid",
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void showEndScreen(PuzzleModel puzzle) {
+    //timer?.cancel();
+    puzzle.countClicks = 0;
+    denyClick = true;
+    levelsSinceAd++;
+
+    if (worlds[currentWorld - 1].maxLevel > selectedLevel ||
+        (worlds[currentWorld - 1].maxLevel == -2)) {
+      getsLightBulb = -1;
+    } else {
+      setState(() {
+        getsLightBulb = ((_random.nextInt(7)) +
+                    (calculateDifficulty(puzzle.maxMoves, puzzle.size) * 4.4))
+                .floor() -
+            6;
+      });
+    }
+
+    if (animations) {
+      _confettiController.play();
+    }
+
+    if (vibration) {
+      HapticFeedback.heavyImpact();
+    }
+    if (animations) {
+      _animationController.forward().then((_) {
+        Future.delayed(Duration(milliseconds: tutorialActive ? 600 : 300), () {
+          _animationController.reverse().then((_) {
+            Future.delayed(Duration(milliseconds: tutorialActive ? 1000 : 500),
+                () {
+              setState(() {
+                if (selectedLevel >= worlds[currentWorld - 1].anzahlLevels) {
+                  selectedLevel = -2;
+                  worlds[currentWorld - 1].maxLevel = -2;
+                  puzzle.updateWorldLevel(currentWorld, -2);
+                } else {
+                  selectedLevel += 1;
+                  puzzle.updateWorldLevel(currentWorld, selectedLevel);
+                }
+
+                showBanner = true;
+              });
+              if (_interstitialAd != null) {
+                _interstitialAd?.show();
+              }
+            });
+          });
+        });
+      });
+    } else {
+      Future.delayed(Duration(milliseconds: tutorialActive ? 900 : 600), () {
+        setState(() {
+          showBanner = true;
+        });
+        if (_interstitialAd != null) {
+          _interstitialAd?.show();
+        }
+      });
+    }
   }
 
   @override
@@ -1128,7 +1255,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                 movesLeft: (puzzle.maxMoves -
                                     puzzle.moves), // No moves left needed here
                                 iconPath: '', // No icon needed
-                                backgroundColor: Colors.grey[100]!,
+                                backgroundColor:
+                                    puzzle.getColor(puzzle.targetColorNumber),
                                 textColor: Colors.black,
                                 isLarge: 0, // Increase size
                                 blink:
@@ -1154,7 +1282,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                       ],
                     ),
                   ),
-                  if (currentWorld != 1)
+                  if (currentWorld != 1 && false)
                     Center(
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -1240,7 +1368,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                         return ScaleTransition(
                           scale: _animation,
                           child: GestureDetector(
-                            onTap: () {
+                            onTap: () async {
                               // if ((!worlds.last.unlocked &&
                               //         selectedLevel > 14) &&
                               //     false) {
@@ -1265,7 +1393,11 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                   if (puzzle.maxMoves < 3) {
                                     if (puzzle.countClicks >
                                         3 * puzzle.maxMoves) {
-                                      puzzle.getHint();
+                                      var resetFirst = await puzzle.getHint();
+                                      if (resetFirst) {
+                                        //showErrorDialog(context);
+                                      }
+
                                       puzzle.countClicks = 0;
                                     }
                                   } else {
@@ -1288,89 +1420,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                 }
 
                                 if (puzzle.isGridFilledWithTargetColor()) {
-                                  timer?.cancel();
-                                  puzzle.countClicks = 0;
-                                  denyClick = true;
-                                  levelsSinceAd++;
-
-                                  if (worlds[currentWorld - 1].maxLevel >
-                                          selectedLevel ||
-                                      (worlds[currentWorld - 1].maxLevel ==
-                                          -2)) {
-                                    getsLightBulb = -1;
-                                  } else {
-                                    setState(() {
-                                      getsLightBulb = ((_random.nextInt(7)) +
-                                                  (calculateDifficulty(
-                                                          puzzle.maxMoves,
-                                                          puzzle.size) *
-                                                      4.4))
-                                              .floor() -
-                                          6;
-                                    });
-                                  }
-
-                                  if (animations) {
-                                    _confettiController.play();
-                                  }
-
-                                  if (vibration) {
-                                    HapticFeedback.heavyImpact();
-                                  }
-                                  if (animations) {
-                                    _animationController.forward().then((_) {
-                                      Future.delayed(
-                                          Duration(
-                                              milliseconds: tutorialActive
-                                                  ? 600
-                                                  : 300), () {
-                                        _animationController
-                                            .reverse()
-                                            .then((_) {
-                                          Future.delayed(
-                                              Duration(
-                                                  milliseconds: tutorialActive
-                                                      ? 1000
-                                                      : 500), () {
-                                            setState(() {
-                                              if (selectedLevel >=
-                                                  worlds[currentWorld - 1]
-                                                      .anzahlLevels) {
-                                                selectedLevel = -2;
-                                                worlds[currentWorld - 1]
-                                                    .maxLevel = -2;
-                                                puzzle.updateWorldLevel(
-                                                    currentWorld, -2);
-                                              } else {
-                                                selectedLevel += 1;
-                                                puzzle.updateWorldLevel(
-                                                    currentWorld,
-                                                    selectedLevel);
-                                              }
-
-                                              showBanner = true;
-                                            });
-                                            if (_interstitialAd != null) {
-                                              _interstitialAd?.show();
-                                            }
-                                          });
-                                        });
-                                      });
-                                    });
-                                  } else {
-                                    Future.delayed(
-                                        Duration(
-                                            milliseconds: tutorialActive
-                                                ? 900
-                                                : 600), () {
-                                      setState(() {
-                                        showBanner = true;
-                                      });
-                                      if (_interstitialAd != null) {
-                                        _interstitialAd?.show();
-                                      }
-                                    });
-                                  }
+                                  showEndScreen(puzzle);
                                 } else {
                                   if (vibration) {
                                     HapticFeedback.selectionClick();
@@ -1475,6 +1525,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                             if (hintsProvider.hints > 0) {
                               bool hintUsed = await puzzle.getHint();
                               if (hintUsed) {
+                                showErrorDialog(context, puzzle);
                                 // Your hint used logic here
                               } else {
                                 /*Future.delayed(Duration(milliseconds: 500), () {
@@ -1506,42 +1557,46 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                       Consumer<RemsProvider>(
                           builder: (context, remsProvider, child) {
                         return CustomActionButton(
-                          icon: Icons.colorize,
+                          icon: Icons.double_arrow,
                           onPressed: () {
                             // if ((!worlds.last.unlocked && selectedLevel > 14) &&
                             //     false) {
                             //   showUnlockWorldsDialog();
                             // } else {
-                            if (!denyClick) {
-                              if (remsProvider.rems > 0) {
-                                setState(() {
-                                  if (isRemoveTileMode) {
-                                    isRemoveTileMode = false;
-                                  } else {
-                                    isRemoveTileMode = true;
-                                  }
-                                });
-                              } else {
-                                buyHintDialog(
-                                    context, remsProvider.rems, puzzle, false);
-                                // showGadgetPopup(
-                                //     context,
-                                //     AppLocalizations.of(context)?.colorizer ??
-                                //         "Colorizer'", () {
-                                //   Navigator.of(context).push(
-                                //     MaterialPageRoute(
-                                //       builder: (context) => const ShopScreen(),
-                                //     ),
-                                //   );
-                                // },
-                                //     handleWatchAdForRems,
-                                //     [
-                                //       const Color.fromARGB(255, 176, 2, 124),
-                                //       const Color.fromARGB(255, 255, 0, 81)
-                                //     ],
-                                //     false);
-                                //}
-                              }
+
+                            if (remsProvider.rems > 0) {
+                              remsProvider.subtractRems(1);
+                              puzzle.fillWholeGrid();
+                              showEndScreen(puzzle);
+                              TODO:
+                              "Fill Grid with targetColor. Show Level Completion Screen";
+                              // setState(() {
+                              //   if (isRemoveTileMode) {
+                              //     isRemoveTileMode = false;
+                              //   } else {
+                              //     isRemoveTileMode = true;
+                              //   }
+                              // });
+                            } else {
+                              buyHintDialog(
+                                  context, remsProvider.rems, puzzle, false);
+                              // showGadgetPopup(
+                              //     context,
+                              //     AppLocalizations.of(context)?.colorizer ??
+                              //         "Colorizer'", () {
+                              //   Navigator.of(context).push(
+                              //     MaterialPageRoute(
+                              //       builder: (context) => const ShopScreen(),
+                              //     ),
+                              //   );
+                              // },
+                              //     handleWatchAdForRems,
+                              //     [
+                              //       const Color.fromARGB(255, 176, 2, 124),
+                              //       const Color.fromARGB(255, 255, 0, 81)
+                              //     ],
+                              //     false);
+                              //}
                             }
                           },
                           count:
@@ -1635,7 +1690,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                     isRemoveTileMode ||
                     resettedGrid
                 ? Padding(
-                    padding: const EdgeInsets.only(bottom: 65.0),
+                    padding: const EdgeInsets.only(bottom: 90.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -1827,7 +1882,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                           padding: const EdgeInsets.symmetric(
                                               vertical: 5, horizontal: 5),
                                           child: LevelCompletionScreen(
-                                            selectedLevel: selectedLevel,
+                                            // selectedLevel: selectedLevel,
                                             timeElapsed: timeElapsed,
                                             onContinue: () {
                                               if (!animationStarted) {
@@ -1884,9 +1939,15 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                           break;
                                                         case TutorialStep.step5:
                                                           setState(() {
-                                                            currentTutorialStep =
-                                                                TutorialStep
-                                                                    .completed;
+                                                            setState(() {
+                                                              tutorialActive =
+                                                                  false;
+                                                              currentTutorialStep =
+                                                                  TutorialStep
+                                                                      .none;
+                                                              saveTutorial(
+                                                                  tutorialActive);
+                                                            });
                                                           });
                                                           break;
                                                         case TutorialStep
@@ -2216,7 +2277,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
         addRems(10);
         _showPurchaseDialog(
             context,
-            "${AppLocalizations.of(context)?.colorizer ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
+            "Skip Level ${AppLocalizations.of(context)?.purchased ?? "World"}",
             10,
             false,
             1);
@@ -2260,7 +2321,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
   void buyHintDialog(
       BuildContext context, int hintCount, PuzzleModel puzzle, bool hints) {
-    String name = hints ? "Hinweise" : "Colorizer";
+    String name = hints ? "Hinweise" : "Skip Level";
     final filteredAndSortedProducts = products
         .where((p) =>
             p.id != 'de.tk.noAds' &&
@@ -2331,7 +2392,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                     OptionButton(
                       product: ProductDetails(
                         id: "de.tk.watchAd",
-                        title: 'Video schauen\nfür 3 $name',
+                        title: 'Video schauen\nfür ${hints ? "3" : 1} $name',
                         description: '',
                         price: "-1",
                         rawPrice: 0,
@@ -2747,10 +2808,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      gadgetName ==
-                              (AppLocalizations.of(context)?.colorizer ??
-                                  "Play")
-                          ? Icons.colorize
+                      gadgetName == "Skip Level"
+                          ? Icons.double_arrow
                           : gadgetName ==
                                   (AppLocalizations.of(context)?.hints ??
                                       "Play")
@@ -2789,10 +2848,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                       label: Padding(
                         padding: const EdgeInsets.only(left: 8.0),
                         child: Text(
-                          gadgetName ==
-                                  (AppLocalizations.of(context)?.colorizer ??
-                                      "Play")
-                              ? '${AppLocalizations.of(context)?.watchAds ?? "Play"} ${AppLocalizations.of(context)?.forName ?? "Play"} 2 ${AppLocalizations.of(context)?.colorizer ?? "Play"}'
+                          gadgetName == "Skip Level"
+                              ? '${AppLocalizations.of(context)?.watchAds ?? "Play"} ${AppLocalizations.of(context)?.forName ?? "Play"} a Skip Level'
                               : gadgetName ==
                                       (AppLocalizations.of(context)?.hints ??
                                           "Play")
@@ -3392,7 +3449,7 @@ class _HintScrollViewState extends State<HintScrollView> {
 }
 
 class LevelCompletionScreen extends StatelessWidget {
-  final int selectedLevel;
+  // int selectedLevel;
   final int timeElapsed;
   final Function onContinue;
   final PuzzleModel puzzle;
@@ -3405,7 +3462,7 @@ class LevelCompletionScreen extends StatelessWidget {
 
   LevelCompletionScreen(
       {super.key,
-      required this.selectedLevel,
+      // required this.selectedLevel,
       required this.timeElapsed,
       required this.onContinue,
       required this.puzzle});
@@ -3420,7 +3477,7 @@ class LevelCompletionScreen extends StatelessWidget {
 
         // Title Text
         Text(
-          "Level abgeschlossen!",
+          "Level ${selectedLevel - 1} abgeschlossen",
           style: TextStyle(
             color: Colors.blueGrey[800],
             fontSize: 22,
@@ -3430,18 +3487,59 @@ class LevelCompletionScreen extends StatelessWidget {
         ),
 
         //const Divider(),
-        const SizedBox(height: 20),
+        if (currentTutorialStep != TutorialStep.step2)
+          const SizedBox(height: 20),
 
         // Feedback Text
-        Text(
-          "Prächtig!",
-          style: TextStyle(
-            color: Colors.blueGrey[800],
-            fontSize: 18,
+        if (currentTutorialStep != TutorialStep.step2)
+          Text(
+            "Toll gemacht!",
+            style: TextStyle(
+              color: Colors.blueGrey[800],
+              fontSize: 18,
+            ),
           ),
-        ),
 
         const SizedBox(height: 35),
+        if (currentTutorialStep == TutorialStep.step2)
+          Container(
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              color: Colors.indigo,
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(5.0),
+              child: Text(
+                textAlign: TextAlign.center,
+                "Du hast einen Stern erhalten! Sammle 10 Sterne, um zur nächsten Stufe aufzusteigen.",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+          ),
+
+        if (displayIndicator(puzzle))
+          Container(
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              color: Colors.indigo,
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(5.0),
+              child: Text(
+                textAlign: TextAlign.center,
+                "Du hast genügend Sterne gesammelt, um zur nächsten Stufe aufzusteigen. Gehe jetzt zurück zum Hauptmenü.",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+          ),
 
         // Time Display
         // Text(
@@ -3452,7 +3550,7 @@ class LevelCompletionScreen extends StatelessWidget {
         //     fontWeight: FontWeight.w500,
         //   ),
         // ),
-        if (currentTutorialStep == TutorialStep.none)
+        if (currentTutorialStep == TutorialStep.none && false)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -3492,19 +3590,29 @@ class LevelCompletionScreen extends StatelessWidget {
                   )
                 : onContinue();
           },
-          child: Container(
-            height: 80,
-            width: MediaQuery.of(context).size.width,
-            decoration: BoxDecoration(
-              color: lastLevel ? Colors.blue : Colors.teal,
-              borderRadius:
-                  const BorderRadius.vertical(bottom: Radius.circular(15)),
-            ),
-            child: Icon(
-              lastLevel ? Icons.home : Icons.skip_next,
-              size: 60,
-              color: primaryColor,
-            ),
+          child: Stack(
+            children: [
+              Container(
+                height: 80,
+                width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                  color: lastLevel ? Colors.blue : Colors.teal,
+                  borderRadius:
+                      const BorderRadius.vertical(bottom: Radius.circular(15)),
+                ),
+                child: Icon(
+                  lastLevel ? Icons.home : Icons.skip_next,
+                  size: 60,
+                  color: primaryColor,
+                ),
+              ),
+              if (displayIndicator(puzzle) && lastLevel)
+                Positioned(
+                  top: 3,
+                  right: 15,
+                  child: _BlinkingIndicator(),
+                ),
+            ],
           ),
         ),
       ],
@@ -3533,6 +3641,30 @@ class LevelCompletionScreen extends StatelessWidget {
     return false;
   }
 
+  void playGame(PuzzleModel puzzle, BuildContext context) async {
+    int size = currentWorld == 1
+        ? await puzzle.readSize(selectedLevel)
+        : puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2;
+    int level = currentWorld == 1
+        ? await puzzle.readMoves(selectedLevel)
+        : puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2;
+    Navigator.of(context).pushReplacement(
+      FadePageRoute(
+        page: ChangeNotifierProvider(
+            create: (_) => PuzzleModel(
+                  size: size,
+                  level: level,
+                  colorMapping: {
+                    1: worlds[currentWorld].colors[0],
+                    2: worlds[currentWorld].colors[1],
+                    3: worlds[currentWorld].colors[2],
+                  },
+                ),
+            child: const PuzzleScreen()),
+      ),
+    );
+  }
+
   // Updated _buildNavigationRow method to pass the showIndicator parameter
   Widget _buildNavigationRow(
       BuildContext context, bool lastLevel, PuzzleModel puzzle) {
@@ -3552,6 +3684,19 @@ class LevelCompletionScreen extends StatelessWidget {
             showIndicator: displayIndicator(
                 puzzle), // Set to true when there’s something to claim
           ),
+        // const SizedBox(
+        //   width: 3,
+        // ),
+        // _buildNavButton(
+        //   context,
+        //   lastLevel: lastLevel,
+        //   color: Colors.deepPurple,
+        //   icon: Icons.bar_chart,
+        //   onTap: () {
+        //     // Handle stats action
+        //   },
+        //   showIndicator: false, // No indicator for stats button
+        // ),
         const SizedBox(
           width: 3,
         ),
@@ -3559,21 +3704,10 @@ class LevelCompletionScreen extends StatelessWidget {
           context,
           lastLevel: lastLevel,
           color: Colors.deepPurple,
-          icon: Icons.bar_chart,
+          icon: Icons.replay,
           onTap: () {
-            // Handle stats action
-          },
-          showIndicator: false, // No indicator for stats button
-        ),
-        const SizedBox(
-          width: 3,
-        ),
-        _buildNavButton(
-          context,
-          lastLevel: lastLevel,
-          color: Colors.red,
-          icon: Icons.share,
-          onTap: () {
+            selectedLevel -= 1;
+            playGame(puzzle, context);
             // Handle share action
           },
           showIndicator: false, // No indicator for share button
@@ -3635,13 +3769,13 @@ class __BlinkingIndicatorState extends State<_BlinkingIndicator>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 1000),
       vsync: this,
     )..repeat(reverse: true);
 
     // Map the animation values from 0.6 to 1.0
     _opacityAnimation =
-        Tween<double>(begin: 0.8, end: 1.0).animate(_controller);
+        Tween<double>(begin: 0.7, end: 1.0).animate(_controller);
   }
 
   @override

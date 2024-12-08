@@ -254,6 +254,29 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                   height: 100,
                                 ),
                                 _buildGrid(),
+                                if (displayIndicator(puzzle))
+                                  Padding(
+                                    padding: const EdgeInsets.all(20.0),
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(10)),
+                                        color: Colors.indigo,
+                                      ),
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(5.0),
+                                        child: Text(
+                                          textAlign: TextAlign.center,
+                                          "Du hast genügend Sterne gesammelt, um zur nächsten Stufe aufzusteigen. Klicke dazu auf das Ausrufezeichen",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 _buildActionButton(context, isWorldUnlocked,
                                     coinProvider, puzzle, () {
                                   setState(() {
@@ -1364,9 +1387,12 @@ class WorldItem extends StatelessWidget {
                     if (puzzle.getCurrencyAmount() >=
                             puzzle.getNeededCurrencyAmount(worldID - 1) &&
                         !unlocked)
-                      Text(
-                        "Du hast genügend\nSterne gesammelt,\num zu diesem Rätsel\nvoranzuschreiten.",
-                        style: TextStyle(color: primaryColor),
+                      Center(
+                        child: Text(
+                          textAlign: TextAlign.center,
+                          "Du hast genügend Sterne\n gesammelt. Klicke hier, um\nzur nächsten Stufe\nvoranzuschreiten.",
+                          style: TextStyle(color: primaryColor),
+                        ),
                       )
                   ],
                 ),

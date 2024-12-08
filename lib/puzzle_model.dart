@@ -901,33 +901,35 @@ class PuzzleModel with ChangeNotifier {
     bool resetOccurred = false;
 
     if (moveWhereError != -1) {
-      _moves = moveWhereError;
-      grid = _lastCorrectGrid
-          .map((row) => List<int>.from(row))
-          .toList(); // Deep copy grid
-      moveWhereError = -1;
+      // _moves = moveWhereError;
+      // grid = _lastCorrectGrid
+      //     .map((row) => List<int>.from(row))
+      //     .toList(); // Deep copy grid
+      // moveWhereError = -1;
+      // resetOccurred = true;
+      // undoStack.clear();
       resetOccurred = true;
-      undoStack.clear();
-    }
-    if (moves < maxMoves) {
-      if (!gotHint) {
-        if (await HintsManager.loadHints() > 0 && clicks.isNotEmpty) {
-          gotHint = true;
-          HintsManager.subtractHints(1);
-          var hint = clicks[0];
-          setHint(hint[0], hint[1]); // Set hint coordinates
-        } else {
-          if (await CoinManager.loadCrystals() >= 50) {
+    } else {
+      if (moves < maxMoves) {
+        if (!gotHint) {
+          if (await HintsManager.loadHints() > 0 && clicks.isNotEmpty) {
             gotHint = true;
-            subtractCrystals(50);
-
+            HintsManager.subtractHints(1);
             var hint = clicks[0];
             setHint(hint[0], hint[1]); // Set hint coordinates
+          } else {
+            if (await CoinManager.loadCrystals() >= 50) {
+              gotHint = true;
+              subtractCrystals(50);
+
+              var hint = clicks[0];
+              setHint(hint[0], hint[1]); // Set hint coordinates
+            }
           }
+        } else {
+          var hint = clicks[0];
+          setHint(hint[0], hint[1]); // Set hint coordinates
         }
-      } else {
-        var hint = clicks[0];
-        setHint(hint[0], hint[1]); // Set hint coordinates
       }
     }
 
@@ -1001,6 +1003,15 @@ class PuzzleModel with ChangeNotifier {
 
     _changeColor(x, y, newColorNumber, reversed, oneTile);
     clearHint(); // Clear hint after clicking
+    notifyListeners();
+  }
+
+  void fillWholeGrid() {
+    for (int i = 0; i < size; i++) {
+      for (int j = 0; j < size; j++) {
+        _grid[i][j] = targetColorNumber;
+      }
+    }
     notifyListeners();
   }
 

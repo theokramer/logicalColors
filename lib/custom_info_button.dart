@@ -160,31 +160,33 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
                   ),
                   if (widget.targetColor != -1) ...[
                     // Target Color
-                    Text(
-                      AppLocalizations.of(context)?.fill ?? "Play",
-                      style: TextStyle(
-                          color: widget.textColor.withOpacity(0.8),
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(width: 10),
-                    Container(
-                      width: iconSize * 0.8,
-                      height: iconSize * 0.8,
-                      decoration: BoxDecoration(
-                        color: puzzle.getColor(widget
-                            .targetColor), // Function to get color from name
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                          child: Text(
-                        "${widget.targetColor}",
+                    Center(
+                      child: Text(
+                        "Zielfarbe (${widget.targetColor})",
                         style: TextStyle(
-                            fontSize: widget.isLarge == 0 ? 15 : 10,
-                            color: primaryColor,
+                            color: Colors.white,
+                            fontSize: fontSize,
                             fontWeight: FontWeight.bold),
-                      )),
+                      ),
                     ),
+                    // const SizedBox(width: 10),
+                    // Container(
+                    //   width: iconSize * 0.8,
+                    //   height: iconSize * 0.8,
+                    //   decoration: BoxDecoration(
+                    //     color: puzzle.getColor(widget
+                    //         .targetColor), // Function to get color from name
+                    //     shape: BoxShape.circle,
+                    //   ),
+                    //   child: Center(
+                    //       child: Text(
+                    //     "${widget.targetColor}",
+                    //     style: TextStyle(
+                    //         fontSize: widget.isLarge == 0 ? 15 : 10,
+                    //         color: primaryColor,
+                    //         fontWeight: FontWeight.bold),
+                    //   )),
+                    // ),
                   ],
                   if (widget.movesLeft > -1 && widget.targetColor == -1) ...[
                     // Moves Left

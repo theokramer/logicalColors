@@ -3477,7 +3477,7 @@ class LevelCompletionScreen extends StatelessWidget {
 
         // Title Text
         Text(
-          "Level ${selectedLevel - 1} abgeschlossen",
+          "Level ${selectedLevel == -2 ? worlds[currentWorld - 1].anzahlLevels : selectedLevel - 1} abgeschlossen",
           style: TextStyle(
             color: Colors.blueGrey[800],
             fontSize: 22,
@@ -3584,11 +3584,14 @@ class LevelCompletionScreen extends StatelessWidget {
         // Continue Button
         GestureDetector(
           onTap: () {
-            lastLevel
-                ? Navigator.of(context).pushReplacement(
-                    FadePageRoute(page: const MainMenuScreen()),
-                  )
-                : onContinue();
+            if (lastLevel) {
+              (Navigator.of(context).pushReplacement(
+                FadePageRoute(page: const MainMenuScreen()),
+              ));
+              selectedLevel = worlds[currentWorld - 1].anzahlLevels;
+            } else {
+              onContinue();
+            }
           },
           child: Stack(
             children: [
@@ -3706,7 +3709,9 @@ class LevelCompletionScreen extends StatelessWidget {
           color: Colors.deepPurple,
           icon: Icons.replay,
           onTap: () {
-            selectedLevel -= 1;
+            !lastLevel
+                ? selectedLevel -= 1
+                : selectedLevel = worlds[currentWorld - 1].anzahlLevels;
             playGame(puzzle, context);
             // Handle share action
           },

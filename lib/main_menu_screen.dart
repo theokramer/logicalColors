@@ -1390,7 +1390,7 @@ class WorldItem extends StatelessWidget {
                       Center(
                         child: Text(
                           textAlign: TextAlign.center,
-                          "Du hast genügend Sterne\n gesammelt. Klicke hier, um\nzur nächsten Stufe\nvoranzuschreiten.",
+                          "Klicke hier, um\ndie nächste Stufe\nfreizuschalten.",
                           style: TextStyle(color: primaryColor),
                         ),
                       )

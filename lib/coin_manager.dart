@@ -1,7 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'coin_manager.dart'; // Importiere CoinManager
 
 class CoinManager {
   static const String _CrystalsKey = 'Crystals';
@@ -11,7 +9,7 @@ class CoinManager {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       return prefs.getInt(_CrystalsKey) ??
-          0; // Standardwert 0, falls nicht gespeichert
+          10; // Standardwert 0, falls nicht gespeichert
     } catch (e) {
       print('Error loading Crystals: $e');
       return 0; // Standardwert bei Fehler

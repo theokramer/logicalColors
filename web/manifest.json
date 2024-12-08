@@ -1,6 +1,6 @@
 {
-    "name": "color_puzzle",
-    "short_name": "color_puzzle",
+    "name": "tone_twister",
+    "short_name": "tone_twister",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

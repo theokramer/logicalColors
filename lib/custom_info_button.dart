@@ -1,6 +1,6 @@
-import 'package:color_puzzle/puzzle_model.dart';
-import 'package:color_puzzle/puzzle_screen.dart';
-import 'package:color_puzzle/shop_screen.dart';
+import 'package:tone_twister/puzzle_model.dart';
+import 'package:tone_twister/puzzle_screen.dart';
+import 'package:tone_twister/shop_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -41,7 +41,10 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
   @override
   void initState() {
     super.initState();
+    initializeController();
+  }
 
+  void initializeController() {
     // Initialize the AnimationController
     _controller = AnimationController(
       duration: const Duration(milliseconds: 500), // Duration of one blink
@@ -106,9 +109,8 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
               : widget.isLarge == 2 && !widget.originShop
                   ? Navigator.of(context).push(
                       FadePageRoute(
-                        page: ShopScreen(
-                          puzzle: puzzle,
-                        ), // Verwende hier das existierende PuzzleModel
+                        page:
+                            const ShopScreen(), // Verwende hier das existierende PuzzleModel
                       ),
                     )
                   : null, // Show info dialog on tap
@@ -158,31 +160,33 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
                   ),
                   if (widget.targetColor != -1) ...[
                     // Target Color
-                    Text(
-                      AppLocalizations.of(context)?.fill ?? "Play",
-                      style: TextStyle(
-                          color: widget.textColor.withOpacity(0.8),
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(width: 10),
-                    Container(
-                      width: iconSize * 0.8,
-                      height: iconSize * 0.8,
-                      decoration: BoxDecoration(
-                        color: puzzle.getColor(widget
-                            .targetColor), // Function to get color from name
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                          child: Text(
-                        "${widget.targetColor}",
+                    Center(
+                      child: Text(
+                        "Zielfarbe (${widget.targetColor})",
                         style: TextStyle(
-                            fontSize: widget.isLarge == 0 ? 15 : 10,
                             color: Colors.white,
+                            fontSize: fontSize,
                             fontWeight: FontWeight.bold),
-                      )),
+                      ),
                     ),
+                    // const SizedBox(width: 10),
+                    // Container(
+                    //   width: iconSize * 0.8,
+                    //   height: iconSize * 0.8,
+                    //   decoration: BoxDecoration(
+                    //     color: puzzle.getColor(widget
+                    //         .targetColor), // Function to get color from name
+                    //     shape: BoxShape.circle,
+                    //   ),
+                    //   child: Center(
+                    //       child: Text(
+                    //     "${widget.targetColor}",
+                    //     style: TextStyle(
+                    //         fontSize: widget.isLarge == 0 ? 15 : 10,
+                    //         color: primaryColor,
+                    //         fontWeight: FontWeight.bold),
+                    //   )),
+                    // ),
                   ],
                   if (widget.movesLeft > -1 && widget.targetColor == -1) ...[
                     // Moves Left
@@ -238,23 +242,5 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
         );
       },
     );
-  }
-
-  // Helper function to get color from name
-  Color getColorFromName(String colorName) {
-    switch (colorName.toLowerCase()) {
-      case 'red':
-        return Colors.red;
-      case 'green':
-        return Colors.green;
-      case 'blue':
-        return Colors.blue;
-      case 'yellow':
-        return Colors.yellow;
-      case 'purple':
-        return Colors.purple;
-      default:
-        return Colors.grey; // Default color
-    }
   }
 }

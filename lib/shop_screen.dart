@@ -1,12 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:color_puzzle/hints_manager.dart';
-import 'package:color_puzzle/main_menu_screen.dart';
-import 'package:color_puzzle/puzzle_model.dart';
-import 'package:color_puzzle/puzzle_model.dart';
-import 'package:color_puzzle/puzzle_model.dart';
-import 'package:color_puzzle/puzzle_screen.dart';
+import 'package:tone_twister/hints_manager.dart';
+import 'package:tone_twister/puzzle_model.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -17,10 +13,8 @@ import 'coin_manager.dart'; // Dein CoinManager
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ShopScreen extends StatefulWidget {
-  final PuzzleModel puzzle; // Add the PuzzleModel field
-
   // Constructor to accept PuzzleModel
-  const ShopScreen({super.key, required this.puzzle});
+  const ShopScreen({super.key});
 
   @override
   State<ShopScreen> createState() => _ShopScreenState();
@@ -34,16 +28,16 @@ class _ShopScreenState extends State<ShopScreen> {
   // Fetch product details (to be called when the page loads)
   void _loadProducts() async {
     const Set<String> productIds = {
-      'de.tk.enhanced.no.ads.bundle',
-      'de.tk.no.ads',
-      'de.tk.colorizer',
-      'de.tk.small.hints',
-      'de.tk.big.hints',
-      'de.tk.700.crystals',
-      'de.tk.Small2.Crystals',
-      'de.tk.medium.crystals',
-      'de.tk.big.crystals2',
-      'de.tk.big1.crystals',
+      'de.tk.noAds.bundle',
+      'de.tk.noAds',
+      'de.tk.colorizer1',
+      'de.tk.hints1',
+      'de.tk.hints2',
+      'de.tk.crystals1',
+      'de.tk.crystals2',
+      'de.tk.crystals3',
+      'de.tk.crystals4',
+      'de.tk.crystals5',
     };
 
     final ProductDetailsResponse response =
@@ -51,6 +45,7 @@ class _ShopScreenState extends State<ShopScreen> {
     if (response.error == null && response.productDetails.isNotEmpty) {
       products.addAll(response.productDetails);
     }
+    print(products.length);
   }
 
   @override
@@ -59,47 +54,108 @@ class _ShopScreenState extends State<ShopScreen> {
     super.dispose();
   }
 
+  void _showLoadingDialog(BuildContext context) async {
+    // Use a post-frame callback to ensure the dialog is shown after the widget is built
+    showDialog(
+      context: context,
+      barrierDismissible:
+          false, // Prevent closing the dialog by tapping outside
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 10),
+                Text(
+                  'Processing...',
+                  style: TextStyle(color: primaryColor),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _hideLoadingDialog(BuildContext context) {
+    Navigator.of(context).pop(); // Close the loading dialog
+  }
+
   @override
   void initState() {
-    _loadProducts();
-    if (_rewardedAd == null) {
-      _loadRewardedAd();
-    }
-    // Listen to the purchaseUpdatedStream
-    final Stream<List<PurchaseDetails>> purchaseUpdated =
-        InAppPurchase.instance.purchaseStream;
-    _subscription = purchaseUpdated.listen((purchases) {
-      _handlePurchaseUpdates(purchases);
-    }, onDone: () {
-      _subscription.cancel();
-    }, onError: (error) {
-      // Handle errors here if necessary
-      print('Error in purchase stream: $error');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Access PuzzleModel via Provider here
+      PuzzleModel puzzle = Provider.of<PuzzleModel>(context, listen: false);
+
+      // Now you can safely use puzzle in your initState logic
+      // For example, loading some data or calling a method on the PuzzleModel
+      // You can call other methods on puzzle as needed
+
+      _loadProducts();
+      if (_rewardedAd == null) {
+        _loadRewardedAd();
+      }
+      // Listen to the purchaseUpdatedStream
+      final Stream<List<PurchaseDetails>> purchaseUpdated =
+          InAppPurchase.instance.purchaseStream;
+      _subscription = purchaseUpdated.listen((purchases) {
+        _handlePurchaseUpdates(purchases, puzzle);
+      }, onDone: () {
+        _subscription.cancel();
+      }, onError: (error) {
+        // Handle errors here if necessary
+        print('Error in purchase stream: $error');
+      });
     });
   }
 
-  void _buyProduct(ProductDetails productDetails, PuzzleModel puzzle) {
-    final PurchaseParam purchaseParam =
-        PurchaseParam(productDetails: productDetails);
-    InAppPurchase.instance.buyNonConsumable(purchaseParam: purchaseParam);
+  void _buyProduct(ProductDetails productDetails, PuzzleModel puzzle) async {
+    try {
+      final PurchaseParam purchaseParam =
+          PurchaseParam(productDetails: productDetails);
+      await InAppPurchase.instance
+          .buyNonConsumable(purchaseParam: purchaseParam);
+    } catch (e) {
+      print('Purchase error: $e');
+      _hideLoadingDialog(context);
+    }
+  }
+
+  void _restorePurchases(PuzzleModel puzzle) async {
+    if (!(await puzzle.loadHasRestoredPurchases())) {
+      try {
+        await inAppPurchase.restorePurchases();
+      } catch (e) {
+        print('Restoration error: $e');
+      }
+    }
   }
 
   // Handle the purchase updates
-  void _handlePurchaseUpdates(List<PurchaseDetails> purchaseDetailsList) {
+// Handle the purchase updates, including restored purchases
+  void _handlePurchaseUpdates(
+      List<PurchaseDetails> purchaseDetailsList, PuzzleModel puzzle) {
     for (var purchaseDetails in purchaseDetailsList) {
-      if (purchaseDetails.status == PurchaseStatus.purchased) {
-        // If the purchase is successful
+      if (purchaseDetails.status == PurchaseStatus.restored) {
+        puzzle.saveHasRestoredPurchases(true);
+      }
+      if (purchaseDetails.status == PurchaseStatus.purchased ||
+          purchaseDetails.status == PurchaseStatus.restored) {
+        _hideLoadingDialog(context);
         bool isVerified = _verifyPurchase(purchaseDetails);
+        if (purchaseDetails.status == PurchaseStatus.restored) {}
         if (isVerified) {
-          // Call your custom function after successful purchase
-          _onPurchaseSuccess(purchaseDetails);
+          _onPurchaseSuccess(purchaseDetails, puzzle);
         }
-      } else if (purchaseDetails.status == PurchaseStatus.canceled) {
-        // Handle purchase failure
+      } else if (purchaseDetails.status == PurchaseStatus.error ||
+          purchaseDetails.status == PurchaseStatus.canceled) {
         print('Purchase failed: ${purchaseDetails.error}');
       }
 
-      // Complete the purchase if necessary
       if (purchaseDetails.pendingCompletePurchase) {
         InAppPurchase.instance.completePurchase(purchaseDetails);
       }
@@ -112,55 +168,74 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 
   // Function to call when the purchase is successful
-  void _onPurchaseSuccess(PurchaseDetails purchaseDetails) {
+  void _onPurchaseSuccess(PurchaseDetails purchaseDetails, PuzzleModel puzzle) {
     // Call your desired function after purchase success
     print('Purchase successful: ${purchaseDetails.productID}');
+
     // For example, unlock content or remove ads
+
     switch (purchaseDetails.productID) {
-      case "de.tk.enhanced.no.ads.bundle":
+      case "de.tk.noAds.bundle":
+        final ProductDetails productDetail = products.firstWhere(
+          (element) => element.id == purchaseDetails.productID,
+          orElse: () => ProductDetails(
+              id: "",
+              title: "",
+              description: "",
+              price: "",
+              rawPrice: 0,
+              currencyCode: ""), // Provide a fallback value or handle it
+        );
+
+        if (productDetail.id == "") {
+          // Handle the case where the product detail is not found
+          print('Product not found for ID: ${purchaseDetails.productID}');
+          return;
+        }
         _showPurchaseDialog(
-            context,
-            '${products.firstWhere((element) => element.id == purchaseDetails.productID).title} ${AppLocalizations.of(context)?.purchased ?? "Open Shop"}',
-            1000,
-            widget.puzzle,
-            true,
-            isEnhancedBundle: true);
+          context,
+          '${productDetail.title} ${AppLocalizations.of(context)?.purchased ?? "Open Shop"}',
+          1000,
+          puzzle,
+          false,
+          isEnhancedBundle: true,
+        );
         break;
-      case "de.tk.no.ads":
-        widget.puzzle.saveNoAds(true);
+      case "de.tk.noAds":
+        puzzle.saveNoAds(true);
         noAds = true;
         _showPurchaseDialog(
             context,
             AppLocalizations.of(context)?.noAdsTitle ?? "Play",
             0,
-            widget.puzzle,
+            puzzle,
             false);
         break;
-      case 'de.tk.colorizer':
+      case 'de.tk.colorizer1':
         addRems(10);
         _showPurchaseDialog(
             context,
             "${AppLocalizations.of(context)?.colorizer ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
             10,
-            widget.puzzle,
+            puzzle,
             false);
         break;
-      case 'de.tk.small.hints':
-        addRems(15);
+      case 'de.tk.hints1':
+        addHints(15);
         _showPurchaseDialog(
             context,
             "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
             15,
-            widget.puzzle,
+            puzzle,
             false);
         break;
-      case 'de.tk.big.hints':
-        addRems(15);
+      case 'de.tk.hints2':
+        addHints(40);
         _showPurchaseDialog(
             context,
             "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
             40,
-            widget.puzzle,
+            puzzle,
             false);
         break;
       default:
@@ -179,7 +254,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 .title
                 .split(' ')
                 .first),
-            widget.puzzle,
+            puzzle,
             false);
         break;
     }
@@ -228,7 +303,7 @@ class _ShopScreenState extends State<ShopScreen> {
           _showPurchaseDialog(
               context,
               '${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.earned ?? "World"}',
-              value,
+              150,
               puzzle,
               true); // Zeige Pop-Up an
         },
@@ -268,7 +343,7 @@ class _ShopScreenState extends State<ShopScreen> {
 
   void _loadRewardedAd() {
     RewardedAd.load(
-      adUnitId: "ca-app-pub-3940256099942544/1712485313",
+      adUnitId: "ca-app-pub-3263827122305139/4563343451",
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
@@ -307,7 +382,7 @@ class _ShopScreenState extends State<ShopScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final puzzle = widget.puzzle;
+    PuzzleModel puzzle = context.read<PuzzleModel>();
     Future.microtask(() => context.read<CoinProvider>().loadCrystals());
 
     return Scaffold(
@@ -315,14 +390,14 @@ class _ShopScreenState extends State<ShopScreen> {
       appBar: AppBar(
         title: Text(
           AppLocalizations.of(context)?.shop ?? "World",
-          style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30),
+          style: TextStyle(
+              color: primaryColor, fontWeight: FontWeight.bold, fontSize: 30),
         ),
-        foregroundColor: Colors.white,
+        foregroundColor: primaryColor,
         actions: [
           SizedBox(
             height: 65,
-            width: 150,
+            width: 100,
             child: Stack(
               children: [
                 Positioned(
@@ -331,13 +406,12 @@ class _ShopScreenState extends State<ShopScreen> {
                   child: Consumer<CoinProvider>(
                     builder: (context, coinProvider, child) {
                       return CustomInfoButton(
-                        value:
-                            '${coinProvider.Crystals}', // Verwende die Crystals aus dem Provider
+                        value: '${coinProvider.Crystals}',
                         targetColor: -1,
                         movesLeft: -1,
                         iconPath: 'images/Crystals.png',
                         backgroundColor: Colors.black45,
-                        textColor: Colors.white,
+                        textColor: primaryColor,
                         isLarge: 2,
                         originShop: true,
                       );
@@ -356,74 +430,106 @@ class _ShopScreenState extends State<ShopScreen> {
         child: Column(
           children: [
             const SizedBox(height: 15),
-            (!noAds &&
-                    products
-                            .firstWhere(
-                                (p) => p.id == 'de.tk.enhanced.no.ads.bundle',
-                                orElse: () => ProductDetails(
-                                    id: "",
-                                    title: "",
-                                    description: "",
-                                    price: "",
-                                    rawPrice: 0,
-                                    currencyCode: ""))
-                            .id !=
-                        "")
-                ? Column(
-                    children: [
-                      _buildEnhancedBundleSection(
-                          puzzle,
-                          products.firstWhere(
-                              (p) => p.id == 'de.tk.enhanced.no.ads.bundle',
-                              orElse: () => ProductDetails(
-                                  id: "",
-                                  title: "",
-                                  description: "",
-                                  price: "",
-                                  rawPrice: 0,
-                                  currencyCode: ""))),
-                      if (!noAds) const SizedBox(height: 15),
-                      _buildPageViewSection(
-                          puzzle,
-                          products.firstWhere((p) => p.id == 'de.tk.no.ads',
-                              orElse: () => ProductDetails(
-                                  id: "",
-                                  title: "",
-                                  description: "",
-                                  price: "",
-                                  rawPrice: 0,
-                                  currencyCode: ""))),
-                      const SizedBox(height: 15),
-                    ],
-                  )
-                : const SizedBox(),
+            // (!noAds &&
+            //             products
+            //                     .firstWhere((p) => p.id == 'de.tk.noAds.bundle',
+            //                         orElse: () => ProductDetails(
+            //                             id: "",
+            //                             title: "",
+            //                             description: "",
+            //                             price: "",
+            //                             rawPrice: 0,
+            //                             currencyCode: ""))
+            //                     .id !=
+            //                 "")
+            //     ?
+            Column(
+              children: [
+                _buildEnhancedBundleSection(
+                    puzzle,
+                    products.firstWhere((p) => p.id == 'de.tk.noAds.bundle',
+                        orElse: () => ProductDetails(
+                            id: "",
+                            title: "",
+                            description: "",
+                            price: "",
+                            rawPrice: 0,
+                            currencyCode: ""))),
+                if (!noAds) const SizedBox(height: 15),
+                _buildPageViewSection(
+                    puzzle,
+                    products.firstWhere((p) => p.id == 'de.tk.noAds',
+                        orElse: () => ProductDetails(
+                            id: "",
+                            title: "",
+                            description: "",
+                            price: "",
+                            rawPrice: 0,
+                            currencyCode: ""))),
+                const SizedBox(height: 15),
+              ],
+            ),
+            //: const SizedBox(),
             Expanded(
-                child: products
-                            .firstWhere((p) => p.id == 'de.tk.colorizer',
-                                orElse: () => ProductDetails(
-                                    id: "",
-                                    title: "",
-                                    description: "",
-                                    price: "",
-                                    rawPrice: 0,
-                                    currencyCode: ""))
-                            .id !=
-                        ""
-                    ? _buildShopItemsGrid(products)
-                    : const SizedBox()),
-            if (!worlds[1].unlocked)
-              SafeArea(
-                child: Text(
-                  textAlign: TextAlign.center,
-                  //worlds[1].unlocked
-                  // ? ""
-                  // : "With the purchase of any item in the shop, you unlock all current and future Levels in the game.",
-                  (boughtWallpapers.length < 14)
-                      ? AppLocalizations.of(context)?.freeWallpaper ?? "World"
-                      : "",
-                  style: const TextStyle(color: Colors.white, fontSize: 15),
+                child:
+                    // products
+                    //                 .firstWhere((p) => p.id == 'de.tk.colorizer1',
+                    //                     orElse: () => ProductDetails(
+                    //                         id: "",
+                    //                         title: "",
+                    //                         description: "",
+                    //                         price: "",
+                    //                         rawPrice: 0,
+                    //                         currencyCode: ""))
+                    //                 .id !=
+                    //             ""
+                    //     ?
+                    _buildShopItemsGrid(products)
+                // : Center(
+                //     child: Column(
+                //       mainAxisSize: MainAxisSize.min,
+                //       children: [
+                //         const CircularProgressIndicator(),
+                //         const SizedBox(height: 10),
+                //         Text(
+                //           '${AppLocalizations.of(context)?.pleaseWait ?? "World"} ',
+                //           style: const TextStyle(color: primaryColor),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
                 ),
-              )
+            SafeArea(
+              child: Column(
+                children: [
+                  Text(
+                    textAlign: TextAlign.center,
+                    worlds[1].unlocked
+                        ? (boughtWallpapers.length < 14)
+                            ? "${AppLocalizations.of(context)?.freeWallpaper ?? "World"} "
+                            : ""
+                        : "${AppLocalizations.of(context)?.unlockWorldsShop ?? "World"} ",
+                    style: TextStyle(color: primaryColor, fontSize: 15),
+                  ),
+                  const SizedBox(
+                    height: 7,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _restorePurchases(puzzle);
+                    },
+                    child: Text(
+                      "${AppLocalizations.of(context)?.restorePurchases ?? "World"} ",
+                      style: TextStyle(
+                          color: primaryColor,
+                          decoration: TextDecoration
+                              .underline, // Add this line to underline the text
+                          decorationColor: primaryColor),
+                    ),
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),
@@ -489,10 +595,10 @@ class _ShopScreenState extends State<ShopScreen> {
         const SizedBox(height: 8),
         Text(
           quantity,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20.0,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: primaryColor,
           ),
         ),
       ],
@@ -504,14 +610,13 @@ class _ShopScreenState extends State<ShopScreen> {
 
     // Filtere Ads-Produkte heraus und sortiere nach Kategorie und Preis
     final filteredAndSortedProducts = items
-        .where((p) =>
-            p.id != 'de.tk.no.ads' && p.id != 'de.tk.enhanced.no.ads.bundle')
+        .where((p) => p.id != 'de.tk.noAds' && p.id != 'de.tk.noAds.bundle')
         .toList()
       ..sort((a, b) {
         // Erstes Kriterium: Kategorie
         int getCategoryOrder(ProductDetails item) {
-          if (item.id == 'de.tk.colorizer') return 0; // Colorizer kommt zuerst
-          if (item.id == 'de.tk.small.hints' || item.id == 'de.tk.big.hints') {
+          if (item.id == 'de.tk.colorizer1') return 0; // Colorizer kommt zuerst
+          if (item.id == 'de.tk.hints1' || item.id == 'de.tk.hints2') {
             return 1; // Hints kommen danach
           }
           return 2; // Crystals kommen zuletzt
@@ -529,9 +634,9 @@ class _ShopScreenState extends State<ShopScreen> {
 
     // Füge "Watch Ad" Item vor dem ersten Crystal-Item hinzu
     final firstCrystalIndex = filteredAndSortedProducts.indexWhere((p) =>
-        !(p.id == 'de.tk.colorizer' ||
-            p.id == 'de.tk.small.hints' ||
-            p.id == 'de.tk.big.hints'));
+        !(p.id == 'de.tk.colorizer1' ||
+            p.id == 'de.tk.hints1' ||
+            p.id == 'de.tk.hints2'));
 
     // Erstelle ein Dummy-Item für "Watch Ad"
     if (firstCrystalIndex != -1) {
@@ -574,9 +679,9 @@ class _ShopScreenState extends State<ShopScreen> {
             child: _buildShopItemCard(
               firstWordOfTitle, // Zeige nur das erste Wort an
               item.price,
-              {'de.tk.small.hints', 'de.tk.big.hints'}.contains(item.id)
+              {'de.tk.hints1', 'de.tk.hints2'}.contains(item.id)
                   ? 0
-                  : 'de.tk.colorizer' == item.id
+                  : 'de.tk.colorizer1' == item.id
                       ? 1
                       : 2, // Nutze den Stil der Kristalle für "Watch Ad"
             ));
@@ -621,8 +726,8 @@ class _ShopScreenState extends State<ShopScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.white.withOpacity(0.9),
-                        Colors.white.withOpacity(0.5),
+                        primaryColor.withOpacity(0.9),
+                        primaryColor.withOpacity(0.5),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -674,10 +779,10 @@ class _ShopScreenState extends State<ShopScreen> {
                 children: [
                   Text(
                     price,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16.0,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: primaryColor,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -754,16 +859,16 @@ class _ShopScreenState extends State<ShopScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
             child: Row(
               children: [
                 Icon(
                   Icons.lock_open,
                   size: 35, // Larger icon size
-                  color: Colors.white, // Updated icon color
+                  color: primaryColor, // Updated icon color
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 12,
                 ),
                 Column(
@@ -775,10 +880,10 @@ class _ShopScreenState extends State<ShopScreen> {
                       style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: primaryColor,
                       ),
                     ),
-                    Text(
+                    const Text(
                       'Unlocks all worlds in the app.',
                       style: TextStyle(
                         fontSize: 10,
@@ -814,12 +919,12 @@ class _ShopScreenState extends State<ShopScreen> {
                   borderRadius: BorderRadius.circular(12.0), // Rounded corners
                 ),
               ),
-              child: const Text(
+              child: Text(
                 'EUR 1,99',
                 style: TextStyle(
                   fontSize: 16.0, // Larger font size
                   fontWeight: FontWeight.bold,
-                  color: Colors.white, // Text color matching button border
+                  color: primaryColor, // Text color matching button border
                 ),
               ),
             ),
@@ -865,10 +970,10 @@ class _ShopScreenState extends State<ShopScreen> {
                       children: [
                         Text(
                           product.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16.0,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: primaryColor,
                           ),
                         ),
                         Text(
@@ -903,10 +1008,10 @@ class _ShopScreenState extends State<ShopScreen> {
                   ),
                   child: Text(
                     '${product.rawPrice} ${product.currencySymbol}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16.0, // Larger font size
                       fontWeight: FontWeight.bold,
-                      color: Colors.white, // Text color matching button border
+                      color: primaryColor, // Text color matching button border
                     ),
                   ),
                 ),
@@ -967,8 +1072,8 @@ class _ShopScreenState extends State<ShopScreen> {
         dotHeight: 12.0,
         dotWidth: 12.0,
         spacing: 8.0,
-        dotColor: Colors.white.withOpacity(0.3), // Inactive dot color
-        activeDotColor: Colors.white, // Active dot color
+        dotColor: primaryColor.withOpacity(0.3), // Inactive dot color
+        activeDotColor: primaryColor, // Active dot color
       ),
     );
   }
@@ -978,10 +1083,10 @@ class _ShopScreenState extends State<ShopScreen> {
       {bool isEnhancedBundle = false}) {
     final Random random = Random();
 
-    int newWallpaper = random.nextInt(14);
-    if (boughtWallpapers.length < 14) {
+    int newWallpaper = random.nextInt(19);
+    if (boughtWallpapers.length < 19) {
       while (boughtWallpapers.contains(newWallpaper)) {
-        newWallpaper = random.nextInt(14);
+        newWallpaper = random.nextInt(19);
       }
       if (!boughtWallpapers.contains(newWallpaper) && !ad) {
         boughtWallpapers.add(newWallpaper);
@@ -1016,12 +1121,16 @@ class _ShopScreenState extends State<ShopScreen> {
       hintsAdded = 30; // Adds 30 hints
       puzzle.addHints(hintsAdded);
       remsAdded = 20;
-      puzzle.addRems(hintsAdded);
+      puzzle.addRems(remsAdded);
       wallpapersUnlocked = 3; // Assume bundle gives 3 wallpapers
       for (int i = 0; i < wallpapersUnlocked - 1; i++) {
-        newWallpaper = random.nextInt(14);
-        while (boughtWallpapers.contains(newWallpaper)) {
-          newWallpaper = random.nextInt(14);
+        newWallpaper = random.nextInt(19);
+        if (boughtWallpapers.length < 19) {
+          while (boughtWallpapers.contains(newWallpaper)) {
+            newWallpaper = random.nextInt(19);
+          }
+        } else {
+          break;
         }
         boughtWallpapers.add(newWallpaper);
         puzzle.saveBoughtWallpaper(newWallpaper);
@@ -1032,7 +1141,8 @@ class _ShopScreenState extends State<ShopScreen> {
     }
 
     if (title ==
-        "${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}") {
+            "${AppLocalizations.of(context)?.crystals ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}" ||
+        amount == 150) {
       addCrystals(amount);
     }
 
@@ -1048,7 +1158,7 @@ class _ShopScreenState extends State<ShopScreen> {
             // Makes the content scrollable
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: primaryColor,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -1072,7 +1182,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  if (!isEnhancedBundle)
+                  if (!isEnhancedBundle && amount != 0)
                     Column(
                       children: [
                         Row(
@@ -1120,9 +1230,9 @@ class _ShopScreenState extends State<ShopScreen> {
                               height: 40, // Smaller image
                             ),
                             const SizedBox(width: 10),
-                            const Text(
-                              '+7000 Crystals',
-                              style: TextStyle(
+                            Text(
+                              '+7000 ${AppLocalizations.of(context)?.crystals ?? "World"}',
+                              style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 20, // Smaller font size
                                 fontWeight: FontWeight.bold,
@@ -1141,7 +1251,7 @@ class _ShopScreenState extends State<ShopScreen> {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              '+$hintsAdded Hints',
+                              '+$hintsAdded ${AppLocalizations.of(context)?.hints ?? "World"}',
                               style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 20,
@@ -1161,7 +1271,7 @@ class _ShopScreenState extends State<ShopScreen> {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              '+$remsAdded Colorizer',
+                              '+$remsAdded ${AppLocalizations.of(context)?.colorizer ?? "World"}',
                               style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 20,
@@ -1181,7 +1291,7 @@ class _ShopScreenState extends State<ShopScreen> {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              '+$wallpapersUnlocked Wallpapers',
+                              '+$wallpapersUnlocked ${AppLocalizations.of(context)?.wallpapers ?? "World"}',
                               style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 20,
@@ -1191,18 +1301,19 @@ class _ShopScreenState extends State<ShopScreen> {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        const Row(
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.block,
                               size: 40, // Smaller icon
                               color: Colors.red,
                             ),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             Text(
-                              'Ads Removed',
-                              style: TextStyle(
+                              AppLocalizations.of(context)?.adsRemoved ??
+                                  "World",
+                              style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -1213,17 +1324,27 @@ class _ShopScreenState extends State<ShopScreen> {
                         const SizedBox(height: 20),
                       ],
                     ),
-                  if (newWallpaper != -1 && !isEnhancedBundle)
+                  if (!isEnhancedBundle && newWallpaper >= 5)
                     Container(
                       height: (MediaQuery.of(context).size.height > 700)
                           ? 150
                           : 120,
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                          image: AssetImage("images/w$newWallpaper.jpg"),
+                          image: AssetImage("images/w${newWallpaper - 5}.jpg"),
                           fit: BoxFit.cover,
                         ),
                       ),
+                    ),
+                  if (!isEnhancedBundle &&
+                      newWallpaper > -1 &&
+                      newWallpaper < 5)
+                    Container(
+                      height: (MediaQuery.of(context).size.height > 700)
+                          ? 150
+                          : 120,
+                      decoration: BoxDecoration(
+                          color: getBackgroundColor(newWallpaper)),
                     ),
                   const SizedBox(height: 20),
                   if (unlocked)
@@ -1264,7 +1385,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     ),
                     child: Text(
                       AppLocalizations.of(context)?.great ?? "World",
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: primaryColor),
                     ),
                   ),
                 ],
@@ -1299,8 +1420,8 @@ class _ShopScreenState extends State<ShopScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.9),
-                  Colors.white.withOpacity(0.5)
+                  primaryColor.withOpacity(0.9),
+                  primaryColor.withOpacity(0.5)
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -1401,10 +1522,10 @@ class _ShopScreenState extends State<ShopScreen> {
           padding: const EdgeInsets.only(left: 8.0),
           child: Text(
             product.title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16.0, // Larger font size
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: primaryColor,
             ),
           ),
         ),
@@ -1413,6 +1534,7 @@ class _ShopScreenState extends State<ShopScreen> {
           child: ElevatedButton(
             onPressed: () {
               // Ensure products are available before proceeding
+              _showLoadingDialog(context);
               _buyProduct(product, puzzle);
             },
             style: ElevatedButton.styleFrom(
@@ -1424,10 +1546,10 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
             child: Text(
               "${product.rawPrice} ${product.currencySymbol}",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16.0, // Larger font size
                 fontWeight: FontWeight.bold,
-                color: Colors.white, // Text color matching button border
+                color: primaryColor, // Text color matching button border
               ),
             ),
           ),

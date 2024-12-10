@@ -773,9 +773,6 @@ class PuzzleModel with ChangeNotifier {
 
     // Decoding JSON file content into a List
     var jsonData = jsonDecode(fileContent);
-    print(jsonData);
-
-    print("MY LEvel: $thisWorld");
 
     // Find the level based on the current world and selected level
     var levelData = jsonData.firstWhere(
@@ -784,7 +781,6 @@ class PuzzleModel with ChangeNotifier {
         orElse: () => null);
 
     if (levelData == null) {
-      print("NULLLLL");
       // Return an empty Level object or handle the error if level is not found
       return Level(worldNr: thisWorld, levelNr: thisLevel, size: 1, clicks: []);
     }
@@ -801,7 +797,6 @@ class PuzzleModel with ChangeNotifier {
 
   Future<int> readSize(int currentWorld, int selectedLevel) async {
     Level level = await readLevel(currentWorld, selectedLevel);
-    print("level: ${level.clicks}");
     return level.size ?? 0;
   }
 
@@ -839,12 +834,8 @@ class PuzzleModel with ChangeNotifier {
         selectedLevel = worlds[currentWorld - 1].anzahlLevels;
       }
       List<Click> clicks2 = await readJson(currentWorld, selectedLevel - 1);
-      for (int i = 0; i < clicks2.length; i++) {
-        print("HIER");
-        print(clicks2[i].x);
-        print(clicks2[i].y);
-      }
-      print("FERTIG");
+      for (int i = 0; i < clicks2.length; i++) {}
+
 // Create random moves and store them in the clicks list
       for (int i = 0; i < _maxMoves; i++) {
         int x;

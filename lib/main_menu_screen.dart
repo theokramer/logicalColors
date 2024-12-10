@@ -1393,7 +1393,7 @@ class WorldItem extends StatelessWidget {
                       Center(
                         child: Text(
                           textAlign: TextAlign.center,
-                          AppLocalizations.of(context)?.world ?? "",
+                          AppLocalizations.of(context)?.clickNextStage ?? "",
                           style: TextStyle(color: primaryColor),
                         ),
                       )

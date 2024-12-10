@@ -10,7 +10,8 @@
   "himmelslicht": "Himmelslicht",
   "unlockReaching": "Verfügbar bei Erreichen von",
   "world": "Welt",
-  
+  "skipLevelTitle": "Level überspringen",
+  "skipLevelBody": "Möchtest du das Level überspringen?",
   "congratulations": "Toll gemacht!",
   "starAwarded": "Du hast einen Stern erhalten! Sammle 10 Sterne, um zur nächsten Stufe aufzusteigen.",
   "levelUp": "Du hast genügend Sterne gesammelt, um zur nächsten Stufe aufzusteigen. Gehe jetzt zurück zum Hauptmenü.",

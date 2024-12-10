@@ -14,7 +14,8 @@
   "close": "Cerrar",
   "play": "Jugar",
   "playAgain": "Jugar de nuevo",
-  
+     "skipLevelTitle": "Saltar nivel",
+  "skipLevelBody": "¿Quieres saltarte el nivel?",
   "congratulations": "¡Bien hecho!",
   "starAwarded": "¡Has ganado una estrella! Colecciona 10 estrellas para avanzar al siguiente nivel.",
   "levelUp": "Has recolectado suficientes estrellas para subir de nivel. Regresa al menú principal ahora.",

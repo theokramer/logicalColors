@@ -750,12 +750,12 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             size: size,
             level: level,
             colorMapping: {
-              1: worlds[currentWorld].colors[0],
-              2: worlds[currentWorld].colors[1],
-              3: worlds[currentWorld].colors[2],
+              1: worlds[currentWorld - 1].colors[0],
+              2: worlds[currentWorld - 1].colors[1],
+              3: worlds[currentWorld - 1].colors[2],
             },
           ),
-          child: selectedLevel < worlds[currentWorld].anzahlLevels
+          child: selectedLevel <= worlds[currentWorld - 1].anzahlLevels
               ? const PuzzleScreen()
               : const MainMenuScreen(),
         ),
@@ -1566,9 +1566,42 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                             // } else {
 
                             if (remsProvider.rems > 0) {
-                              remsProvider.subtractRems(1);
-                              puzzle.fillWholeGrid();
-                              showEndScreen(puzzle);
+                              showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                        title: Text(AppLocalizations.of(context)
+                                                ?.skipLevelTitle ??
+                                            "removeTile"),
+                                        content: Text(
+                                            AppLocalizations.of(context)
+                                                    ?.skipLevelBody ??
+                                                "removeTile"),
+                                        actions: [
+                                          TextButton(
+                                            child: Text(
+                                                AppLocalizations.of(context)
+                                                        ?.cancel ??
+                                                    "removeTile"),
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                          TextButton(
+                                            child: Text(
+                                                AppLocalizations.of(context)
+                                                        ?.skipLevelTitle ??
+                                                    "removeTile"),
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                              remsProvider.subtractRems(1);
+                                              puzzle.fillWholeGrid();
+                                              showEndScreen(puzzle);
+                                            },
+                                          ),
+                                        ]);
+                                  });
+
                               TODO:
                               "Fill Grid with targetColor. Show Level Completion Screen";
                               // setState(() {
@@ -1890,7 +1923,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                 setState(() {
                                                   animationStarted = true;
                                                   showCoinAnimation = true;
-                                                  if (selectedLevel <
+
+                                                  if (selectedLevel <=
                                                       worlds[currentWorld - 1]
                                                           .anzahlLevels) {
                                                     puzzle.updateWorldLevel(
@@ -1966,7 +2000,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                           break;
                                                       }
                                                     }
-                                                    print(currentTutorialStep);
                                                     puzzle.saveTutorialStep(
                                                         currentTutorialStep);
                                                     denyClick = false;
@@ -2556,7 +2589,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
               },
               child: const Text(
                 'Ok',
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.white),
               ),
             ),
           ],

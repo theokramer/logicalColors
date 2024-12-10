@@ -12,7 +12,8 @@
   "noStarsTitle": "You have not enough stars",
   "resetGrid": "Reset Grid",
   "completed": "completed",
-  
+   "skipLevelTitle": "Level überspringen",
+  "skipLevelBody": "Möchtest du das Level überspringen?",
   "congratulations": "Well done!",
   "starAwarded": "You have earned a star! Collect 10 stars to advance to the next level.",
   "levelUp": "You have collected enough stars to level up. Go back to the main menu now.",

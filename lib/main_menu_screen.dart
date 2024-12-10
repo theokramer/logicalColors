@@ -337,25 +337,31 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                       Consumer<CoinProvider>(
                                         builder:
                                             (context, coinProvider, child) {
-                                          return Row(
-                                            children: [
-                                              Icon(
-                                                currencyIcon,
-                                                color: currencyColor,
-                                                size: 25,
-                                              ),
-                                              const SizedBox(
-                                                width: 8,
-                                              ),
-                                              Text(
-                                                "${puzzle.getCurrencyAmountForWorld(currentWorld)}/${worlds[currentWorld - 1].anzahlLevels}",
-                                                style: TextStyle(
-                                                    color: primaryColor,
-                                                    fontSize: 18,
-                                                    fontWeight:
-                                                        FontWeight.bold),
-                                              ),
-                                            ],
+                                          return GestureDetector(
+                                            onTap: () {
+                                              showStarsInfo(
+                                                  context, true, puzzle);
+                                            },
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  currencyIcon,
+                                                  color: currencyColor,
+                                                  size: 25,
+                                                ),
+                                                const SizedBox(
+                                                  width: 8,
+                                                ),
+                                                Text(
+                                                  "${puzzle.getCurrencyAmountForWorld(currentWorld)}/${worlds[currentWorld - 1].anzahlLevels}",
+                                                  style: TextStyle(
+                                                      color: primaryColor,
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
                                           );
                                         },
                                       ),
@@ -1442,24 +1448,29 @@ class SunnysDisplay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<CoinProvider>(
       builder: (context, coinProvider, child) {
-        return Row(
-          children: [
-            Icon(
-              currencyIcon,
-              color: currencyColor,
-              size: 33,
-            ),
-            const SizedBox(
-              width: 8,
-            ),
-            Text(
-              "${puzzle.getCurrencyAmount()}",
-              style: TextStyle(
-                  color: primaryColor,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold),
-            ),
-          ],
+        return GestureDetector(
+          onTap: () {
+            showStarsInfo(context, false, puzzle);
+          },
+          child: Row(
+            children: [
+              Icon(
+                currencyIcon,
+                color: currencyColor,
+                size: 33,
+              ),
+              const SizedBox(
+                width: 8,
+              ),
+              Text(
+                "${puzzle.getCurrencyAmount()}",
+                style: TextStyle(
+                    color: primaryColor,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         );
       },
     );

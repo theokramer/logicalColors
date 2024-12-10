@@ -24,6 +24,32 @@ import 'package:url_launcher/url_launcher.dart';
 import 'puzzle_model.dart';
 import 'shop_screen.dart';
 
+void showStarsInfo(
+    BuildContext context, bool proportional, PuzzleModel puzzle) {
+  showDialog(
+    context: context,
+    builder: (BuildContext builder) {
+      return AlertDialog(
+        title: const Text("Sterne-System"),
+        content: Text(
+            "Im Sterne-System erhältst du nach jedem neuen Level einen Stern. "
+            "Wenn du eine bestimmte Anzahl an Sternen gesammelt hast, steigst du eine Stufe auf. "
+            "Zusätzlich schaltest du mit den Sternen neue Wallpaper frei. "
+            "${proportional ? "Du hast in diesem Level bereits ${puzzle.getCurrencyAmountForWorld(currentWorld)} von ${worlds[currentWorld - 1].anzahlLevels} möglichen Sternen gesammelt." : ""}"
+            "Sammle so viele Sterne wie möglich, um alle Belohnungen freizuschalten! "),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text("OK"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 Widget _buildUnlockButton(
     BuildContext context, String text, Color color, VoidCallback onPressed) {
   return Container(
@@ -2051,21 +2077,27 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                 0, // adjust left or right if needed
                                             right:
                                                 0, // center the icon horizontally
-                                            child: Container(
-                                                height: 150,
-                                                width: 150,
-                                                decoration: BoxDecoration(
-                                                  color: currencyColor,
-                                                  shape: BoxShape.circle,
-                                                  // border: Border.all(
-                                                  //     color: primaryColor,
-                                                  //     width: 1.5)
-                                                ),
-                                                child: Icon(
-                                                  currencyIcon,
-                                                  color: primaryColor,
-                                                  size: 90,
-                                                ))),
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                showStarsInfo(
+                                                    context, false, puzzle);
+                                              },
+                                              child: Container(
+                                                  height: 150,
+                                                  width: 150,
+                                                  decoration: BoxDecoration(
+                                                    color: currencyColor,
+                                                    shape: BoxShape.circle,
+                                                    // border: Border.all(
+                                                    //     color: primaryColor,
+                                                    //     width: 1.5)
+                                                  ),
+                                                  child: Icon(
+                                                    currencyIcon,
+                                                    color: primaryColor,
+                                                    size: 90,
+                                                  )),
+                                            )),
                                       ],
                                     ),
                                   ),

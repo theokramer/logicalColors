@@ -49,6 +49,7 @@ dependencies:
   path: ^1.8.0
   firebase_database: ^11.1.6
   uuid: ^4.5.0
+  logger: ^2.5.0
 
 
 dev_dependencies:

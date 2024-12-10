@@ -194,9 +194,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   bool displayIndicator(PuzzleModel puzzle) {
     for (int i = 0; i < worlds.length + 1; i++) {
-      print(puzzle.getNeededCurrencyAmount(i - 1));
-      print(puzzle.getCurrencyAmount());
-      print(puzzle.getMaxLevelForWorld(i));
       var unlocked = puzzle.getMaxLevelForWorld(i) != 0;
       if (puzzle.getCurrencyAmount() >= puzzle.getNeededCurrencyAmount(i - 1) &&
           !unlocked) {
@@ -263,12 +260,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                             Radius.circular(10)),
                                         color: Colors.indigo,
                                       ),
-                                      child: const Padding(
-                                        padding: EdgeInsets.all(5.0),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(5.0),
                                         child: Text(
+                                          "${AppLocalizations.of(context)?.starsExcl ?? "Play"} ",
                                           textAlign: TextAlign.center,
-                                          "Du hast genügend Sterne gesammelt, um zur nächsten Stufe aufzusteigen. Klicke dazu auf das Ausrufezeichen",
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w600,
                                             fontSize: 15,
@@ -668,11 +665,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     final puzzle = Provider.of<PuzzleModel>(context, listen: false);
     int maxLevel = puzzle.getMaxLevelForWorld(thisWorld + 1);
     void playGame() async {
-      int size = currentWorld == 1
-          ? await puzzle.readSize(selectedLevel)
+      int size = currentWorld == 1 || currentWorld == 2
+          ? await puzzle.readSize(currentWorld, selectedLevel)
           : puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2;
-      int level = currentWorld == 1
-          ? await puzzle.readMoves(selectedLevel)
+      int level = currentWorld == 1 || currentWorld == 2
+          ? await puzzle.readMoves(currentWorld, selectedLevel)
           : puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2;
       Navigator.of(context).pushReplacement(
         FadePageRoute(
@@ -743,7 +740,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 colors: [Colors.white, Colors.lightGreenAccent],
               ).createShader(bounds),
               child: Text(
-                "${AppLocalizations.of(context)?.play ?? "Play"} ${selectedLevel < maxLevel || maxLevel == -2 ? "Again" : ""}",
+                selectedLevel < maxLevel || maxLevel == -2
+                    ? AppLocalizations.of(context)?.playAgain ?? "Play"
+                    : AppLocalizations.of(context)?.play ?? "Play",
                 style: const TextStyle(
                   fontSize: 24, // Larger font
                   color: Colors.white,
@@ -1221,7 +1220,9 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
                                       padding: const EdgeInsets.only(
                                           left: 30.0, top: 30, bottom: 8),
                                       child: Text(
-                                        "Entdecke dein geistiges Auge",
+                                        AppLocalizations.of(context)
+                                                ?.selectStageTitle ??
+                                            "Play",
                                         style: TextStyle(
                                             color: primaryColor,
                                             fontWeight: FontWeight.bold,
@@ -1234,7 +1235,9 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
                                   padding: const EdgeInsets.only(
                                       left: 30.0, bottom: 50, right: 30),
                                   child: Text(
-                                    "Eine friedvolle Reise durch immer komplexer werdende Spektren",
+                                    AppLocalizations.of(context)
+                                            ?.selectStageBody ??
+                                        "",
                                     style: TextStyle(
                                         color: primaryColor,
                                         fontSize: 16,
@@ -1390,7 +1393,7 @@ class WorldItem extends StatelessWidget {
                       Center(
                         child: Text(
                           textAlign: TextAlign.center,
-                          "Klicke hier, um\ndie nächste Stufe\nfreizuschalten.",
+                          AppLocalizations.of(context)?.world ?? "",
                           style: TextStyle(color: primaryColor),
                         ),
                       )

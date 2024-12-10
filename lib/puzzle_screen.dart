@@ -407,9 +407,11 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       });
     }*/
 
+    PuzzleModel puzzle = Provider.of<PuzzleModel>(context, listen: false);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (currentTutorialStep == TutorialStep.step3) {
-        _showInfoDialogStart(context);
+        _showInfoDialogStart(context, puzzle);
       }
       /*if ((!worlds.last.unlocked && selectedLevel > 14) && false) {
         showUnlockWorldsDialog(puzzle);
@@ -417,7 +419,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     });
 
     // Access PuzzleModel via Provider here
-    PuzzleModel puzzle = Provider.of<PuzzleModel>(context, listen: false);
 
     // Now you can safely use puzzle in your initState logic
     // For example, loading some data or calling a method on the PuzzleModel
@@ -736,11 +737,11 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   bool resettedGrid = false;
 
   void playGame(PuzzleModel puzzle) async {
-    int size = currentWorld == 1
-        ? await puzzle.readSize(selectedLevel)
+    int size = currentWorld == 1 || currentWorld == 2
+        ? await puzzle.readSize(currentWorld, selectedLevel)
         : puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2;
-    int level = currentWorld == 1
-        ? await puzzle.readMoves(selectedLevel)
+    int level = currentWorld == 1 || currentWorld == 2
+        ? await puzzle.readMoves(currentWorld, selectedLevel)
         : puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2;
     Navigator.of(context).pushReplacement(
       FadePageRoute(
@@ -770,19 +771,19 @@ class _PuzzleScreenState extends State<PuzzleScreen>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15.0),
           ),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.error_outline, color: Colors.red),
-              SizedBox(width: 8),
-              Text("Action Required"),
+              const Icon(Icons.error_outline, color: Colors.red),
+              const SizedBox(width: 8),
+              Text(AppLocalizations.of(context)?.actionRequiredTitle ?? "Play"),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                "You made an error! To proceed, please reset the grid before attempting to use a hint.",
-                style: TextStyle(fontSize: 16),
+              Text(
+                AppLocalizations.of(context)?.actionRequiredBody ?? "Play",
+                style: const TextStyle(fontSize: 16),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
@@ -814,9 +815,9 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                     });
                     Navigator.of(context).pop();
                   },
-                  child: const Text(
-                    "Reset Grid",
-                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  child: Text(
+                    AppLocalizations.of(context)?.resetGrid ?? "Play",
+                    style: const TextStyle(fontSize: 16, color: Colors.white),
                   ),
                 ),
               ),
@@ -1348,7 +1349,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                     child: GridView.builder(
                       physics: const NeverScrollableScrollPhysics(),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: puzzle.size,
+                        crossAxisCount: puzzle.size > 0 ? puzzle.size : 1,
                         crossAxisSpacing: 8.0,
                         mainAxisSpacing: 8.0,
                       ),
@@ -1920,7 +1921,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                                 TutorialStep
                                                                     .step3;
                                                             _showInfoDialogStart(
-                                                                context);
+                                                                context,
+                                                                puzzle);
                                                           });
                                                           break;
                                                         case TutorialStep.step3:
@@ -2520,18 +2522,24 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     );
   }
 
-  void _showInfoDialogStart(BuildContext contex) {
+  void _showInfoDialogStart(BuildContext context, PuzzleModel puzzle) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor:
+              worlds[currentWorld - 1].colors[puzzle.targetColorNumber - 1],
           title: Text(
             AppLocalizations.of(context)?.colorTheGrid ?? "Play",
+            style: const TextStyle(color: Colors.white),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min, // To fit the content size
             children: [
-              Text(AppLocalizations.of(context)?.colorTheGridBody ?? "Play"),
+              Text(
+                AppLocalizations.of(context)?.colorTheGridBody ?? "Play",
+                style: const TextStyle(color: Colors.white),
+              ),
               const SizedBox(height: 30), // Space between text and GIF
               Image.asset(
                 'images/tutorial_animation.gif', // Replace with your local path to the GIF
@@ -2546,7 +2554,10 @@ class _PuzzleScreenState extends State<PuzzleScreen>
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Ok'),
+              child: const Text(
+                'Ok',
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -3477,7 +3488,7 @@ class LevelCompletionScreen extends StatelessWidget {
 
         // Title Text
         Text(
-          "Level ${selectedLevel == -2 ? worlds[currentWorld - 1].anzahlLevels : selectedLevel - 1} abgeschlossen",
+          "Level ${selectedLevel == -2 ? worlds[currentWorld - 1].anzahlLevels : selectedLevel - 1} ${AppLocalizations.of(context)?.completed ?? "Play"}",
           style: TextStyle(
             color: Colors.blueGrey[800],
             fontSize: 22,
@@ -3493,7 +3504,7 @@ class LevelCompletionScreen extends StatelessWidget {
         // Feedback Text
         if (currentTutorialStep != TutorialStep.step2)
           Text(
-            "Toll gemacht!",
+            AppLocalizations.of(context)?.congratulations ?? "Play",
             style: TextStyle(
               color: Colors.blueGrey[800],
               fontSize: 18,
@@ -3507,12 +3518,12 @@ class LevelCompletionScreen extends StatelessWidget {
               borderRadius: BorderRadius.all(Radius.circular(10)),
               color: Colors.indigo,
             ),
-            child: const Padding(
-              padding: EdgeInsets.all(5.0),
+            child: Padding(
+              padding: const EdgeInsets.all(5.0),
               child: Text(
                 textAlign: TextAlign.center,
-                "Du hast einen Stern erhalten! Sammle 10 Sterne, um zur nächsten Stufe aufzusteigen.",
-                style: TextStyle(
+                AppLocalizations.of(context)?.starAwarded ?? "Play",
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                   fontSize: 15,
@@ -3527,12 +3538,12 @@ class LevelCompletionScreen extends StatelessWidget {
               borderRadius: BorderRadius.all(Radius.circular(10)),
               color: Colors.indigo,
             ),
-            child: const Padding(
-              padding: EdgeInsets.all(5.0),
+            child: Padding(
+              padding: const EdgeInsets.all(5.0),
               child: Text(
                 textAlign: TextAlign.center,
-                "Du hast genügend Sterne gesammelt, um zur nächsten Stufe aufzusteigen. Gehe jetzt zurück zum Hauptmenü.",
-                style: TextStyle(
+                AppLocalizations.of(context)?.levelUp ?? "Play",
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                   fontSize: 15,
@@ -3631,9 +3642,6 @@ class LevelCompletionScreen extends StatelessWidget {
 
   bool displayIndicator(PuzzleModel puzzle) {
     for (int i = 0; i < worlds.length + 1; i++) {
-      print(puzzle.getNeededCurrencyAmount(i - 1));
-      print(puzzle.getCurrencyAmount());
-      print(puzzle.getMaxLevelForWorld(i));
       var unlocked = puzzle.getMaxLevelForWorld(i) != 0;
       if (puzzle.getCurrencyAmount() >= puzzle.getNeededCurrencyAmount(i - 1) &&
           !unlocked) {
@@ -3645,11 +3653,11 @@ class LevelCompletionScreen extends StatelessWidget {
   }
 
   void playGame(PuzzleModel puzzle, BuildContext context) async {
-    int size = currentWorld == 1
-        ? await puzzle.readSize(selectedLevel)
+    int size = currentWorld == 1 || currentWorld == 2
+        ? await puzzle.readSize(currentWorld, selectedLevel)
         : puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2;
-    int level = currentWorld == 1
-        ? await puzzle.readMoves(selectedLevel)
+    int level = currentWorld == 1 || currentWorld == 2
+        ? await puzzle.readMoves(currentWorld, selectedLevel)
         : puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2;
     Navigator.of(context).pushReplacement(
       FadePageRoute(

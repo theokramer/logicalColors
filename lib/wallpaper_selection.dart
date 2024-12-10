@@ -100,7 +100,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                       child: isLocked && !isUnlockable
                           ? Center(
                               child: Text(
-                                'Unlock by reaching ${index < 6 ? worlds[index].name : worlds[5].name}',
+                                '${AppLocalizations.of(context)?.unlockReaching ?? "Play"} ${index < 6 ? worlds[index].name : worlds[5].name}',
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   color: Colors.white,
@@ -113,7 +113,8 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                               : isUnlockable
                                   ? Center(
                                       child: Text(
-                                        'Unlock now',
+                                        AppLocalizations.of(context)?.unlock ??
+                                            "Play",
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           color: primaryColor,
@@ -179,7 +180,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                                     .floor());
                           },
                           child: Text(
-                              '${AppLocalizations.of(context)?.unlock ?? "Unlock"} ${AppLocalizations.of(context)?.forName ?? "for"} free'),
+                              AppLocalizations.of(context)?.unlock ?? "Unlock"),
                         )
                       : ElevatedButton(
                           onPressed: () {
@@ -212,9 +213,10 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("You have not enough stars"),
+          title: Text(
+              AppLocalizations.of(context)?.noStarsTitle ?? "Select Wallpaper"),
           content: Text(
-              "You need $requiredStars stars to unlock this wallpaper. You can collect stars, by completing levels"),
+              "${AppLocalizations.of(context)?.noStarsBody1 ?? "Select Wallpaper"}$requiredStars${AppLocalizations.of(context)?.noStarsBody2 ?? "Select Wallpaper"}"),
           actions: [
             TextButton(
               onPressed: () {

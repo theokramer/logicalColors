@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:tone_twister/puzzle_model.dart';
 import 'package:tone_twister/puzzle_screen.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 // Assuming PuzzleModel and other dependencies are already defined.
 
@@ -47,9 +48,10 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Level Auswahl',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                AppLocalizations.of(context)?.levelSelection ?? "Play",
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               IconButton(
                 icon: const Icon(Icons.close),

@@ -102,18 +102,16 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
             : 6;
 
     return GestureDetector(
-      onTap: tutorialActive
-          ? null
-          : () => widget.isLarge != 1 && widget.isLarge != 2
-              ? _showInfoDialog(context)
-              : widget.isLarge == 2 && !widget.originShop
-                  ? Navigator.of(context).push(
-                      FadePageRoute(
-                        page:
-                            const ShopScreen(), // Verwende hier das existierende PuzzleModel
-                      ),
-                    )
-                  : null, // Show info dialog on tap
+      onTap: () => widget.isLarge != 1 && widget.isLarge != 2
+          ? _showInfoDialog(context)
+          : widget.isLarge == 2 && !widget.originShop
+              ? Navigator.of(context).push(
+                  FadePageRoute(
+                    page:
+                        const ShopScreen(), // Verwende hier das existierende PuzzleModel
+                  ),
+                )
+              : null, // Show info dialog on tap
       child: AnimatedBuilder(
           animation: _colorAnimation,
           builder: (context, child) {
@@ -162,7 +160,7 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
                     // Target Color
                     Center(
                       child: Text(
-                        "Zielfarbe (${widget.targetColor})",
+                        "${AppLocalizations.of(context)?.goalColor ?? "Play"} (${widget.targetColor})",
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: fontSize,
@@ -236,7 +234,7 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('OK'),
+              child: const Text('Ok'),
             ),
           ],
         );

@@ -85,7 +85,7 @@ List<World> worlds = [
       id: 1,
       maxLevel: 1,
       anzahlLevels: 0,
-      name: "Anfänger",
+      name: "Funke",
       colors: const [
         Color(0xff48cae4),
         Color(0xff0077b6),
@@ -96,7 +96,7 @@ List<World> worlds = [
       id: 2,
       maxLevel: 0,
       anzahlLevels: 15,
-      name: "Lehrling",
+      name: "Flamme",
       colors: const [
         Color(0xff9CDBA6),
         Color(0xff50B498),
@@ -107,7 +107,7 @@ List<World> worlds = [
       id: 3,
       maxLevel: 0,
       anzahlLevels: 40,
-      name: "Schüler",
+      name: "Feuersturm",
       colors: const [
         Color(0xffdb222a),
         Color(0xff7c2e41),
@@ -118,7 +118,7 @@ List<World> worlds = [
       id: 4,
       maxLevel: 0,
       anzahlLevels: 25,
-      name: "Gelehrter",
+      name: "Gipfelwind",
       colors: const [
         Color(0xff720455),
         Color(0xff3C0753),
@@ -129,7 +129,7 @@ List<World> worlds = [
       id: 5,
       maxLevel: 0,
       anzahlLevels: 25,
-      name: "Mystiker",
+      name: "Sturmherr",
       colors: const [
         Color(0xffFFBB5C),
         Color(0xffd25E3E),
@@ -140,7 +140,7 @@ List<World> worlds = [
       id: 6,
       maxLevel: 0,
       anzahlLevels: 25,
-      name: "Prophet",
+      name: "Erdenhüter",
       colors: const [
         Color(0xffFFBB5C),
         Color(0xffd25E3E),
@@ -475,7 +475,7 @@ class PuzzleModel with ChangeNotifier {
   Map<String, int> getSizeAndMaxMoves(int level) {
     //return {"size": getGridSize(level), "maxMoves": getMaxMoves(level)};
     getMaxLevelForWorld(currentWorld);
-    int s = currentWorld == 1
+    int s = currentWorld == 1 || currentWorld == 2
         ? 1
         : currentWorld == 5 || currentWorld == 6
             ? 3
@@ -483,7 +483,7 @@ class PuzzleModel with ChangeNotifier {
     int m = 1; // MaxMoves
     int startLevel = 1; // Startlevel für die aktuelle Grid-Size
 
-    if (currentWorld == 1 && level < 19) {
+    if (currentWorld == 1 || currentWorld == 2 && level < 19) {
       switch (level) {
         case 1:
           s = 1;
@@ -584,7 +584,7 @@ class PuzzleModel with ChangeNotifier {
     }
 
     while (level < 37) {
-      if (currentWorld == 1) {
+      if (currentWorld == 1 || currentWorld == 2) {
         int levelsForCurrentSize = ((s) * (s)).floor();
         int endLevel = startLevel + levelsForCurrentSize - 1;
 
@@ -615,7 +615,7 @@ class PuzzleModel with ChangeNotifier {
 
     if (level >= 37) {
       s = 5;
-      m = currentWorld == 1 ? 7 : 6;
+      m = currentWorld == 1 || currentWorld == 2 ? 7 : 6;
       int tempLvl = level - 1;
       int set = 0;
       while (tempLvl > 37) {
@@ -752,12 +752,12 @@ class PuzzleModel with ChangeNotifier {
     return CrystalsEarned;
   }
 
-  Future<List<Click>> readJson(int index) async {
-    Level level = await readLevel(index);
+  Future<List<Click>> readJson(int currentWorld, int selectedLevel) async {
+    Level level = await readLevel(currentWorld, selectedLevel);
 
-    // Return the first click from the clicks list, if available
+    // Return the list of clicks for the selected level, or default click if no clicks found
     if (level.clicks != null && level.clicks!.isNotEmpty) {
-      return level.clicks!; // Return the first click
+      return level.clicks!;
     } else {
       return [Click(x: 0, y: 0)]; // Return default click if no clicks found
     }
@@ -768,26 +768,40 @@ class PuzzleModel with ChangeNotifier {
     return jsonString;
   }
 
-  Future<Level> readLevel(int index) async {
+  Future<Level> readLevel(int thisWorld, int thisLevel) async {
     String fileContent = await loadJsonFromAssets("assets/levels.json");
 
-    // Decoding JSON file content into a Map
+    // Decoding JSON file content into a List
     var jsonData = jsonDecode(fileContent);
+    print(jsonData);
+
+    print("MY LEvel: $thisWorld");
+
+    // Find the level based on the current world and selected level
+    var levelData = jsonData.firstWhere(
+        (level) =>
+            level['worldNr'] == thisWorld && level['levelNr'] == thisLevel,
+        orElse: () => null);
+
+    if (levelData == null) {
+      print("NULLLLL");
+      // Return an empty Level object or handle the error if level is not found
+      return Level(worldNr: thisWorld, levelNr: thisLevel, size: 1, clicks: []);
+    }
 
     // Deserializing into a Level object
-    Level level = Level.fromJson(jsonData[index]);
-    //Level level = Level();
-    // Return the first click from the clicks list, if available
+    Level level = Level.fromJson(levelData);
     return level;
   }
 
-  Future<int> readMoves(int index) async {
-    Level level = await readLevel(index - 1);
+  Future<int> readMoves(int currentWorld, int selectedLevel) async {
+    Level level = await readLevel(currentWorld, selectedLevel);
     return level.clicks?.length ?? 0;
   }
 
-  Future<int> readSize(int index) async {
-    Level level = await readLevel(index - 1);
+  Future<int> readSize(int currentWorld, int selectedLevel) async {
+    Level level = await readLevel(currentWorld, selectedLevel);
+    print("level: ${level.clicks}");
     return level.size ?? 0;
   }
 
@@ -824,12 +838,19 @@ class PuzzleModel with ChangeNotifier {
       if (selectedLevel == -2) {
         selectedLevel = worlds[currentWorld - 1].anzahlLevels;
       }
-      List<Click> clicks2 = await readJson(selectedLevel - 1);
+      List<Click> clicks2 = await readJson(currentWorld, selectedLevel - 1);
+      for (int i = 0; i < clicks2.length; i++) {
+        print("HIER");
+        print(clicks2[i].x);
+        print(clicks2[i].y);
+      }
+      print("FERTIG");
 // Create random moves and store them in the clicks list
       for (int i = 0; i < _maxMoves; i++) {
         int x;
         int y;
-        if (currentWorld == 1) {
+//TODO: Add support for all worlds
+        if (currentWorld == 1 || currentWorld == 2) {
           x = clicks2[i].x ?? 0;
           y = clicks2[i].y ?? 0;
         } else {
@@ -837,7 +858,7 @@ class PuzzleModel with ChangeNotifier {
           y = _randomPositionNumber();
         }
 
-        if (currentWorld != 1) {
+        if (currentWorld != 1 && currentWorld != 2) {
           int count = 0;
           bool works = false;
           while (works == false) {

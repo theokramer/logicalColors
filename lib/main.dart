@@ -51,23 +51,24 @@ Future<int> readSize(int index) async {
 }
 
 Future<int> returnCorrectSize() async {
-  return currentWorld == 1
+  //TODO: Add support for all worlds
+  return currentWorld == 1 || currentWorld == 2
       ? (await readSize(selectedLevel > 0 ? selectedLevel : 1))
       : getSizeAndMaxMoves(selectedLevel)["size"] ?? 2;
 }
 
 Future<int> returnCorrectMoves() async {
-  return currentWorld == 1
+  return currentWorld == 1 || currentWorld == 2
       ? (await readMoves(selectedLevel > 0 ? selectedLevel : 1))
       : getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2;
 }
 
 Map<String, int> getSizeAndMaxMoves(int level) {
-  int s = currentWorld == 1 ? 1 : 2;
+  int s = currentWorld == 1 || currentWorld == 2 ? 1 : 2;
   int m = 1;
   int startLevel = 1;
 
-  if (currentWorld == 1 && level < 13) {
+  if (currentWorld == 1 || currentWorld == 2 && level < 13) {
     switch (level) {
       case 1:
         s = 1;
@@ -114,7 +115,7 @@ Map<String, int> getSizeAndMaxMoves(int level) {
   }
 
   while (level < 50) {
-    if (currentWorld == 1) {
+    if (currentWorld == 1 || currentWorld == 2) {
       int levelsForCurrentSize = ((s) * (s)).floor();
       int endLevel = startLevel + levelsForCurrentSize - 1;
 
@@ -145,7 +146,7 @@ Map<String, int> getSizeAndMaxMoves(int level) {
 
   if (level >= 50) {
     s = 5;
-    m = currentWorld == 1 ? 7 : 6;
+    m = currentWorld == 1 || currentWorld == 2 ? 7 : 6;
     int tempLvl = level - 1;
     int set = 0;
     while (tempLvl > 50) {

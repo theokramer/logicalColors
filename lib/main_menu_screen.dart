@@ -671,12 +671,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     final puzzle = Provider.of<PuzzleModel>(context, listen: false);
     int maxLevel = puzzle.getMaxLevelForWorld(thisWorld + 1);
     void playGame() async {
-      int size = currentWorld == 1 || currentWorld == 2
-          ? await puzzle.readSize(currentWorld, selectedLevel)
-          : puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2;
-      int level = currentWorld == 1 || currentWorld == 2
-          ? await puzzle.readMoves(currentWorld, selectedLevel)
-          : puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2;
+      int size = await puzzle.readSize(currentWorld, selectedLevel);
+      int level = await puzzle.readMoves(currentWorld, selectedLevel);
       Navigator.of(context).pushReplacement(
         FadePageRoute(
           page: ChangeNotifierProvider(

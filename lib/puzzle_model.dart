@@ -95,7 +95,7 @@ List<World> worlds = [
   World(
       id: 2,
       maxLevel: 0,
-      anzahlLevels: 15,
+      anzahlLevels: 35,
       name: "Flamme",
       colors: const [
         Color(0xff9CDBA6),
@@ -106,7 +106,7 @@ List<World> worlds = [
   World(
       id: 3,
       maxLevel: 0,
-      anzahlLevels: 40,
+      anzahlLevels: 35,
       name: "Feuersturm",
       colors: const [
         Color(0xffdb222a),
@@ -117,7 +117,7 @@ List<World> worlds = [
   World(
       id: 4,
       maxLevel: 0,
-      anzahlLevels: 25,
+      anzahlLevels: 35,
       name: "Gipfelwind",
       colors: const [
         Color(0xff720455),
@@ -128,7 +128,7 @@ List<World> worlds = [
   World(
       id: 5,
       maxLevel: 0,
-      anzahlLevels: 25,
+      anzahlLevels: 35,
       name: "Sturmherr",
       colors: const [
         Color(0xffFFBB5C),
@@ -139,7 +139,7 @@ List<World> worlds = [
   World(
       id: 6,
       maxLevel: 0,
-      anzahlLevels: 25,
+      anzahlLevels: 35,
       name: "Erdenhüter",
       colors: const [
         Color(0xffFFBB5C),
@@ -833,7 +833,7 @@ class PuzzleModel with ChangeNotifier {
       if (selectedLevel == -2) {
         selectedLevel = worlds[currentWorld - 1].anzahlLevels;
       }
-      List<Click> clicks2 = await readJson(currentWorld, selectedLevel - 1);
+      List<Click> clicks2 = await readJson(currentWorld, selectedLevel);
       for (int i = 0; i < clicks2.length; i++) {}
 
 // Create random moves and store them in the clicks list
@@ -841,7 +841,7 @@ class PuzzleModel with ChangeNotifier {
         int x;
         int y;
 //TODO: Add support for all worlds
-        if (currentWorld == 1 || currentWorld == 2) {
+        if (true) {
           x = clicks2[i].x ?? 0;
           y = clicks2[i].y ?? 0;
         } else {

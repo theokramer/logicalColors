@@ -52,15 +52,11 @@ Future<int> readSize(int index) async {
 
 Future<int> returnCorrectSize() async {
   //TODO: Add support for all worlds
-  return currentWorld == 1 || currentWorld == 2
-      ? (await readSize(selectedLevel > 0 ? selectedLevel : 1))
-      : getSizeAndMaxMoves(selectedLevel)["size"] ?? 2;
+  return (await readSize(selectedLevel > 0 ? selectedLevel : 1));
 }
 
 Future<int> returnCorrectMoves() async {
-  return currentWorld == 1 || currentWorld == 2
-      ? (await readMoves(selectedLevel > 0 ? selectedLevel : 1))
-      : getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2;
+  return (await readMoves(selectedLevel > 0 ? selectedLevel : 1));
 }
 
 Map<String, int> getSizeAndMaxMoves(int level) {

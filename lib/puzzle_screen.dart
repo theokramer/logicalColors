@@ -30,6 +30,7 @@ void showStarsInfo(
     context: context,
     builder: (BuildContext builder) {
       return AlertDialog(
+        //TODO: Translate!
         title: const Text("Sterne-System"),
         content: Text(
             "Im Sterne-System erhältst du nach jedem neuen Level einen Stern. "
@@ -763,12 +764,8 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   bool resettedGrid = false;
 
   void playGame(PuzzleModel puzzle) async {
-    int size = currentWorld == 1 || currentWorld == 2
-        ? await puzzle.readSize(currentWorld, selectedLevel)
-        : puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2;
-    int level = currentWorld == 1 || currentWorld == 2
-        ? await puzzle.readMoves(currentWorld, selectedLevel)
-        : puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2;
+    int size = await puzzle.readSize(currentWorld, selectedLevel);
+    int level = await puzzle.readMoves(currentWorld, selectedLevel);
     Navigator.of(context).pushReplacement(
       FadePageRoute(
         page: ChangeNotifierProvider(
@@ -3718,12 +3715,8 @@ class LevelCompletionScreen extends StatelessWidget {
   }
 
   void playGame(PuzzleModel puzzle, BuildContext context) async {
-    int size = currentWorld == 1 || currentWorld == 2
-        ? await puzzle.readSize(currentWorld, selectedLevel)
-        : puzzle.getSizeAndMaxMoves(selectedLevel)["size"] ?? 2;
-    int level = currentWorld == 1 || currentWorld == 2
-        ? await puzzle.readMoves(currentWorld, selectedLevel)
-        : puzzle.getSizeAndMaxMoves(selectedLevel)["maxMoves"] ?? 2;
+    int size = await puzzle.readSize(currentWorld, selectedLevel);
+    int level = await puzzle.readMoves(currentWorld, selectedLevel);
     Navigator.of(context).pushReplacement(
       FadePageRoute(
         page: ChangeNotifierProvider(

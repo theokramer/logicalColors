@@ -84,7 +84,7 @@ List<World> worlds = [
   World(
       id: 1,
       maxLevel: 1,
-      anzahlLevels: 0,
+      anzahlLevels: 10,
       name: "Funke",
       colors: const [
         Color(0xff48cae4),
@@ -272,7 +272,8 @@ class PuzzleModel with ChangeNotifier {
     //   nCurrencyAmount += worlds[i].anzahlLevels;
     // }
     // return nCurrencyAmount;
-    return world * 10;
+
+    return world == 1 ? world * 15 : world * 20;
   }
 
   Future<bool> loadWorldUnlocked(int worldId) async {
@@ -849,7 +850,7 @@ class PuzzleModel with ChangeNotifier {
           y = _randomPositionNumber();
         }
 
-        if (currentWorld != 1 && currentWorld != 2) {
+        if (false) {
           int count = 0;
           bool works = false;
           while (works == false) {
@@ -1059,16 +1060,16 @@ class PuzzleModel with ChangeNotifier {
 
     int currentColorNumber = _grid[x][y];
     if (currentColorNumber == newColorNumber) return;
-    if ((currentWorld != 2 && currentWorld != 4) || oneTile) {
+    if ((currentWorld != 4) || oneTile) {
       _grid[x][y] = newColorNumber;
     }
     if (!oneTile) {
-      if (currentWorld == 1 || currentWorld == 2) {
+      if (currentWorld == 1 || currentWorld == 2 || currentWorld == 4) {
         _updateAdjacentTile(x - 1, y, reversed); // Up
         _updateAdjacentTile(x + 1, y, reversed); // Down
         _updateAdjacentTile(x, y - 1, reversed); // Left
         _updateAdjacentTile(x, y + 1, reversed); // Right
-      } else if (currentWorld == 3 || currentWorld == 4) {
+      } else if (currentWorld == 3) {
         _updateAdjacentTile(x - 1, y - 1, reversed); // Up
         _updateAdjacentTile(x + 1, y + 1, reversed); // Down
         _updateAdjacentTile(x + 1, y - 1, reversed); // Left

@@ -178,6 +178,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                                         index * 50 +
                                         log(index * 10000))
                                     .floor());
+                            widget.onWallpaperSelected(index);
                           },
                           child: Text(
                               AppLocalizations.of(context)?.unlock ?? "Unlock"),

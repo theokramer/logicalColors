@@ -132,7 +132,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       Colors.indigo,
       Colors.grey,
       Colors.indigo,
-      Colors.grey,
+      Colors.indigo,
       Colors.indigo,
       Colors.grey,
       Colors.indigo,
@@ -150,15 +150,15 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       Colors.indigo
     ],
     [
+      Colors.grey,
+      Colors.indigo,
+      Colors.grey,
       Colors.indigo,
       Colors.grey,
       Colors.indigo,
       Colors.grey,
-      Colors.grey,
-      Colors.grey,
       Colors.indigo,
-      Colors.grey,
-      Colors.indigo
+      Colors.grey
     ],
     [
       Colors.indigo,

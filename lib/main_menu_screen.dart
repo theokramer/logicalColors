@@ -1,23 +1,13 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
-import 'package:tone_twister/coin_manager.dart';
-import 'package:tone_twister/level_selection.dart';
-import 'package:tone_twister/main.dart';
 import 'package:tone_twister/puzzle_screen.dart';
-import 'package:tone_twister/shop_screen.dart';
+
 import 'package:tone_twister/wallpaper_selection.dart';
 
-import 'custom_info_button.dart';
 import 'puzzle_model.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -106,12 +96,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   void _updateLevel(int newIndex) {
     setState(() {
       selectedLevel = newIndex;
-    });
-  }
-
-  void _updateWallpaper(int newIndex) {
-    setState(() {
-      selectedWallpaperIndex = newIndex;
     });
   }
 
@@ -207,7 +191,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
-    final coinProvider = Provider.of<CoinProvider>(context);
     bool isWorldUnlocked = puzzle.isWorldUnlocked(currentWorld);
 
     return Scaffold(
@@ -228,7 +211,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 children: [
                   Column(
                     children: [
-                      _buildTopRow(context, coinProvider, currentWorld,
+                      _buildTopRow(context, currentWorld,
                           puzzle.getMaxLevelForWorld(currentWorld), puzzle),
                       // const SizedBox(
                       //   height: 5,
@@ -274,8 +257,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                       ),
                                     ),
                                   ),
-                                _buildActionButton(context, isWorldUnlocked,
-                                    coinProvider, puzzle, () {
+                                _buildActionButton(
+                                    context, isWorldUnlocked, puzzle, () {
                                   setState(() {
                                     isWorldUnlocked = true;
                                   });
@@ -301,7 +284,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                         },
                                         child: Row(
                                           children: [
-                                            _buildIconButton2(
+                                            const _buildIconButton2(
                                               icon: Icons.more_vert,
                                             ),
                                             const SizedBox(
@@ -334,37 +317,30 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                           ],
                                         ),
                                       const Spacer(),
-                                      Consumer<CoinProvider>(
-                                        builder:
-                                            (context, coinProvider, child) {
-                                          return GestureDetector(
-                                            onTap: () {
-                                              showStarsInfo(
-                                                  context, true, puzzle);
-                                            },
-                                            child: Row(
-                                              children: [
-                                                Icon(
-                                                  currencyIcon,
-                                                  color: currencyColor,
-                                                  size: 25,
-                                                ),
-                                                const SizedBox(
-                                                  width: 8,
-                                                ),
-                                                Text(
-                                                  "${puzzle.getCurrencyAmountForWorld(currentWorld)}/${worlds[currentWorld - 1].anzahlLevels}",
-                                                  style: TextStyle(
-                                                      color: primaryColor,
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                ),
-                                              ],
-                                            ),
-                                          );
+                                      GestureDetector(
+                                        onTap: () {
+                                          showStarsInfo(context, true, puzzle);
                                         },
-                                      ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              currencyIcon,
+                                              color: currencyColor,
+                                              size: 25,
+                                            ),
+                                            const SizedBox(
+                                              width: 8,
+                                            ),
+                                            Text(
+                                              "${puzzle.getCurrencyAmountForWorld(currentWorld)}/${worlds[currentWorld - 1].anzahlLevels}",
+                                              style: TextStyle(
+                                                  color: primaryColor,
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                      )
                                     ],
                                   ),
                                 ),
@@ -389,8 +365,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 ],
               ),
             ),
-            // _buildSwipeGestureDetector(),
-            // _buildNavigationArrows(),
             // if (_isBannerAdReady)
             //   Align(
             //     alignment: Alignment.bottomCenter,
@@ -410,31 +384,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     );
   }
 
-  Widget _buildSelectedLevelDisplay() {
-    return Column(
-      children: [
-        Text(
-          'Selected Level',
-          style: TextStyle(
-            color: primaryColor.withOpacity(0.8),
-            fontSize: 24,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          selectedLevel == -2
-              ? (worlds[currentWorld - 1].anzahlLevels).toString()
-              : selectedLevel.toString(),
-          style: TextStyle(
-            fontSize: 60,
-            fontWeight: FontWeight.bold,
-            color: primaryColor,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildGrid() {
     return Expanded(
       child: SizedBox(
@@ -450,8 +399,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   (MediaQuery.of(context).size.width < 500) ? 95.0 : 300),
           itemCount: 9,
           itemBuilder: (context, index) {
-            int x = index ~/ 3;
-            int y = index % 3;
             Color tileColor = colors[currentWorld - 1][index];
             Color borderColor = currentWorld == 6 || currentWorld == 5
                 ? index == 0
@@ -487,8 +434,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     );
   }
 
-  Widget _buildTopRow(BuildContext context, CoinProvider coinProvider,
-      int worldIndex, int maxLevel, PuzzleModel puzzle) {
+  Widget _buildTopRow(
+      BuildContext context, int worldIndex, int maxLevel, PuzzleModel puzzle) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
       child: Stack(
@@ -503,72 +450,37 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       SunnysDisplay(
                         puzzle: puzzle,
                       ),
-                      // _buildIconButton(
-                      //   icon: Icons.shopping_cart,
-                      //   onPressed: () {
-                      //     Navigator.of(context).push(
-                      //       FadePageRoute(
-                      //         page: const ShopScreen(),
-                      //       ),
-                      //     );
-                      //   },
-                      // ),
-                      //const SizedBox(width: 16),
-
-                      //     // Handle grid view navigation
-                      //   },
-                      // ),
-                      // const SizedBox(width: 16),
-                      // _buildIconButton(
-                      //   icon: Icons.palette,
-                      //   onPressed: () {
-                      //     showDialog(
-                      //       context: context,
-                      //       builder: (BuildContext context) =>
-                      //           WallpaperSelectionWidget(
-                      //         onWallpaperSelected: _updateWallpaper,
-                      //       ),
-                      //     );
-                      //   },
-                      // ),
                     ],
                   ),
                   Row(
                     children: [
-                      //     Consumer<CoinProvider>(
-                      //       builder: (context, coinProvider, child) {
-                      //         return CustomInfoButton(
-                      //           value: '${coinProvider.Crystals}',
-                      //           targetColor: -1,
-                      //           movesLeft: -1,
-                      //           iconPath: 'images/Crystals.png',
-                      //           backgroundColor: Colors.black45,
-                      //           textColor: primaryColor,
-                      //           isLarge: 2,
-                      //         );
-                      //       },
-                      //     ),
-                      //     //const SizedBox(width: 16),
-                      // GestureDetector(
-                      //   onTap: () {
-                      //     if (puzzle.isWorldUnlocked(currentWorld)) {
-                      //       Navigator.of(context).push(
-                      //         MaterialPageRoute(
-                      //           builder: (context) => LevelSelectionScreen(
-                      //             worldIndex: worldIndex,
-                      //             currentLevel: maxLevel,
-                      //           ),
-                      //         ),
-                      //       );
-                      //     }
-                      //   },
-                      //   child: _buildIconButton2(
-                      //     icon: Icons.grid_view,
-                      //   ),
-                      // ),
                       const SizedBox(
                         width: 20,
                       ),
+                      if (!noAds)
+                        Row(
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(right: 15.0, top: 5),
+                              child: GestureDetector(
+                                onTap: () {
+                                  puzzle.saveNoAds(true);
+                                  noAds = true;
+                                  Navigator.of(context).pushReplacement(
+                                    FadePageRoute(
+                                      page: const MainMenuScreen(),
+                                    ),
+                                  );
+                                },
+                                child: Image.asset(
+                                  "images/no_ads.png",
+                                  height: 35,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       GestureDetector(
                         onTap: () {
                           showModalBottomSheet(
@@ -582,7 +494,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                 true, // Optional: damit Modal den ganzen Bildschirm ausfüllt
                           );
                         },
-                        child: _buildIconButton2(
+                        child: const _buildIconButton2(
                           icon: Icons.tune,
                         ),
                       ),
@@ -590,30 +502,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   ),
                 ],
               ),
-              if (!noAds && false)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 5.0, top: 5),
-                      child: GestureDetector(
-                        onTap: () {
-                          puzzle.saveNoAds(true);
-                          noAds = true;
-                          Navigator.of(context).pushReplacement(
-                            FadePageRoute(
-                              page: const MainMenuScreen(),
-                            ),
-                          );
-                        },
-                        child: Image.asset(
-                          "images/no_ads.png",
-                          height: 35,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               const SizedBox(
                 height: 5,
               )
@@ -624,47 +512,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     );
   }
 
-  Widget _buildTitleText(int maxLevel) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          '${worlds[currentWorld - 1].name} $selectedLevel',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: primaryColor,
-            fontSize: 25,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Quicksand',
-            shadows: [
-              Shadow(
-                color: primaryColor.withOpacity(0.2),
-                offset: const Offset(2, 2),
-                blurRadius: 6,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(
-          width: 5,
-        ),
-        Icon(
-          Icons.keyboard_arrow_down,
-          color: primaryColor,
-          size: 45,
-        ),
-      ],
-    );
-  }
-
   Widget _buildActionButton(BuildContext context, bool isWorldUnlocked,
-      CoinProvider coinProvider, PuzzleModel puzzle, Function onUnlock) {
-    return Center(child: _buildPlayButton(context, currentWorld - 1)
-        /*isWorldUnlocked
-          ? _buildPlayButton(context, currentWorld - 1)
-          : _buildUnlockButton(
-              context, (currentWorld - 1), coinProvider, puzzle, onUnlock),*/
-        );
+      PuzzleModel puzzle, Function onUnlock) {
+    return Center(child: _buildPlayButton(context, currentWorld - 1));
   }
 
   Widget _buildPlayButton(BuildContext context, int thisWorld) {
@@ -723,10 +573,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 70, vertical: 18),
         ),
         onPressed: () {
-          // if ((!worlds.last.unlocked && selectedLevel > 14) && false) {
-          //   _showUnlockOptionsDialog(context, thisWorld, puzzle, () {});
-          // } else {
-          //   selectedLevel = maxLevel;
           playGame();
 
           //}
@@ -755,132 +601,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildUnlockButton(BuildContext context, int currentWorldIndex,
-      CoinProvider coinProvider, PuzzleModel puzzle, Function onUnlock) {
-    //int unlockCost = (currentWorldIndex + 1) * (currentWorldIndex + 1) * 400;
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color.fromARGB(255, 178, 9, 9),
-            Color.fromARGB(255, 210, 9, 9)
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: ElevatedButton(
-        onPressed: () async {
-          _showUnlockOptionsDialog(
-              context, currentWorldIndex, puzzle, onUnlock);
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.lock_open, color: primaryColor, size: 36),
-            const SizedBox(width: 8),
-            Text(
-              AppLocalizations.of(context)?.unlock ?? "Unlock",
-              style: TextStyle(
-                color: primaryColor,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSwipeGestureDetector() {
-    return GestureDetector(
-      onHorizontalDragEnd: (details) {
-        if (details.primaryVelocity != null) {
-          setState(() {
-            if (details.primaryVelocity! < 0) {
-              currentWorld++;
-            } else if (details.primaryVelocity! > 0) {
-              currentWorld--;
-            }
-          });
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.grey.withOpacity(0.3), Colors.transparent],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavigationArrows() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (currentWorld > 1) _buildNavigationArrow(Icons.arrow_back, -1),
-              const Spacer(),
-              if (currentWorld < worlds.length)
-                _buildNavigationArrow(Icons.arrow_forward, 1),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNavigationArrow(IconData icon, int direction) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          if (direction == -1 && currentWorld > 1) {
-            currentWorld--;
-          } else if (direction == 1 && currentWorld < worlds.length) {
-            currentWorld++;
-          }
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        child: Icon(
-          icon,
-          size: 48, // Larger icon
-          color: primaryColor.withOpacity(0.9),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildIconButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    return IconButton(
-      icon: Icon(icon, size: 28),
-      color: Colors.black,
-      onPressed: onPressed,
     );
   }
 }
@@ -1096,8 +816,8 @@ class _LevelSelectionWidgetState extends State<LevelSelectionWidget> {
 
 class WorldSelectionScreen extends StatefulWidget {
   final Function(bool) onWorldSelected;
-  PuzzleModel puzzle;
-  WorldSelectionScreen({
+  final PuzzleModel puzzle;
+  const WorldSelectionScreen({
     super.key,
     required this.onWorldSelected,
     required this.puzzle,
@@ -1411,8 +1131,8 @@ class WorldItem extends StatelessWidget {
 }
 
 class _buildIconButton2 extends StatelessWidget {
-  IconData icon;
-  _buildIconButton2({
+  final IconData icon;
+  const _buildIconButton2({
     super.key,
     required this.icon,
   });
@@ -1434,173 +1154,35 @@ class _buildIconButton2 extends StatelessWidget {
 }
 
 class SunnysDisplay extends StatelessWidget {
-  PuzzleModel puzzle;
-  SunnysDisplay({
+  final PuzzleModel puzzle;
+  const SunnysDisplay({
     super.key,
     required this.puzzle,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<CoinProvider>(
-      builder: (context, coinProvider, child) {
-        return GestureDetector(
-          onTap: () {
-            showStarsInfo(context, false, puzzle);
-          },
-          child: Row(
-            children: [
-              Icon(
-                currencyIcon,
-                color: currencyColor,
-                size: 33,
-              ),
-              const SizedBox(
-                width: 8,
-              ),
-              Text(
-                "${puzzle.getCurrencyAmount()}",
-                style: TextStyle(
-                    color: primaryColor,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        );
+    return GestureDetector(
+      onTap: () {
+        showStarsInfo(context, false, puzzle);
       },
+      child: Row(
+        children: [
+          Icon(
+            currencyIcon,
+            color: currencyColor,
+            size: 33,
+          ),
+          const SizedBox(
+            width: 8,
+          ),
+          Text(
+            "${puzzle.getCurrencyAmount()}",
+            style: TextStyle(
+                color: primaryColor, fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
     );
   }
-}
-
-Widget _buildUnlockButton(
-    BuildContext context, String text, Color color, VoidCallback onPressed) {
-  return Container(
-    margin: const EdgeInsets.symmetric(vertical: 8.0),
-    child: ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: primaryColor,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
-        elevation: 4,
-      ),
-      onPressed: onPressed,
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    ),
-  );
-}
-
-void _showUnlockOptionsDialog(BuildContext context, int currentWorldIndex,
-    PuzzleModel puzzle, Function onUnlock) {
-  showDialog(
-    context: context,
-    builder: (context) {
-      return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        elevation: 16,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              decoration: const BoxDecoration(
-                  color: Colors.indigo,
-                  borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(10),
-                      bottomRight: Radius.circular(10))),
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                AppLocalizations.of(context)?.unlockTitle ?? "",
-                style: TextStyle(
-                  color: primaryColor,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                AppLocalizations.of(context)?.unlockBody ?? "",
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 18,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            _buildUnlockButton(
-                context,
-                AppLocalizations.of(context)?.openShop ?? "Open Shop",
-                Colors.teal, () {
-              Navigator.of(context).push(
-                FadePageRoute(
-                  page: const ShopScreen(),
-                ),
-              );
-            }),
-            /*_buildUnlockButton(
-              context,
-              'Unlock Single World (€0.99)',
-              Colors.teal,
-              () {
-                puzzle.saveWorldUnlocked(currentWorldIndex + 1, true);
-                puzzle.unlockWorld(currentWorldIndex + 1);
-                puzzle.updateWorldLevel(currentWorldIndex + 1, 1);
-                puzzle.saveWorldProgress(currentWorldIndex + 1, 1);
-                onUnlock();
-
-                // Add unlock single world logic here
-                Navigator.of(context).pop();
-              },
-            ),
-            _buildUnlockButton(
-              context,
-              'Unlock All Worlds (€1.99)',
-              Colors.orangeAccent,
-              () {
-                for (int i = 0; i < worlds.length; i++) {
-                  if (!puzzle.isWorldUnlocked(i + 1)) {
-                    puzzle.saveWorldUnlocked(i + 1, true);
-                    puzzle.unlockWorld(i + 1);
-                    puzzle.updateWorldLevel(i + 1, 1);
-                    puzzle.saveWorldProgress(i + 1, 1);
-                    onUnlock();
-                  }
-
-                  // Add unlock single world logic here
-                }
-                Navigator.of(context).pop();
-              },
-            ),*/
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-              },
-              child: Text(
-                AppLocalizations.of(context)?.cancel ?? "Cancel",
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      );
-    },
-  );
 }

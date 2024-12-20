@@ -2,13 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:uuid/uuid.dart';
-import 'package:tone_twister/coin_manager.dart';
 import 'package:tone_twister/hints_manager.dart';
 import 'package:tone_twister/main_menu_screen.dart';
-import 'package:tone_twister/shop_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -51,117 +47,11 @@ Future<int> readSize(int index) async {
 }
 
 Future<int> returnCorrectSize() async {
-  //TODO: Add support for all worlds
   return (await readSize(selectedLevel > 0 ? selectedLevel : 1));
 }
 
 Future<int> returnCorrectMoves() async {
   return (await readMoves(selectedLevel > 0 ? selectedLevel : 1));
-}
-
-Map<String, int> getSizeAndMaxMoves(int level) {
-  int s = currentWorld == 1 || currentWorld == 2 ? 1 : 2;
-  int m = 1;
-  int startLevel = 1;
-
-  if (currentWorld == 1 || currentWorld == 2 && level < 13) {
-    switch (level) {
-      case 1:
-        s = 1;
-        m = 1;
-        break;
-      case 2:
-      case 3:
-        s = 2;
-        m = 1;
-        break;
-      case 4:
-      case 5:
-      case 6:
-        s = 2;
-        m = 2;
-        break;
-      case 7:
-      case 8:
-        s = 2;
-        m = 3;
-        break;
-      case 9:
-        s = 3;
-        m = 1;
-        break;
-      case 10:
-        s = 3;
-        m = 2;
-        break;
-      case 11:
-        s = 3;
-        m = 3;
-        break;
-      case 12:
-        s = 3;
-        m = 4;
-        break;
-      default:
-        s = 2;
-        m = 3;
-        break;
-    }
-    return {"size": s, "maxMoves": m};
-  }
-
-  while (level < 50) {
-    if (currentWorld == 1 || currentWorld == 2) {
-      int levelsForCurrentSize = ((s) * (s)).floor();
-      int endLevel = startLevel + levelsForCurrentSize - 1;
-
-      if (level <= endLevel) {
-        m = (1 + (log(level - startLevel + 1) / log(1.9))).ceil();
-        int maxMovesForCurrentSize = (s * 1.8).floor();
-        m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
-        break;
-      }
-
-      s++;
-      startLevel = endLevel + 1;
-    } else {
-      int levelsForCurrentSize = ((s + 0.6) * (s + 0.6)).floor();
-      int endLevel = startLevel + levelsForCurrentSize - 1;
-
-      if (level <= endLevel) {
-        m = (1 + (log(level - startLevel + 1) / log(2.07))).floor();
-        int maxMovesForCurrentSize = (s * 5).floor();
-        m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
-        break;
-      }
-
-      s++;
-      startLevel = endLevel + 1;
-    }
-  }
-
-  if (level >= 50) {
-    s = 5;
-    m = currentWorld == 1 || currentWorld == 2 ? 7 : 6;
-    int tempLvl = level - 1;
-    int set = 0;
-    while (tempLvl > 50) {
-      if (set == 2 || tempLvl >= 65) {
-        set = 0;
-        if (s > m - 5 && s > 4) {
-          s = s - 1;
-        } else {
-          s = 5;
-          m += 1;
-        }
-      } else {
-        set += 1;
-      }
-      tempLvl -= 1;
-    }
-  }
-
-  return {"size": s, "maxMoves": m};
 }
 
 Future<int> countSpecificLevels(int targetWorldNr) async {
@@ -186,20 +76,6 @@ Future<int> countSpecificLevels(int targetWorldNr) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MobileAds.instance.initialize();
-
-  //Initialize Firebase-App first!
-  // userID = await loadUserID();
-  // if (userID == "") {
-  //   userID = const Uuid().v4();
-  //   saveUserID(userID);
-  // }
-
-  // final snapshot = await database.ref("users/$userID").get();
-  // if (snapshot.exists) {
-  //   print(snapshot.value);
-  // } else {
-  //   print('No data available.');
-  // }
 
   currentWorld = await maxWorld();
 
@@ -343,7 +219,6 @@ class MyApp extends StatelessWidget {
             },
           ),
         ),
-        ChangeNotifierProvider(create: (_) => CoinProvider()),
         ChangeNotifierProvider(create: (_) => LanguageProvider(savedLanguage)),
         ChangeNotifierProvider(create: (_) => HintsProvider()),
         ChangeNotifierProvider(create: (_) => RemsProvider()),
@@ -373,7 +248,6 @@ class MyApp extends StatelessWidget {
           routes: {
             '/': (context) => const MainMenuScreen(),
             '/tutorial': (context) => const PuzzleScreen(),
-            '/shop': (context) => const ShopScreen(),
           },
         );
       }),

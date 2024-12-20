@@ -1,6 +1,4 @@
 import 'package:tone_twister/puzzle_model.dart';
-import 'package:tone_twister/puzzle_screen.dart';
-import 'package:tone_twister/shop_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -104,14 +102,7 @@ class _CustomInfoButtonState extends State<CustomInfoButton>
     return GestureDetector(
       onTap: () => widget.isLarge != 1 && widget.isLarge != 2
           ? _showInfoDialog(context)
-          : widget.isLarge == 2 && !widget.originShop
-              ? Navigator.of(context).push(
-                  FadePageRoute(
-                    page:
-                        const ShopScreen(), // Verwende hier das existierende PuzzleModel
-                  ),
-                )
-              : null, // Show info dialog on tap
+          : null, // Show info dialog on tap
       child: AnimatedBuilder(
           animation: _colorAnimation,
           builder: (context, child) {

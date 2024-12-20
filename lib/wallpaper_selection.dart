@@ -1,9 +1,6 @@
 import 'dart:math';
-import 'package:tone_twister/puzzle_screen.dart';
-import 'package:tone_twister/shop_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'coin_manager.dart';
 import 'puzzle_model.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -22,7 +19,6 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
   @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
-    final coinProvider = Provider.of<CoinProvider>(context);
 
     return Container(
       decoration: selectedWallpaper < 5
@@ -55,8 +51,7 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                   onTap: () {
                     if (isLocked) {
                       if (isUnlockable) {
-                        _showWallpaperPreview(
-                            context, index, isLocked, coinProvider, puzzle);
+                        _showWallpaperPreview(context, index, isLocked, puzzle);
                       } else {
                         // Show a message that the user needs more stars
                         _showUnlockMessage(context, index, puzzle);
@@ -134,8 +129,8 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
     );
   }
 
-  void _showWallpaperPreview(BuildContext context, int index, bool isLocked,
-      CoinProvider coinProvider, PuzzleModel puzzle) {
+  void _showWallpaperPreview(
+      BuildContext context, int index, bool isLocked, PuzzleModel puzzle) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -172,7 +167,6 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
                             unlockWallpaper(
                                 context,
                                 index,
-                                coinProvider,
                                 puzzle,
                                 (exp(index * 0.4) * 15 +
                                         index * 50 +
@@ -234,7 +228,6 @@ class _WallpaperSelectionWidgetState extends State<WallpaperSelectionWidget> {
   void unlockWallpaper(
     BuildContext context,
     int index,
-    CoinProvider coinProvider,
     PuzzleModel puzzle,
     int wallpaperCost,
   ) {

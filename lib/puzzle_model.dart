@@ -1,9 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
-import 'package:tone_twister/coin_manager.dart';
-import 'package:tone_twister/difficulty_bar.dart';
 import 'package:tone_twister/hints_manager.dart';
 import 'package:tone_twister/main_menu_screen.dart';
 import 'package:tone_twister/puzzle_screen.dart';
@@ -98,9 +95,9 @@ List<World> worlds = [
       anzahlLevels: 35,
       name: "Flamme",
       colors: const [
-        Color(0xff9CDBA6),
-        Color(0xff50B498),
-        Color(0xff468585),
+        Color(0xff48cae4),
+        Color(0xff0077b6),
+        Color.fromARGB(255, 0, 37, 89),
       ],
       unlocked: false),
   World(
@@ -131,9 +128,9 @@ List<World> worlds = [
       anzahlLevels: 35,
       name: "Sturmherr",
       colors: const [
-        Color(0xffFFBB5C),
-        Color(0xffd25E3E),
-        Color(0xffE93D2F),
+        Color(0xff9CDBA6),
+        Color(0xff50B498),
+        Color(0xff468585),
       ],
       unlocked: false),
   World(
@@ -157,7 +154,7 @@ class PuzzleModel with ChangeNotifier {
   int _elapsedTime;
   int _targetColorNumber;
   int moveWhereError = -1;
-  int _CrystalsEarned;
+  final int _CrystalsEarned;
   double countClicks = 0;
 
   final List<List<dynamic>> _undoStack = []; // Stack für Undo-Funktion
@@ -273,7 +270,7 @@ class PuzzleModel with ChangeNotifier {
     // }
     // return nCurrencyAmount;
 
-    return world == 1 ? world * 15 : world * 20;
+    return world == 1 ? world * 10 : world * 20;
   }
 
   Future<bool> loadWorldUnlocked(int worldId) async {
@@ -473,210 +470,6 @@ class PuzzleModel with ChangeNotifier {
     notifyListeners();
   }
 
-  Map<String, int> getSizeAndMaxMoves(int level) {
-    //return {"size": getGridSize(level), "maxMoves": getMaxMoves(level)};
-    getMaxLevelForWorld(currentWorld);
-    int s = currentWorld == 1 || currentWorld == 2
-        ? 1
-        : currentWorld == 5 || currentWorld == 6
-            ? 3
-            : 2; // Grid-Size
-    int m = 1; // MaxMoves
-    int startLevel = 1; // Startlevel für die aktuelle Grid-Size
-
-    if (currentWorld == 1 || currentWorld == 2 && level < 19) {
-      switch (level) {
-        case 1:
-          s = 1;
-          m = 1;
-          break;
-        case 2:
-        case 3:
-          s = 2;
-          m = 1;
-          break;
-        case 4:
-        case 5:
-        case 6:
-          s = 2;
-          m = 2;
-          break;
-        case 7:
-        case 8:
-          s = 2;
-          m = 3;
-          break;
-        case 9:
-          s = 3;
-          m = 1;
-          break;
-        case 10:
-          s = 3;
-          m = 2;
-          break;
-        case 11:
-          s = 3;
-          m = 3;
-          break;
-        case 12:
-          s = 3;
-          m = 4;
-          break;
-        case 13:
-          s = 3;
-          m = 4;
-          break;
-        case 14:
-          s = 3;
-          m = 4;
-          break;
-        case 15:
-          s = 4;
-          m = 1;
-          break;
-        case 16:
-          s = 4;
-          m = 3;
-          break;
-        case 17:
-          s = 4;
-          m = 4;
-          break;
-        case 18:
-          s = 4;
-          m = 4;
-          break;
-        default:
-          s = 2;
-          m = 3;
-          break;
-      }
-      return {"size": s, "maxMoves": m};
-    } else if (currentWorld != 1 && currentWorld < 5 && level < 10) {
-      switch (level) {
-        case 1:
-          s = 2;
-          m = 1;
-          break;
-        case 2:
-        case 3:
-          s = 2;
-          m = 2;
-          break;
-        case 4:
-        case 5:
-          s = 2;
-          m = 3;
-          break;
-        case 6:
-          s = 3;
-          m = 1;
-        case 7:
-        case 8:
-          s = 3;
-          m = 2;
-          break;
-        case 9:
-          s = 3;
-          m = 3;
-          break;
-      }
-      return {"size": s, "maxMoves": m};
-    }
-
-    while (level < 37) {
-      if (currentWorld == 1 || currentWorld == 2) {
-        int levelsForCurrentSize = ((s) * (s)).floor();
-        int endLevel = startLevel + levelsForCurrentSize - 1;
-
-        if (level <= endLevel) {
-          m = (1 + (log((level - startLevel) + 1) / log(1.8))).ceil();
-          int maxMovesForCurrentSize = (s * 1.8).floor();
-          m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
-          break;
-        }
-
-        s++;
-        startLevel = endLevel + 1;
-      } else {
-        int levelsForCurrentSize = ((s) * (s)).floor();
-        int endLevel = startLevel + levelsForCurrentSize - 1;
-
-        if (level <= endLevel) {
-          m = (1 + (log((level - startLevel) + 1) / log(1.9))).ceil();
-          int maxMovesForCurrentSize = (s * 1.8).floor();
-          m = m > maxMovesForCurrentSize ? maxMovesForCurrentSize : m;
-          break;
-        }
-
-        s++;
-        startLevel = endLevel + 1;
-      }
-    }
-
-    if (level >= 37) {
-      s = 5;
-      m = currentWorld == 1 || currentWorld == 2 ? 7 : 6;
-      int tempLvl = level - 1;
-      int set = 0;
-      while (tempLvl > 37) {
-        if (set == 2 || tempLvl >= 65) {
-          set = 0;
-          if (s > m - 5 && s > 4) {
-            s = s - 1;
-          } else {
-            s = 5;
-            m += 1;
-          }
-        } else {
-          set += 1;
-        }
-        tempLvl -= 1;
-      }
-    }
-
-    return {"size": s, "maxMoves": m};
-  }
-
-  // Berechnet die gridSize basierend auf dem aktuellen Level
-  int getGridSize(int level) {
-    switch (level) {
-      case 1:
-        return 1;
-      case < 7:
-        return 2;
-      case < 14:
-        return 3;
-      case < 25:
-        return 4;
-      default:
-        return 5;
-    }
-  }
-
-  // Berechnet die maxMoves basierend auf dem aktuellen Level
-  int getMaxMoves(int level) {
-    int m;
-    int s = getGridSize(level);
-    m = 1;
-    int tempLvl = level - 1;
-    int set = 0;
-    if (set == 2 || tempLvl >= 65) {
-      set = 0;
-      if (s > m - 5 && s > 4) {
-        s = s - 1;
-      } else {
-        s = 5;
-        m += 1;
-      }
-    } else {
-      set += 1;
-    }
-    tempLvl -= 1;
-
-    return m;
-  }
-
   void refreshGrid(int newLevel, int newSize) {
     _maxMoves = newLevel;
     _moves = 0;
@@ -695,11 +488,6 @@ class PuzzleModel with ChangeNotifier {
     initializeProgress(); // Lade den Fortschritt
   }
 
-  Future<void> addCrystals(int amount) async {
-    await CoinManager.addCrystals(amount);
-    notifyListeners();
-  }
-
   Future<void> addHints(int amount) async {
     await HintsManager.addHints(amount);
     notifyListeners();
@@ -715,12 +503,6 @@ class PuzzleModel with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> subtractCrystals(int amount) async {
-    await CoinManager.subtractCrystals(amount);
-    if (await CoinManager.loadCrystals() < 0) await CoinManager.saveCrystals(0);
-    notifyListeners();
-  }
-
   void setHint(int x, int y) {
     _hintX = x;
     _hintY = y;
@@ -731,26 +513,6 @@ class PuzzleModel with ChangeNotifier {
     _hintX = null;
     _hintY = null;
     notifyListeners();
-  }
-
-  int calculateCrystalsEarned(
-      int maxMoves, int size, int selectedLevel, int worldID) {
-    double difficulty = calculateDifficulty(maxMoves, size) * 8;
-
-    // Skaliere die Schwierigkeit stärker für höhere Belohnungen
-    num difficultyWeight = difficulty > 1 ? pow(difficulty, 2) : difficulty;
-
-    // Dynamische Anpassung der Crystals-Belohnung basierend auf Level und Schwierigkeit
-    double baseCrystals = difficultyWeight * 2; // Grundwert pro Schwierigkeit
-    double levelFactor =
-        log(selectedLevel); // sorgt für geringeren Einfluss bei kleinen Levels
-
-    // Endberechnung der Crystals mit minimalen und maximalen Grenzen
-    int CrystalsEarned = ((baseCrystals + levelFactor) * 0.4 + 5)
-        .clamp(1, 1000)
-        .ceil(); // z.B. Mindestwert 1, Maximalwert 1000
-
-    return CrystalsEarned;
   }
 
   Future<List<Click>> readJson(int currentWorld, int selectedLevel) async {
@@ -805,16 +567,6 @@ class PuzzleModel with ChangeNotifier {
     _targetColorNumber =
         _random.nextInt(3) + 1; // Target color number to achieve
     setTargetColor(_targetColorNumber);
-    if (worlds[currentWorld - 1].maxLevel <= selectedLevel) {
-      _CrystalsEarned =
-          calculateCrystalsEarned(maxMoves, size, selectedLevel, currentWorld);
-      //_CrystalsEarned = ((calculateDifficulty(maxMoves, size) * 100 + (selectedLevel * 0.3)) * 0.5).ceil();
-    } else {
-      //? Auskommentieren, wenn mehr Crystals in abgeschlossenen Levels gewünscht
-      //_CrystalsEarned =
-      //calculateCrystalsEarned(maxMoves, size, selectedLevel, currentWorld);
-      _CrystalsEarned = 5;
-    }
     // Initialize the grid with the target color
     for (int i = 0; i < size; i++) {
       for (int j = 0; j < size; j++) {
@@ -841,33 +593,8 @@ class PuzzleModel with ChangeNotifier {
       for (int i = 0; i < _maxMoves; i++) {
         int x;
         int y;
-//TODO: Add support for all worlds
-        if (true) {
-          x = clicks2[i].x ?? 0;
-          y = clicks2[i].y ?? 0;
-        } else {
-          x = _randomPositionNumber();
-          y = _randomPositionNumber();
-        }
-
-        if (false) {
-          int count = 0;
-          bool works = false;
-          while (works == false) {
-            count = 0;
-            for (int i = 0; i < positions.length; i++) {
-              if (positions[i].x == x && positions[i].y == y) {
-                count++;
-              }
-            }
-            if (count < 2) {
-              works = true;
-            } else {
-              x = _randomPositionNumber();
-              y = _randomPositionNumber();
-            }
-          }
-        }
+        x = clicks2[i].x ?? 0;
+        y = clicks2[i].y ?? 0;
         positions.add(Click(x: x, y: y));
 
         clickTile(x, y, true, false);
@@ -930,15 +657,7 @@ class PuzzleModel with ChangeNotifier {
             HintsManager.subtractHints(1);
             var hint = clicks[0];
             setHint(hint[0], hint[1]); // Set hint coordinates
-          } else {
-            if (await CoinManager.loadCrystals() >= 50) {
-              gotHint = true;
-              subtractCrystals(50);
-
-              var hint = clicks[0];
-              setHint(hint[0], hint[1]); // Set hint coordinates
-            }
-          }
+          } else {}
         } else {
           var hint = clicks[0];
           setHint(hint[0], hint[1]); // Set hint coordinates

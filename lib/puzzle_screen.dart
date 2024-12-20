@@ -1,6 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
-import 'dart:ffi';
 import 'dart:math';
 
 import 'package:confetti/confetti.dart';
@@ -12,7 +11,6 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tone_twister/action_Button.dart';
-import 'package:tone_twister/coin_manager.dart';
 import 'package:tone_twister/custom_info_button.dart';
 import 'package:tone_twister/difficulty_bar.dart';
 import 'package:tone_twister/hints_manager.dart';
@@ -22,7 +20,6 @@ import 'package:tone_twister/tutorial_overlay.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'puzzle_model.dart';
-import 'shop_screen.dart';
 
 void showStarsInfo(
     BuildContext context, bool proportional, PuzzleModel puzzle) {
@@ -512,115 +509,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     ];
   }
 
-  void showUnlockWorldsDialog(PuzzleModel puzzle) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          elevation: 16,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                decoration: const BoxDecoration(
-                    color: Colors.indigo,
-                    borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(10),
-                        bottomRight: Radius.circular(10))),
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  AppLocalizations.of(context)?.unlockTitle ?? "Unlock",
-                  style: TextStyle(
-                    color: primaryColor,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  AppLocalizations.of(context)?.unlockBody ?? "Unlock",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              _buildUnlockButton(
-                  context,
-                  AppLocalizations.of(context)?.openShop ?? "Open Shop",
-                  Colors.teal, () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const ShopScreen(),
-                  ),
-                );
-              }),
-              /*_buildUnlockButton(
-              context,
-              'Unlock Single World (€0.99)',
-              Colors.teal,
-              () {
-                puzzle.saveWorldUnlocked(currentWorldIndex + 1, true);
-                puzzle.unlockWorld(currentWorldIndex + 1);
-                puzzle.updateWorldLevel(currentWorldIndex + 1, 1);
-                puzzle.saveWorldProgress(currentWorldIndex + 1, 1);
-                onUnlock();
-
-                // Add unlock single world logic here
-                Navigator.of(context).pop();
-              },
-            ),
-            _buildUnlockButton(
-              context,
-              'Unlock All Worlds (€1.99)',
-              Colors.orangeAccent,
-              () {
-                for (int i = 0; i < worlds.length; i++) {
-                  if (!puzzle.isWorldUnlocked(i + 1)) {
-                    puzzle.saveWorldUnlocked(i + 1, true);
-                    puzzle.unlockWorld(i + 1);
-                    puzzle.updateWorldLevel(i + 1, 1);
-                    puzzle.saveWorldProgress(i + 1, 1);
-                    onUnlock();
-                  }
-
-                  // Add unlock single world logic here
-                }
-                Navigator.of(context).pop();
-              },
-            ),*/
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pushReplacement(
-                    FadePageRoute(
-                      page: const MainMenuScreen(),
-                    ),
-                  );
-                },
-                child: Text(
-                  AppLocalizations.of(context)?.backToHome ?? "Back to home",
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Future<void> handleBuyHint() async {
     /*if (await CoinManager.loadCrystals() >= 200) {
       subtractCrystals(200);
@@ -628,14 +516,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     } else {}*/
     // addHints(15);
     // Navigator.pop(context);
-  }
-
-  Future<void> handleBuyMoves() async {
-    if (await CoinManager.loadCrystals() >= 150) {
-      subtractCrystals(150);
-      addMoves(3);
-    } else {}
-    Navigator.pop(context);
   }
 
   void handleWatchAdForMoves() {
@@ -652,20 +532,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     _loadRewardedAdMoves();
   }
 
-  Future<void> handleBuyHintSale() async {
-    if (await CoinManager.loadCrystals() >= 300) {
-      subtractCrystals(300);
-      addHints(3);
-    } else {}
-    Navigator.pop(context);
-  }
-
-  void addCrystals(int amount) async {
-    await context
-        .read<CoinProvider>()
-        .addCrystals(amount); // Verwende den Provider
-  }
-
   void addHints(int amount) async {
     await context
         .read<HintsProvider>()
@@ -678,12 +544,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
   void addRems(int amount) async {
     await context.read<RemsProvider>().addRems(amount); // Verwende den Provider
-  }
-
-  void subtractCrystals(int amount) async {
-    await context
-        .read<CoinProvider>()
-        .subtractCrystals(amount); // Verwende den Provider
   }
 
   Future<void> handleBuyRem() async {
@@ -916,7 +776,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   @override
   Widget build(BuildContext context) {
     final puzzle = Provider.of<PuzzleModel>(context);
-    Future.microtask(() => context.read<CoinProvider>().loadCrystals());
     Future.microtask(() => context.read<HintsProvider>().loadHints());
     Future.microtask(() => context.read<RemsProvider>().loadRems());
 
@@ -1462,7 +1321,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                     context,
                                     AppLocalizations.of(context)?.moves ??
                                         "Moves",
-                                    handleBuyMoves,
+                                    () {},
                                     handleWatchAdForMoves,
                                     [Colors.indigo, Colors.indigoAccent],
                                     false);
@@ -1890,7 +1749,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                     // Delay navigation to ensure coin animation completes
                                     Future.delayed(
                                         const Duration(milliseconds: 800), () {
-                                      puzzle.addCrystals(puzzle.CrystalsEarned);
                                       if (getsLightBulb == 1) {
                                         setState(() {
                                           puzzle.addHints(1);
@@ -2039,9 +1897,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                                 Future.delayed(
                                                     const Duration(
                                                         milliseconds: 800), () {
-                                                  puzzle.addCrystals(
-                                                      puzzle.CrystalsEarned);
-
                                                   if (getsLightBulb == 1) {
                                                     setState(() {
                                                       puzzle.addHints(1);
@@ -2175,10 +2030,10 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              HorizontalDifficultyBar(
-                                  gridSize: puzzle.size,
-                                  maxMoves: puzzle.maxMoves,
-                                  colors: worlds[currentWorld - 1].colors),
+                              // HorizontalDifficultyBar(
+                              //     gridSize: puzzle.size,
+                              //     maxMoves: puzzle.maxMoves,
+                              //     colors: worlds[currentWorld - 1].colors),
                               Wrap(
                                 children: [
                                   Row(

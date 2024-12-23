@@ -475,49 +475,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
     );
   }
 
-  void _onTick() {
-    setState(() {
-      timeElapsed += 1;
-    });
-  }
-
-  List<PopupMenuEntry<String>> _showPopupMenu() {
-    return <PopupMenuEntry<String>>[
-      _buildPopupMenuItem('home', AppLocalizations.of(context)?.home ?? "Home",
-          Icons.home, Colors.indigo),
-      // _buildPopupMenuItem('shop', AppLocalizations.of(context)?.shop ?? "Shop",
-      //     Icons.shopping_cart, Colors.indigo),
-      // _buildPopupMenuItem(
-      //     'refresh',
-      //     '${AppLocalizations.of(context)?.newS ?? "New"} Level ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 10 ${AppLocalizations.of(context)?.crystals ?? "Crystals"}' : ""}',
-      //     Icons.refresh,
-      //     Colors.indigo),
-      // if (selectedLevel > 1)
-      //   _buildPopupMenuItem('prev', 'Level ${selectedLevel - 1}',
-      //       Icons.skip_previous, Colors.indigo),
-      // if (!(worlds[currentWorld - 1].maxLevel <= selectedLevel))
-      //   _buildPopupMenuItem(
-      //       'next',
-      //       'Level ${selectedLevel + 1} ${worlds[currentWorld - 1].maxLevel <= selectedLevel ? '– 100 ${AppLocalizations.of(context)?.crystals ?? "Crystals"}' : ""}',
-      //       Icons.skip_next,
-      //       Colors.indigo),
-      _buildPopupMenuItem(
-          'settings',
-          '${AppLocalizations.of(context)?.settings ?? "New"} ',
-          Icons.settings,
-          Colors.indigo),
-    ];
-  }
-
-  Future<void> handleBuyHint() async {
-    /*if (await CoinManager.loadCrystals() >= 200) {
-      subtractCrystals(200);
-      
-    } else {}*/
-    // addHints(15);
-    // Navigator.pop(context);
-  }
-
   void handleWatchAdForMoves() {
     _rewardedAdMoves?.show(
       onUserEarnedReward: (_, reward) {
@@ -544,25 +501,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
   void addRems(int amount) async {
     await context.read<RemsProvider>().addRems(amount); // Verwende den Provider
-  }
-
-  Future<void> handleBuyRem() async {
-    /*if (await CoinManager.loadCrystals() >= 200) {
-      subtractCrystals(200);
-      
-    } else {
-      // Handle not enough Crystals
-    }*/
-    addRems(10);
-    Navigator.pop(context);
-  }
-
-  void buyHints(int index) {
-    if (products.isNotEmpty) {
-      for (int i = 0; i < products.length; i++) {
-        if (products[i].id == "hints.$index") {}
-      }
-    }
   }
 
   void handleWatchAdForHints() {
@@ -1283,21 +1221,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
                                       puzzle.countClicks = 0;
                                     }
-                                  } else {
-                                    /*if (puzzle.countClicks >
-                                        5 * puzzle.maxMoves) {
-                                      puzzle.countClicks =
-                                          double.negativeInfinity;
-                                      showGadgetPopup(
-                                          context,
-                                          'Hints',
-                                          handleBuyHintSale,
-                                          handleWatchAdForHints,
-                                          [Colors.amber, Colors.orange],
-                                          false //Change this Line to true, if you want sale for 200 Crystals
-                                          );
-                                    }*/
-                                  }
+                                  } else {}
 
                                   puzzle.clickTile(x, y, false, false);
                                 }
@@ -1418,14 +1342,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
                             } else {
                               buyHintDialog(
                                   context, hintsProvider.hints, puzzle, true);
-                              // showGadgetPopup(
-                              //     context,
-                              //     AppLocalizations.of(context)?.hints ??
-                              //         "Hints",
-                              //     handleBuyHint,
-                              //     handleWatchAdForHints,
-                              //     [Colors.amber, Colors.orange],
-                              //     false);
                             }
                           },
                           count:
@@ -2170,7 +2086,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
       if (purchaseDetails.status == PurchaseStatus.purchased ||
           purchaseDetails.status == PurchaseStatus.restored) {
         bool isVerified = _verifyPurchase(purchaseDetails);
-        if (purchaseDetails.status == PurchaseStatus.restored) {}
         if (isVerified) {
           _onPurchaseSuccess(purchaseDetails, puzzle);
         }
@@ -2211,11 +2126,29 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             0);
         break;
       case 'de.tk.hints2':
-        addHints(40);
+        addHints(30);
         _showPurchaseDialog(
             context,
             "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
             40,
+            false,
+            0);
+        break;
+      case 'de.tk.hints3':
+        addHints(75);
+        _showPurchaseDialog(
+            context,
+            "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
+            75,
+            false,
+            0);
+        break;
+      case 'de.tk.hints3':
+        addHints(120);
+        _showPurchaseDialog(
+            context,
+            "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
+            120,
             false,
             0);
         break;

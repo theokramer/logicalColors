@@ -506,13 +506,13 @@ class _PuzzleScreenState extends State<PuzzleScreen>
   void handleWatchAdForHints() {
     _rewardedAdHints?.show(
       onUserEarnedReward: (_, reward) {
+        Navigator.of(context).pop();
         _showPurchaseDialog(
             context,
             "${AppLocalizations.of(context)?.hints ?? "Hints'"} ${AppLocalizations.of(context)?.earned ?? "earned'"}",
             3,
             true,
             0);
-        Navigator.of(context).pop();
       },
     );
     _loadRewardedAdHints();
@@ -527,6 +527,7 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             1,
             true,
             1);
+        Navigator.of(context).pop();
       },
     );
     _loadRewardedAdRems();
@@ -2108,7 +2109,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
 
     switch (purchaseDetails.productID) {
       case 'de.tk.colorizer1':
-        addRems(10);
         _showPurchaseDialog(
             context,
             "Skip Level ${AppLocalizations.of(context)?.purchased ?? "World"}",
@@ -2117,25 +2117,22 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             1);
         break;
       case 'de.tk.hints1':
-        addHints(15);
         _showPurchaseDialog(
             context,
             "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
-            15,
+            10,
             false,
             0);
         break;
       case 'de.tk.hints2':
-        addHints(30);
         _showPurchaseDialog(
             context,
             "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
-            40,
+            30,
             false,
             0);
         break;
       case 'de.tk.hints3':
-        addHints(75);
         _showPurchaseDialog(
             context,
             "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
@@ -2144,7 +2141,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             0);
         break;
       case 'de.tk.hints3':
-        addHints(120);
         _showPurchaseDialog(
             context,
             "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
@@ -2153,7 +2149,6 @@ class _PuzzleScreenState extends State<PuzzleScreen>
             0);
         break;
       default:
-        addHints(40);
         _showPurchaseDialog(
             context,
             "${AppLocalizations.of(context)?.hints ?? "World"} ${AppLocalizations.of(context)?.purchased ?? "World"}",
